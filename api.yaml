@@ -1,0 +1,496 @@
+openapi: 3.0.0
+
+info:
+  title: WASAText
+  version: 1.0.1
+  description: Project made by 2087354. In questa versione ho sistemato l'incongruenza gruppo/1v1 nelle conversazioni
+  contact:
+    name: Sasha
+    url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+    email: bazhura.2087354@studenti.uniroma1.it
+
+components:
+  schemas:
+    
+    MessagePreviewXORPhoto:
+      description: Preview of the last message or a photo icon if the last message is a photo.
+      type: object
+      oneOf:
+        - properties:
+            MessagePreview:
+              description: Snippet of the last text message.
+              type: string
+              example: "ao azzozzo ma che fai"
+        - properties:
+            PhotoIcon:
+              description: Icon indicating the last message is a photo.
+              type: string
+              enum: ["📷 Photo"]
+              example: "📷 Photo"
+  
+    User:
+      description: A resource representing a user.
+      type: object
+      properties:
+        Username:
+          description: Unique name of the user.
+          type: string
+          example: "DajeRoma69"
+          readOnly: false
+        Photo:
+          description: A foto profilo ao
+          type: string
+          format: binary
+        
+    Message:
+      description: A resource indicating a single message
+      type: object
+      properties:
+        Timestamp:
+          description: Timestamp of the message
+          type: string
+          format: time-stamp
+        Content:
+          description: The content of the message, could be plain text or photos (but not both since i dont want to implement it and i would rather make the user send two separate messages).
+          type: object
+          oneOf:
+            - properties:
+                Photo:
+                  type: string
+                  format: binary  
+            - properties:
+                Text:
+                  type: string
+        Author:
+          description: Reference to the user profile who sent the message, necessary to retrieve the Username.
+          $ref: "#/components/schemas/User"
+        Status:
+          description: Checkmarks Counter :)
+          type: string 
+          enum: ['recieved', 'seen']
+          # TODO setStatus i guess?
+        Reactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Reaction"
+        ID:
+          description: Unique identifier for the message
+          type: integer
+          readOnly: true 
+            
+    Reaction:
+      type: object
+      properties:
+        ID:
+          description: Unique identifier for the reación
+          type: integer
+          readOnly: true 
+        Author: { $ref: "#/components/schemas/User" }
+        Emoticon:
+          type: string
+          maxLength: 1
+          example: 🍆
+          
+    ConversationELT:
+      description: This is a conversation resource that will apear in the conversation list. Basically a collection of messages and other bs
+      type: object
+      properties:
+        ID:
+          description: Unique ID of the conversation.
+          type: integer
+          readOnly: true
+        Name:
+          description: Username/Group name
+          type: string
+          readOnly: false
+        Photo:
+          description: Profile Picture / Group Photo
+          type: string
+          format: binary
+        DateLastMessage:
+          description: Timestamp of the last message
+          type: string
+          format: time-stamp
+        Preview:
+            $ref: '#/components/schemas/MessagePreviewXORPhoto'
+        Messages:
+          description: A collection of messages
+          #Sorted in reverse chrono order? TODO (i dont know how to implement it and i will think about it later.)
+          type: array
+          items:
+           $ref: '#/components/schemas/Message'
+        
+
+    Group:
+      description: Guess what it could be lol
+      type: object
+      properties:
+        Conversation:
+          $ref: "#/components/schemas/ConversationELT"
+        Users:
+          description: A collection of users participating in the conversation.
+          type: array
+          minLength: 2
+          # for a group to exist, minimum is 2
+          items:
+           $ref: '#/components/schemas/User'
+            
+    Private:
+      description: Private 1v1 conversation
+      type: object
+      properties:
+        Conversation:
+          $ref: "#/components/schemas/ConversationELT"
+        FirstUser:
+          $ref: '#/components/schemas/User'
+        SecondUser:
+          $ref: '#/components/schemas/User'
+    
+    
+    #is it redundant?
+    Conversations:
+      description: This will be the list that the user will see with all of his conversations.
+      type: array
+      items:
+        $ref: '#/components/schemas/ConversationELT'
+
+
+paths:
+  /users/{Username}:
+    description: Made for practice to retrieve json of a user by his Username
+    get:
+      parameters:
+        - name: Username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: All good bro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  
+    
+  /login:
+    description: doLogin POST
+    #TODO
+    
+    
+  # "me" rappresenta il current user loggato (suppongo? scrivo senza capire na minchia lol, ma prima si fa e dopo si capisce, questa è la filosofia della sapienza), mentre uso /{id} quando non deve essere per forza l'utente corrente (sono un admin ecc.)
+  
+  /users/me/username:
+    put:  #setMyUserName
+      operationId: setMyUserName
+      summary: Aggiorna il nome utente di un utente loggato
+      
+      requestBody:
+        required: true
+        content:
+          text/plain:  
+            schema:
+              type: string
+              example: "DajeRoma69"
+        
+      
+      responses:
+        "200":
+         description: Aggiornato il nome utente con successo.
+         content: #ritorna lo user
+            application/json:
+              schema: { $ref: "#/components/schemas/User"}
+        "404": 
+            description: Utente non trovato :(   
+
+  /conversations: 
+    description: Conversations implica le conversazioni del CURRENT USER
+    get: #getMyConversations
+      operationId: getMyConversations
+      responses:
+        200:
+          description: Hea' ya' go m8, yo' lefty convasations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversations'
+    
+  /conversations/{ID}:
+    get:  #getConversation
+      operationId: getConversation 
+      
+      parameters:
+      - name: ID
+        in: path
+        description: L'id della convo da prende
+        required: true
+        schema:
+          type: integer  
+    
+      responses:
+        200:
+          description: All good bro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationELT'
+        400:
+          description: Convo not found man :C
+    
+  /conversations/{ID}/messages:
+    post: #sendMessage 
+      operationId: sendMessage
+      
+      parameters:
+        - name: ID
+          in: path
+          description: L'id della convo in cui mandare il messaggio
+          required: true
+          schema:
+            type: integer  
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Message" }
+      
+      responses:
+        200:
+          description: All good, message sent bro
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+        400:
+          description: Convo not found error.
+      
+  #per il forwarding non mi serve la conversazione originaria, solo l'id del messaggio e la convo di destinazione come parametro perciò uso /messages come path, siccome ci sono più operazioni le separo in path (forward/comment ecc.)
+  
+  /messages/{ID}/forward:
+    post: #forwardMessage
+      operationId: forwardMessage
+      
+      parameters:
+        - name: ID
+          in: path
+          description: L'id del messaggio
+          required: true
+          schema:
+            type: integer  
+      
+      requestBody:
+        required: true
+        description: Conversazione destinataria (da cui prendo l'ID successivamente)
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConversationELT" }
+      
+      responses:
+        200:
+          description: All good, message forwarded bro
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+        400:
+          description: Message not found error.
+    
+  /messages/{ID}/comments:
+    post: #commentMessage (Reaction)
+      operationId: commentMessage
+      
+      parameters:
+        - name: ID
+          in: path
+          description: L'id del messaggio da commentare
+          required: true
+          schema:
+            type: integer  
+      
+      requestBody:
+        required: true
+        description: Passo l'oggetto "Reazione" necessario
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Reaction" }
+      
+      responses:
+        200:
+          description: All good, message commented bro
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+        400:
+          description: Message not found error.
+  
+  /messages/{ID}/comments/{commentID}:
+    delete: #uncommentMessage (Delete Reaction)
+      operationId: uncommentMessage
+      
+      parameters:
+        - name: ID
+          in: path
+          description: L'id del messaggio dove si trova il commento
+          required: true
+          schema:
+            type: integer  
+        
+        - name: commentID
+          in: path
+          description: L'id del commento da eliminare
+          required: true
+          schema:
+            type: integer 
+            
+      responses:
+        200:
+          description: All good, comment deleted bro
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+        400:
+          description: Message not found error.
+        401:
+          description: Comment not found error.
+    
+  /messages/{ID}:
+    delete: #deleteMessage
+      operationId: deleteMessage
+      
+      parameters:
+        - name: ID
+          in: path
+          description: L'id del messaggio dove si trova il commento
+          required: true
+          schema:
+            type: integer  
+
+      responses:
+        200:
+          description: All good, comment deleted bro
+        400:
+          description: Message not found error.
+  
+  # TODO SEPARA LE IDEE DEI GRUPPI E DELLE CONVO SINGOLE LEVANDO L'ARRAY DEGLI UTENTI da convoELT E FACENDO due strutture diverse (1v1 e gruppo)
+  # non scordarti di aggiustare le operazioni sotto dopo
+  
+  /groups/{ID}/members:
+    post: #addToGroup
+      operationId: addToGroup
+        
+      parameters:
+        - name: ID
+          in: path
+          description: L'id della convo-gruppo a cui aggiungere un utente
+          required: true
+          schema:
+            type: integer  
+        
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/User" }
+        
+      responses:
+        200:
+          description: All good, user added to group
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Group" }
+        400:
+          description: Convo not found error.
+  
+  /groups/{ID}/members/me:
+    delete: #leaveGroup
+      operationId: leaveGroup
+      
+      parameters:
+        - name: ID
+          in: path
+          description: L'id del gruppo da cui il user corrente (/me) vuole uscire
+          required: true
+          schema:
+            type: integer  
+
+      responses:
+        200:
+          description: All good, you left the group bro
+        400:
+          description: Message not found error.
+  
+  /groups/{ID}/name:
+    put:  #setGroupName
+      operationId: setGroupName
+      
+      parameters:
+        - name: ID
+          in: path
+          description: L'id della convo-gruppo a cui cambiare il nome
+          required: true
+          schema:
+            type: integer  
+      
+      responses:
+        "200":
+         description: Aggiornato il nome gruppo con successo.
+         content: #ritorna il gruppo
+            application/json:
+              schema: { $ref: "#/components/schemas/Group"}
+        "404": 
+            description: Gruppo non trovato :(   
+  
+  /users/me/photo:
+    put:  #setMyPhoto
+      operationId: setMyPhoto
+      
+      requestBody:
+        content:
+          multipart/form-data: #tecnicamente, se è una richiesta va bene, ho letto sul libro che è meglio non farlo per le risposte :)
+            schema:
+              title: Photo
+              type: string
+              format: binary 
+      
+      responses:
+        "200":
+         description: Aggiornato la pfp con successo.
+         content: #ritorna il user
+            application/json:
+              schema: { $ref: "#/components/schemas/User"}   
+      
+  /groups/{ID}/photo:
+    put:  #setGroupPhoto
+      operationId: setGroupPhoto
+      
+      parameters:
+        - name: ID
+          in: path
+          description: L'id della convo-gruppo a cui cambiare la foto
+          required: true
+          schema:
+            type: integer 
+      
+      
+      requestBody:
+        content:
+          multipart/form-data: #tecnicamente, se è una richiesta va bene, ho letto sul libro che è meglio non farlo per le risposte :)
+            schema:
+              title: Photo
+              type: string
+              format: binary 
+      
+      responses:
+        "200":
+         description: Aggiornato la pfp con successo.
+         content: #ritorna il gruppo
+            application/json:
+              schema: { $ref: "#/components/schemas/Group"}   
+      
+      
+      
+      
+      
+      
+      
+  
