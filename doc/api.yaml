@@ -10,6 +10,12 @@ info:
     email: bazhura.2087354@studenti.uniroma1.it
 
 components:
+  
+  securitySchemes:
+      bearerAuth:
+        type: http
+        scheme: bearer
+  
   schemas:
     
     MessagePreviewXORPhoto:
@@ -156,9 +162,35 @@ components:
 
 
 paths:
+  
+  /login:
+    post:
+      summary: Logs in the user
+      description: |-
+        If the user does not exist, it will be created, and an identifier is returned.
+        If the user exists, the user identifier is returned.
+      operationId: doLogin
+      requestBody:
+        description: User details
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        '201':
+          description: User log-in action successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+
   /users/{Username}:
     description: Made for practice to retrieve json of a user by his Username
     get:
+      security:
+        - bearerAuth: []
       parameters:
         - name: Username
           in: path
@@ -174,18 +206,17 @@ paths:
                 $ref: '#/components/schemas/User'
   
     
-  /login:
-    description: doLogin POST
-    #TODO
-    
     
   # "me" rappresenta il current user loggato (suppongo? scrivo senza capire na minchia lol, ma prima si fa e dopo si capisce, questa è la filosofia della sapienza), mentre uso /{id} quando non deve essere per forza l'utente corrente (sono un admin ecc.)
   
   /users/me/username:
     put:  #setMyUserName
+      
       operationId: setMyUserName
       summary: Aggiorna il nome utente di un utente loggato
       
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -207,6 +238,8 @@ paths:
   /conversations: 
     description: Conversations implica le conversazioni del CURRENT USER
     get: #getMyConversations
+      security:
+        - bearerAuth: []
       operationId: getMyConversations
       responses:
         200:
@@ -218,6 +251,8 @@ paths:
     
   /conversations/{ID}:
     get:  #getConversation
+      security:
+        - bearerAuth: []
       operationId: getConversation 
       
       parameters:
@@ -240,6 +275,8 @@ paths:
     
   /conversations/{ID}/messages:
     post: #sendMessage 
+      security:
+        - bearerAuth: []
       operationId: sendMessage
       
       parameters:
@@ -269,6 +306,8 @@ paths:
   
   /messages/{ID}/forward:
     post: #forwardMessage
+      security:
+        - bearerAuth: []
       operationId: forwardMessage
       
       parameters:
@@ -297,6 +336,8 @@ paths:
     
   /messages/{ID}/comments:
     post: #commentMessage (Reaction)
+      security:
+        - bearerAuth: []
       operationId: commentMessage
       
       parameters:
@@ -325,6 +366,8 @@ paths:
   
   /messages/{ID}/comments/{commentID}:
     delete: #uncommentMessage (Delete Reaction)
+      security:
+        - bearerAuth: []
       operationId: uncommentMessage
       
       parameters:
@@ -355,6 +398,8 @@ paths:
     
   /messages/{ID}:
     delete: #deleteMessage
+      security:
+        - bearerAuth: []
       operationId: deleteMessage
       
       parameters:
@@ -371,11 +416,11 @@ paths:
         400:
           description: Message not found error.
   
-  # TODO SEPARA LE IDEE DEI GRUPPI E DELLE CONVO SINGOLE LEVANDO L'ARRAY DEGLI UTENTI da convoELT E FACENDO due strutture diverse (1v1 e gruppo)
-  # non scordarti di aggiustare le operazioni sotto dopo
   
   /groups/{ID}/members:
     post: #addToGroup
+      security:
+        - bearerAuth: []
       operationId: addToGroup
         
       parameters:
@@ -403,6 +448,8 @@ paths:
   
   /groups/{ID}/members/me:
     delete: #leaveGroup
+      security:
+        - bearerAuth: []
       operationId: leaveGroup
       
       parameters:
@@ -421,6 +468,8 @@ paths:
   
   /groups/{ID}/name:
     put:  #setGroupName
+      security:
+        - bearerAuth: []
       operationId: setGroupName
       
       parameters:
@@ -442,6 +491,8 @@ paths:
   
   /users/me/photo:
     put:  #setMyPhoto
+      security:
+        - bearerAuth: []
       operationId: setMyPhoto
       
       requestBody:
@@ -461,6 +512,8 @@ paths:
       
   /groups/{ID}/photo:
     put:  #setGroupPhoto
+      security:
+        - bearerAuth: []
       operationId: setGroupPhoto
       
       parameters:
