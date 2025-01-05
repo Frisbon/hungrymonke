@@ -211,25 +211,25 @@ paths:
                 $ref: "#/components/schemas/User"
 
 
-#  /users/{UserID}:
-#    description: Made for practice to retrieve json of a user by his Username/UserID
-#   get:
-#      security:
-#        - bearerAuth: []
-#      parameters:
-#        - name: UserID
-#         in: path
-#          required: true
-#          schema:
-#            type: string
-#      responses:
-#        200:
-#          description: All good bro
-#          content:
-#            application/json:
-#              schema:
-#                $ref: '#/components/schemas/User'
-  
+  #  /users/{UserID}:
+  #    description: Made for practice to retrieve json of a user by his Username/UserID
+  #   get:
+  #      security:
+  #        - bearerAuth: []
+  #      parameters:
+  #        - name: UserID
+  #         in: path
+  #          required: true
+  #          schema:
+  #            type: string
+  #      responses:
+  #        200:
+  #          description: All good bro
+  #          content:
+  #            application/json:
+  #              schema:
+  #                $ref: '#/components/schemas/User'
+    
     
     
   # "me" rappresenta il current user loggato (suppongo? scrivo senza capire na minchia lol, ma prima si fa e dopo si capisce, questa è la filosofia della sapienza), mentre uso /{id} quando non deve essere per forza l'utente corrente (sono un admin ecc.)
@@ -266,7 +266,7 @@ paths:
 
   /conversations: 
     description: Conversations implica le conversazioni del CURRENT USER. Utilizzato per l'operazione di getMyConversations.
-    
+
     get: #getMyConversations
       description: Recupera le conversazioni dell'utente loggato in questo momento 
       summary: Recupera lista messaggi.
