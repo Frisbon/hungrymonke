@@ -207,8 +207,17 @@ paths:
           content:
             application/json:
               schema:
-                description: Reference allo User
-                $ref: "#/components/schemas/User"
+                type: object
+                properties:
+                  token:
+                    description: Il token creato dal login
+                    type: string
+                  user:
+                    description: Reference allo User
+                    $ref: "#/components/schemas/User"
+        '500':
+          description: er token nun se crea ao
+    
 
 
   #  /users/{UserID}:
@@ -262,7 +271,9 @@ paths:
                 description: Reference allo user
                 $ref: "#/components/schemas/User"
         "404": 
-            description: Utente non trovato :(   
+            description: Utente non trovato :( 
+        "400":
+            description: Input non valido...  
 
   /conversations: 
     description: Conversations implica le conversazioni del CURRENT USER. Utilizzato per l'operazione di getMyConversations.
