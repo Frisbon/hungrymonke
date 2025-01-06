@@ -122,9 +122,6 @@ components:
         ID:
           description: Unique ID of the conversation.
           $ref: "#/components/schemas/GenericID"
-        Photo:
-          description: Profile Picture / Group Photo
-          $ref: "#/components/schemas/Photo"
         DateLastMessage:
           description: Timestamp of the last message
           type: string
@@ -144,6 +141,9 @@ components:
       description: Resource representing a Group (A Conversation element and a collection of users.)
       type: object
       properties:
+        GroupPhoto:
+          description: Group Photo
+          $ref: "#/components/schemas/Photo"
         Conversation:
           description: Resource/object representing a Conversation Element (a collection of messages and properites)
           $ref: "#/components/schemas/ConversationELT"
@@ -160,7 +160,7 @@ components:
            $ref: '#/components/schemas/User'
             
     Private:
-      description: Private 1v1 conversation
+      description: Private 1v1 conversation. The "Chat Photo" should be that of the user im talking with.
       type: object
       properties:
         Conversation:
@@ -329,7 +329,7 @@ paths:
   
     post: #sendMessage 
       description: Invia il messaggio contenuto nel body sulla conversazione identificata dal parametro.
-      summary: Invia un messaggio in una convo data dall'id.
+      summary: Invia un messaggio in una convo data dall'id oppure direttamente ad un utente (se non esiste convo la crea).
       security:
         - bearerAuth: []
       operationId: sendMessage
@@ -338,7 +338,7 @@ paths:
         - name: ID
           in: path
           description: L'id della convo in cui mandare il messaggio
-          required: true
+          required: false #potrebbe essere solo nome utente il parametro
           schema:
             description: 
             $ref: '#/components/schemas/GenericID'
@@ -348,9 +348,15 @@ paths:
         required: true
         content:
           application/json:
-            schema: 
-              description: Reference al messaggio
-              $ref: "#/components/schemas/Message" 
+            schema:
+              recipientUsername:
+                  type: string
+                  description: Username del destinatario diretto. Ignorato se viene fornito un ID di conversazione.
+              message:
+                  $description: Reference al messaggio
+                  $ref: "#/components/schemas/Message"
+              required:
+                - message
       
       responses:
         200:
@@ -360,8 +366,10 @@ paths:
               schema: 
                 description: Reference al messaggio.
                 $ref: "#/components/schemas/Message"
+        404:
+          description: Convo or user not found error.
         400:
-          description: Convo not found error.
+          description: Parametri de schifo mhai dato
       
   #per il forwarding non mi serve la conversazione originaria, solo l'id del messaggio e la convo di destinazione come parametro perciò uso /messages come path, siccome ci sono più operazioni le separo in path (forward/comment ecc.)
   

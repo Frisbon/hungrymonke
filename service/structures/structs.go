@@ -46,7 +46,6 @@ type Message struct {
 /*La struct MessagePreviewXorPhoto era inutile da dichiarare (vedi Preview sotto.) */
 type ConversationELT struct {
 	ID              GenericID `json:"id"`
-	Photo           Photo     `json:"photo"`
 	DateLastMessage time.Time `json:"datelastmessage"` //timestamp
 	/*NB il Preview è una stringa variabile (messaggio) or una stringa prefissata ("📷 Photo")*/
 	Preview  string    `json:"preview"`
@@ -57,6 +56,7 @@ type Conversations []ConversationELT
 
 type Group struct {
 	Conversation ConversationELT `json:"conversation"`
+	GroupPhoto   Photo           `json:"groupphoto"`
 	Name         string          `json:"name"`
 	Users        []User          `json:"users"`
 }

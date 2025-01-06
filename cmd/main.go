@@ -6,7 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var UserDB = make(map[string]structures.User)
+var UserDB = make(map[string]structures.User)                   // nickname : struct utente.
+var ConversationsDB = make(map[string]structures.Conversations) //  nickname : lista conversazioni di quell'utente.
+
+var PrivateDB []structures.Private // Database con tutte le chat "1v1"
 
 func main() {
 
@@ -27,6 +30,22 @@ func main() {
 
 	r.POST("/users/me/username", func(c *gin.Context) {
 		handlers.SetMyUsername(c, UserDB)
+	})
+
+	r.POST("/users/me/photo", func(c *gin.Context) {
+		handlers.SetMyPhoto(c, UserDB)
+	})
+
+	r.GET("/conversations", func(c *gin.Context) {
+		handlers.GetMyConversations(c, UserDB, ConversationsDB)
+	})
+
+	r.GET("/conversations/:ID", func(c *gin.Context) {
+		handlers.GetMyConversation(c, UserDB, ConversationsDB)
+	})
+
+	r.POST("/conversations/:ID/messages", func(c *gin.Context) {
+		handlers.SendMessage(c, UserDB, ConversationsDB, PrivateDB)
 	})
 
 	r.Run(":8080")
@@ -53,19 +72,65 @@ COMANDO UNICO PER CREARE DUE UTENTI
 			"photo": {"photofile": []}
 			}'
 
-COMANDO PER...
+e delle conversazioni tra loro....
 
+
+
+COMANDO PER...
 
 login
 	curl -X POST http://localhost:8080/login \
     -H "Content-Type: application/json" \
-    -d '{"username": {"userid": "Terzo3"}}'
+    -d '{"username": {"userid": "Secondo2"}}'
 
 setmyusername
 	curl -X POST http://localhost:8080/users/me/username \
 	-H "Content-Type: application/json" \
 	-H "Authorization: Bearer <token>" \
-	-d '{"newUsername": "francesco totti"}'
+	-d "francesco totti"
 
+setmyphoto
+	curl -X POST http://localhost:8080/users/me/photo \
+    -H "Authorization: Bearer <token>" \
+    -F "file=@service/pictureslol/2x2 pink pixel.jpg"
+
+getmyconvos
+	curl -X GET http://localhost:8080/conversations \
+	-H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzYyMjAwMzEsInN1YiI6Im5pbGwga2lnZ2VycyJ9.yPGIaj_Vh7ituvZwb1TFzd5RpfttirG324rMnwc4ADQ" \
+
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzYyMTk3NTQsInN1YiI6IlByaW1vMSJ9.cLZSJLZKHN896aC0fpFHKxmto8jCFWdRlshgKh8NsnY
+
+getmyconvo
+
+
+sendmessage
+
+
+	SENZA ID
+
+	curl -X POST http://localhost:8080/conversations//messages \
+	-H "Authorization: Bearer <your_token>" \
+	-H "Content-Type: application/json" \
+	-d '{
+	"recipientusername": "Secondo2",
+	"message": {
+		"text": "Hello!",
+		"timestamp": "2025-01-06T00:00:00Z"
+	}
+	}'
+
+	CON ID
+
+	curl -X POST http://localhost:8080/conversations//messages \
+	-H "Authorization: Bearer <your_token>" \
+	-H "Content-Type: application/json" \
+	-d '{
+	"recipientusername": "Secondo2",
+	"message": {
+		"text": "Hello!",
+		"timestamp": "2025-01-06T00:00:00Z"
+	}
+	}'
 
 */
