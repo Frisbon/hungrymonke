@@ -18,21 +18,32 @@ components:
         scheme: bearer
   
   schemas:
-    MessagePreviewXORPhoto:
-      description: Preview of the last message or a photo icon if the last message is a photo.
+    # MessagePreviewXORPhoto:
+    #   description: Preview of the last message or a photo icon if the last message is a photo.
+    #   type: object
+    #   oneOf:
+    #     - properties:
+    #         MessagePreview:
+    #           description: Snippet of the last text message.
+    #           type: string
+    #           example: "ao ma che fai"
+    #     - properties:
+    #         PhotoIcon:
+    #           description: Icon indicating the last message is a photo.
+    #           type: string
+    #           enum: ["📷 Photo"]
+    #           example: "📷 Photo"
+  
+    SendMessageRequest:
       type: object
-      oneOf:
-        - properties:
-            MessagePreview:
-              description: Snippet of the last text message.
-              type: string
-              example: "ao ma che fai"
-        - properties:
-            PhotoIcon:
-              description: Icon indicating the last message is a photo.
-              type: string
-              enum: ["📷 Photo"]
-              example: "📷 Photo"
+      properties:
+        recipientUsername:
+          type: string
+          description: Username del destinatario diretto. Ignorato se viene fornito un ID di conversazione.
+        message:
+          $ref: "#/components/schemas/Message"
+      required:
+        - message
   
     Photo:
       description: A binary file that represent the image.
@@ -70,18 +81,21 @@ components:
           description: Timestamp of the message
           type: string
           format: time-stamp
+
         Content:
-          description: The content of the message, could be plain text xor photo.
+          description: The content of the message, could contain plain text, photo, or both.
           type: object
-          oneOf:
-            - properties:
-                Photo:
-                  description: Photo content of the message
-                  $ref: "#/components/schemas/Photo" 
-            - properties:
-                Text:
-                  description: Textual content of the message
-                  type: string
+          properties:
+            Photo:
+              description: Photo content of the message
+              $ref: "#/components/schemas/Photo"
+            Text:
+              description: Textual content of the message
+              type: string
+          required: []  # Indica che Photo e Text sono opzionali
+        ID:
+          description: Unique identifier for the message
+          $ref: "#/components/schemas/GenericID"
         Author:
           description: Reference to the UserID of the user who sent the message.
           $ref: "#/components/schemas/UserID"
@@ -96,9 +110,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Reaction"
-        ID:
-          description: Unique identifier for the message
-          $ref: "#/components/schemas/GenericID"
+        
             
     Reaction:
       type: object
@@ -196,7 +208,7 @@ paths:
       requestBody:
         description: User details
         content:
-          application/json:
+          text/plain:
             schema:
               description: Reference all'id dello user
               $ref: "#/components/schemas/UserID"
@@ -324,7 +336,7 @@ paths:
         400:
           description: Convo not found man :C
     
-  /conversations/{ID}/messages:
+  /conversations/messages:
     description: Path utilizzato per l'operazione di sendMessage  
   
     post: #sendMessage 
@@ -336,11 +348,11 @@ paths:
       
       parameters:
         - name: ID
-          in: path
+          in: query
           description: L'id della convo in cui mandare il messaggio
-          required: false #potrebbe essere solo nome utente il parametro
+          required: false
           schema:
-            description: 
+            description: ref all'id
             $ref: '#/components/schemas/GenericID'
       
       requestBody:
@@ -349,14 +361,8 @@ paths:
         content:
           application/json:
             schema:
-              recipientUsername:
-                  type: string
-                  description: Username del destinatario diretto. Ignorato se viene fornito un ID di conversazione.
-              message:
-                  $description: Reference al messaggio
-                  $ref: "#/components/schemas/Message"
-              required:
-                - message
+              description:
+              $ref: '#/components/schemas/SendMessageRequest'
       
       responses:
         200:
@@ -630,11 +636,17 @@ paths:
       operationId: setMyPhoto
       
       requestBody:
+        required: true
         content:
           multipart/form-data: #tecnicamente, se è una richiesta va bene, ho letto sul libro che è meglio non farlo per le risposte :)
             schema:
-              description: Reference ad una risorsa foto.
-              $ref: "#/components/schemas/Photo" 
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
       
       responses:
         "200":

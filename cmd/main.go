@@ -4,6 +4,8 @@ import (
 	"github.com/Frisbon/hungrymonke/service/handlers"
 	"github.com/Frisbon/hungrymonke/service/structures"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 var UserDB = make(map[string]structures.User)                   // nickname : struct utente.
@@ -14,6 +16,10 @@ var PrivateDB []structures.Private // Database con tutte le chat "1v1"
 func main() {
 
 	r := gin.Default() // creo un router Gin per gestire l'HTTP
+
+	r.Static("/doc", "./doc")
+
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/doc/api.yaml")))
 
 	// LISTA DI HANDLER CON I PATH
 
@@ -28,11 +34,11 @@ func main() {
 
 	r.POST("/login", func(c *gin.Context) { handlers.Login(c, UserDB) })
 
-	r.POST("/users/me/username", func(c *gin.Context) {
+	r.PUT("/users/me/username", func(c *gin.Context) {
 		handlers.SetMyUsername(c, UserDB)
 	})
 
-	r.POST("/users/me/photo", func(c *gin.Context) {
+	r.PUT("/users/me/photo", func(c *gin.Context) {
 		handlers.SetMyPhoto(c, UserDB)
 	})
 
@@ -44,7 +50,7 @@ func main() {
 		handlers.GetMyConversation(c, UserDB, ConversationsDB)
 	})
 
-	r.POST("/conversations/:ID/messages", func(c *gin.Context) {
+	r.POST("/conversations/messages", func(c *gin.Context) {
 		handlers.SendMessage(c, UserDB, ConversationsDB, PrivateDB)
 	})
 
@@ -96,10 +102,7 @@ setmyphoto
 
 getmyconvos
 	curl -X GET http://localhost:8080/conversations \
-	-H "Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzYyMjAwMzEsInN1YiI6Im5pbGwga2lnZ2VycyJ9.yPGIaj_Vh7ituvZwb1TFzd5RpfttirG324rMnwc4ADQ" \
-
-
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzYyMTk3NTQsInN1YiI6IlByaW1vMSJ9.cLZSJLZKHN896aC0fpFHKxmto8jCFWdRlshgKh8NsnY
+	-H "Authorization: Bearer <token>" \
 
 getmyconvo
 
@@ -134,3 +137,5 @@ sendmessage
 	}'
 
 */
+
+// TODO: Funzioni per debug e per visualizzare correttamente liste di messaggi conversazioni ecc.

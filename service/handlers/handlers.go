@@ -120,7 +120,16 @@ func SetMyUsername(c *gin.Context, UserDB map[string]structures.User) {
 	user.Username.UserID = usernameString
 	UserDB[usernameString] = user // lo riaggiungo con il nome diverso.
 
-	c.JSON(http.StatusOK, gin.H{"message": "Username aggiornato lessgo", "user": user})
+	//azzo devo anche aggiornarlo con il token altrimenti si ricorda ancora il nome precedente
+	// rigeneriamo il token con il nuovo username
+	tokenString, err := GeneraToken(usernameString) // Supponiamo che la funzione generaToken prenda il nuovo username
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Non riesco a creare il token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Username aggiornato lessgo", "user": user, "new_token": tokenString})
+
 }
 
 // POST, path /users/me/photo
@@ -260,12 +269,12 @@ func SendMessage(c *gin.Context, UserDB map[string]structures.User, Conversation
 
 	var req requestLol
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON non valido"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON non valido", "details": err.Error()})
 		return
 	}
 
 	//estraggo l'ID dal body (se c'è)
-	conversationID := c.Param("ID")
+	conversationID := c.DefaultQuery("ID", "") // se c'è ID lo estrae altrimenti lo mette come ""
 
 	if conversationID != "" { // se tra parametri ho ID invio su ID direttamente
 

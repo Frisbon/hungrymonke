@@ -14,7 +14,7 @@ import (
 var jwtKey = []byte("non_so_perchè_complico_cosi_tanto_questa_roba...")
 
 /* NB Devi passare il nome utente come stringa*/
-func generaToken(username string) (string, error) {
+func GeneraToken(username string) (string, error) {
 
 	expirationTime := time.Now().Add(12 * time.Hour) // token scade 12 ore
 
@@ -35,25 +35,25 @@ func generaToken(username string) (string, error) {
 
 // handler per il login
 func Login(c *gin.Context, UserDB map[string]structures.User) {
-	var user structures.User
+	var reqUserID string
 
 	//creo una struttura user e vedo se nel body mi arriva quello.
-	if err := c.ShouldBindBodyWithJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "non riesco a binda er json"}) // se non funge
+	if err := c.ShouldBind(&reqUserID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "il dato del curl non funge fra non è stringa"}) // se non funge
 		return
 	}
 
 	// vedo se esiste user nel sistema, se non esiste lo creo
-	if _, exists := UserDB[user.Username.UserID]; !exists {
-		UserDB[user.Username.UserID] = user
+	if _, exists := UserDB[reqUserID]; !exists {
+		UserDB[reqUserID] = structures.User{Username: structures.UserID{UserID: reqUserID}}
 	}
 
 	//genero token x user e lo returno
-	tokenString, err := generaToken(user.Username.UserID)
+	tokenString, err := GeneraToken(reqUserID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "non riesco a crea il token"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": user})
+	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": UserDB[reqUserID]})
 }

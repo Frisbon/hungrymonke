@@ -31,16 +31,19 @@ type Reaction struct {
 	Emoticon string    `json:"emoticon"`
 }
 
-type Text string
+type Content struct {
+	Text  *string `json:"text,omitempty"`  // Usa puntatori per distinguere i valori non forniti
+	Photo *Photo  `json:"photo,omitempty"` // Alternativa per il contenuto
+}
+
 type Message struct {
 	Timestamp time.Time `json:"timestamp"`
 	/* NB Content type is either Text o Photo*/
-	Content   interface{} `json:"content"` // todo ricordati il type assertion dopo altrimenti può essere any type
-	Type      string      `json:"type"`
-	Author    UserID      `json:"author"`
-	Status    Status      `json:"status"`
-	Reactions []Reaction  `json:"reactions"`
-	ID        GenericID   `json:"id"`
+	Content   Content    `json:"content"`
+	Author    UserID     `json:"author"`
+	Status    Status     `json:"status"`
+	Reactions []Reaction `json:"reactions"`
+	ID        GenericID  `json:"id"` //id messaggio
 }
 
 /*La struct MessagePreviewXorPhoto era inutile da dichiarare (vedi Preview sotto.) */
