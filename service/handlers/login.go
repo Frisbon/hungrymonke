@@ -45,7 +45,7 @@ func Login(c *gin.Context, UserDB map[string]structures.User) {
 
 	// vedo se esiste user nel sistema, se non esiste lo creo
 	if _, exists := UserDB[reqUserID]; !exists {
-		UserDB[reqUserID] = structures.User{Username: structures.UserID{UserID: reqUserID}}
+		UserDB[reqUserID] = structures.User{Username: reqUserID}
 	}
 
 	//genero token x user e lo returno

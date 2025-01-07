@@ -2,53 +2,42 @@ package structures
 
 import "time"
 
-type Photo struct {
-	PhotoFile []byte `json:"photofile"` // a quanto pare []byte si usa per i file binari
-}
-
-type UserID struct {
-	UserID string `json:"userid"`
-}
-
-type GenericID struct {
-	GenericID string `json:"genericid"`
-}
-
 type User struct {
-	Username UserID `json:"username"`
-	Photo    Photo  `json:"photo"`
+	Username string `json:"username"`
+	Photo    []byte `json:"photo"`
 }
 
 type Status string // enumerativo per Message
 const (
-	Recieved Status = "recieved"
-	Seen     Status = "seen"
+	Delivered Status = "delivered"
+	Recieved  Status = "recieved"
+	Seen      Status = "seen"
 )
 
 type Reaction struct {
-	ID       GenericID `json:"id"`
-	Author   UserID    `json:"author"`
-	Emoticon string    `json:"emoticon"`
+	ID       string `json:"id"`
+	Author   string `json:"author"`
+	Emoticon string `json:"emoticon"`
 }
 
 type Content struct {
 	Text  *string `json:"text,omitempty"`  // Usa puntatori per distinguere i valori non forniti
-	Photo *Photo  `json:"photo,omitempty"` // Alternativa per il contenuto
+	Photo *[]byte `json:"photo,omitempty"` // Alternativa per il contenuto
 }
 
 type Message struct {
 	Timestamp time.Time `json:"timestamp"`
 	/* NB Content type is either Text o Photo*/
 	Content   Content    `json:"content"`
-	Author    UserID     `json:"author"`
+	Author    string     `json:"author"`
 	Status    Status     `json:"status"`
 	Reactions []Reaction `json:"reactions"`
-	ID        GenericID  `json:"id"` //id messaggio
+	ID        string     `json:"id"` //id messaggio
 }
 
 /*La struct MessagePreviewXorPhoto era inutile da dichiarare (vedi Preview sotto.) */
 type ConversationELT struct {
-	ID              GenericID `json:"id"`
+	ID              string    `json:"id"`
 	DateLastMessage time.Time `json:"datelastmessage"` //timestamp
 	/*NB il Preview è una stringa variabile (messaggio) or una stringa prefissata ("📷 Photo")*/
 	Preview  string    `json:"preview"`
@@ -59,7 +48,7 @@ type Conversations []ConversationELT
 
 type Group struct {
 	Conversation ConversationELT `json:"conversation"`
-	GroupPhoto   Photo           `json:"groupphoto"`
+	GroupPhoto   []byte          `json:"groupphoto"`
 	Name         string          `json:"name"`
 	Users        []User          `json:"users"`
 }
