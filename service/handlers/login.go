@@ -47,7 +47,7 @@ func Login(c *gin.Context) {
 	println(reqUserID)
 	// vedo se esiste user nel sistema, se non esiste lo creo
 	if _, exists := scs.UserDB[reqUserID]; !exists {
-		scs.UserDB[reqUserID] = scs.User{Username: reqUserID}
+		scs.UserDB[reqUserID] = &scs.User{Username: reqUserID}
 	}
 
 	//genero token x user e lo returno
