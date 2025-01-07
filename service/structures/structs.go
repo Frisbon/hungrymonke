@@ -2,6 +2,11 @@ package structures
 
 import "time"
 
+/*
+	NB: Ho ignorato il fatto che GenericID fosse readonly, per semplificare il codice GO
+		sticavoli se viene modificato... basta che non ci siano doppioni, tutto qui.
+*/
+
 type User struct {
 	Username string `json:"username"`
 	Photo    []byte `json:"photo"`
@@ -15,9 +20,9 @@ const (
 )
 
 type Reaction struct {
-	ID       string `json:"id"`
-	Author   string `json:"author"`
-	Emoticon string `json:"emoticon"`
+	Author    string    `json:"author"`
+	Emoticon  string    `json:"emoticon"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 type Content struct {
@@ -32,16 +37,15 @@ type Message struct {
 	Author    string     `json:"author"`
 	Status    Status     `json:"status"`
 	Reactions []Reaction `json:"reactions"`
-	ID        string     `json:"id"` //id messaggio
+	MsgID     string     `json:"msgid"`
 }
 
 /*La struct MessagePreviewXorPhoto era inutile da dichiarare (vedi Preview sotto.) */
 type ConversationELT struct {
-	ID              string    `json:"id"`
+	ConvoID         string    `json:"convoid"`         // id conversazione //readonly, implemento un costruttore.
 	DateLastMessage time.Time `json:"datelastmessage"` //timestamp
-	/*NB il Preview è una stringa variabile (messaggio) or una stringa prefissata ("📷 Photo")*/
-	Preview  string    `json:"preview"`
-	Messages []Message `json:"messages"`
+	Preview         string    `json:"preview"`         /*NB il Preview è una stringa variabile (messaggio) or una stringa prefissata ("📷 Photo") v2: oppure un mix tra i due? :)*/
+	Messages        []Message `json:"messages"`
 }
 
 type Conversations []ConversationELT

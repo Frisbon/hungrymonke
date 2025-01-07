@@ -2,16 +2,10 @@ package main
 
 import (
 	"github.com/Frisbon/hungrymonke/service/handlers"
-	"github.com/Frisbon/hungrymonke/service/structures"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
-
-var UserDB = make(map[string]structures.User)                   // nickname : struct utente.
-var ConversationsDB = make(map[string]structures.Conversations) //  nickname : lista conversazioni di quell'utente.
-
-var PrivateDB []structures.Private // Database con tutte le chat "1v1"
 
 func main() {
 
@@ -21,37 +15,31 @@ func main() {
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/doc/api.yaml")))
 
-	// LISTA DI HANDLER CON I PATH
-
-	r.POST("/admin", func(c *gin.Context) {
-		handlers.CreateUser(c, UserDB)
-	})
-
 	// nota: puoi fare una fuzione per tutti i get e dentro la funzione separare per parametro passato nel body c
-	r.GET("/admin", func(c *gin.Context) {
-		handlers.ListUsers(c, UserDB)
+	r.GET("/admin/listUsers", func(c *gin.Context) {
+		handlers.ListUsers(c)
 	})
 
-	r.POST("/login", func(c *gin.Context) { handlers.Login(c, UserDB) })
+	r.POST("/login", func(c *gin.Context) { handlers.Login(c) })
 
 	r.PUT("/users/me/username", func(c *gin.Context) {
-		handlers.SetMyUsername(c, UserDB)
+		handlers.SetMyUsername(c)
 	})
 
 	r.PUT("/users/me/photo", func(c *gin.Context) {
-		handlers.SetMyPhoto(c, UserDB)
+		handlers.SetMyPhoto(c)
 	})
 
 	r.GET("/conversations", func(c *gin.Context) {
-		handlers.GetMyConversations(c, UserDB, ConversationsDB)
+		handlers.GetMyConversations(c)
 	})
 
 	r.GET("/conversations/:ID", func(c *gin.Context) {
-		handlers.GetMyConversation(c, UserDB, ConversationsDB)
+		handlers.GetMyConversation(c)
 	})
 
 	r.POST("/conversations/messages", func(c *gin.Context) {
-		handlers.SendMessage(c, UserDB, ConversationsDB, PrivateDB)
+		handlers.SendMessage(c)
 	})
 
 	r.Run(":8080")
