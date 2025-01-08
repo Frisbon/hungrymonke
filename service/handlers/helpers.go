@@ -78,3 +78,43 @@ func isUniversalIdUnique(ID string) bool {
 	return true
 
 }
+
+// costruisce la stringa di preview in base al contenuto passatogli come parametro
+func PreviewMaker(Content scs.Content) string {
+
+	if Content.Text != nil && Content.Photo != nil {
+
+		if len(*Content.Text) > 8 {
+			return "📷 " + (*Content.Text)[:8] + "..."
+		}
+		// uso tutta la stringa se è più corta di 8 caratteri
+		return "📷 " + *Content.Text
+
+	} else if Content.Text != nil {
+		if len(*Content.Text) > 8 {
+			return (*Content.Text)[:8] + "..."
+		}
+		return *Content.Text
+
+	} else if Content.Photo != nil {
+		return "📷 Photo..." // Ritorna una stringa indicante la presenza di un'immagine
+
+	} else {
+		return "ERROR - INVALID CONTENT" // Nel caso in cui non ci sia né testo né foto
+	}
+
+}
+
+/*
+Aggiorna la convo con le info dell'ultimo messaggio, ossia la preview e la last msg timestamp
+*/
+func UpdateConversationWLastMSG(convo *scs.ConversationELT) {
+
+	// recupero ultimo messaggio
+	msglist := convo.Messages
+	lst_msg := msglist[len(msglist)-1]
+
+	convo.DateLastMessage = lst_msg.Timestamp
+	convo.Preview = PreviewMaker(lst_msg.Content)
+
+}

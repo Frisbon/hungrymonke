@@ -32,7 +32,7 @@ type Content struct {
 
 type Message struct {
 	Timestamp time.Time `json:"timestamp"`
-	/* NB Content type is either Text o Photo*/
+	/* NB Content type is either Text o Photo or both*/
 	Content   Content    `json:"content"`
 	Author    *User      `json:"author"`
 	Status    Status     `json:"status"`
@@ -48,7 +48,7 @@ type ConversationELT struct {
 	Messages        []*Message `json:"messages"`
 }
 
-type Conversations []ConversationELT
+type Conversations []*ConversationELT
 
 type Group struct {
 	Conversation *ConversationELT `json:"conversation"`

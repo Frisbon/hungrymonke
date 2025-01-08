@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	scs "github.com/Frisbon/hungrymonke/service/structures"
 	"github.com/gin-gonic/gin"
@@ -151,7 +152,7 @@ func GetMyConversation(c *gin.Context) {
 	}
 
 	//ricerco la conversazione nel UserConvosDB tramite l'id estratto.
-	var found_conversation scs.ConversationELT
+	var found_conversation *scs.ConversationELT
 
 	for _, conversation := range user_conversations {
 		if conversation.ConvoID == conversationID {
@@ -172,6 +173,17 @@ func GetMyConversation(c *gin.Context) {
 
 }
 
+/*
+
+	// TODO UPDATER DELLO STATUS QUANDO VISUALIZZO O RISPONDO.
+
+		A scrive "hello" a B
+		hello.status = delivered
+
+		hello.status = delivered <=> B GetMyConversation(ID) or SendMessage ad A...
+
+*/
+
 // POST, path /conversations/messages
 func SendMessage(c *gin.Context) {
 
@@ -184,7 +196,7 @@ func SendMessage(c *gin.Context) {
 	// leggo il messaggio e il username a chi inviarlo (se c'è) dal body
 	type requestLol struct {
 		RecipientUsername string      `json:"recipientusername"`
-		Message           scs.Message `json:"message"`
+		Message           scs.Content `json:"message"`
 	}
 
 	var req requestLol
@@ -193,14 +205,18 @@ func SendMessage(c *gin.Context) {
 		return
 	}
 
+	var reactlist []scs.Reaction
+
+	// DEFINISCO NUOVO MESSAGGIO CON PARAMETRI GIUSTI
 	msgc := MsgCONSTR{
-		Timestamp: req.Message.Timestamp,
-		Content:   req.Message.Content,
-		Status:    req.Message.Status,
-		Reactions: req.Message.Reactions,
+		Timestamp: time.Now(),
+		Content:   req.Message,
+		Status:    "delivered",
+		Reactions: reactlist,
 		Author:    sender_struct,
 	}
 
+	// USO COSTRUTTORE PER GENERARE ANCHE L'ID MESSAGGIO UNIVOCO
 	newMessage := ConstrMessage(msgc)
 
 	//estraggo l'ID dal body (se c'è)
@@ -212,6 +228,13 @@ func SendMessage(c *gin.Context) {
 		convo := scs.ConvoDB[conversationID]
 		//aggiungo il messaggio alla lista dei messaggi su quella convo
 		convo.Messages = append(convo.Messages, newMessage)
+		UpdateConversationWLastMSG(convo)
+
+		// aggiorno le liste personali di entrambi gli utenti...
+		scs.UserConvosDB[SenderUsername] = append(scs.UserConvosDB[SenderUsername], convo)
+		scs.UserConvosDB[req.RecipientUsername] = append(scs.UserConvosDB[req.RecipientUsername], convo)
+
+		c.JSON(http.StatusOK, gin.H{"Status": "Inviato sulla convo indicata dall'ID!", "Conversation": &convo})
 
 		// se context NON ha ID ma ha username
 	} else if conversationID == "" && req.RecipientUsername != "" {
@@ -235,18 +258,23 @@ func SendMessage(c *gin.Context) {
 		}
 
 		// se non esiste
-		if len(found_private.Conversation.ConvoID) == 0 {
+		if found_private == nil {
 
 			//recupero puntatore al secondo utente
 
 			//creo convo
 			x := ConvoCONSTR{
 				DateLastMessage: newMessage.Timestamp,
-				Preview:         "",                         //TODO: implementa preview maker, qui lo devi prendere da newMessage.text
+				Preview:         "",
 				Messages:        []*scs.Message{newMessage}, // array con solo il messaggio mandato al momento.
 			}
 
 			newConversation := ConstrConvo(x)
+			UpdateConversationWLastMSG(newConversation)
+
+			// aggiorno le liste personali di entrambi gli utenti...
+			scs.UserConvosDB[SenderUsername] = append(scs.UserConvosDB[SenderUsername], newConversation)
+			scs.UserConvosDB[req.RecipientUsername] = append(scs.UserConvosDB[req.RecipientUsername], newConversation)
 
 			p := &scs.Private{
 				Conversation: newConversation,
@@ -260,13 +288,10 @@ func SendMessage(c *gin.Context) {
 
 		} else { // se esiste
 
-			// invio messaggio su quella convo
 			found_private.Conversation.Messages = append(found_private.Conversation.Messages, newMessage)
 			c.JSON(http.StatusOK, gin.H{"Status": "Ho trovato una convo esistente con questo utente... Messaggio inviato!", "Conversation": found_private.Conversation})
 
 		}
-
-		fmt.Println("Messaggio Inviato! :)")
 
 		return
 	}
