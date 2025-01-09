@@ -427,12 +427,14 @@ paths:
       
       requestBody:
         required: true
-        description: Conversazione destinataria (da cui prendo l'ID successivamente)
+        description: ID conversazione alla quale inoltrare la roba.
         content:
           application/json:
             schema: 
-              description: Reference all'oggetto di conversazione
-              $ref: "#/components/schemas/ConversationELT" 
+              type: object
+              properties:
+                ConvoID:
+                  $ref: "#/components/schemas/GenericID"
       
       responses:
         200:

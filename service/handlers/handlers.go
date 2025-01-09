@@ -132,7 +132,7 @@ func GetMyConversations(c *gin.Context) {
 func GetMyConversation(c *gin.Context) {
 
 	// AUTENTICAZIONE UTENTE
-	username, _, er1 := QuickAuth(c)
+	username, logged_struct, er1 := QuickAuth(c)
 	if len(er1) != 0 {
 		return
 	}
@@ -165,6 +165,21 @@ func GetMyConversation(c *gin.Context) {
 		return
 	}
 
+	/*
+
+		dopo aver trovato la conversazione, mi assicuro che lo status
+		*dei messaggi "delivered" degli altri utenti* sia impostato a seen
+		se è una convo 1v1
+
+		in caso fosse una convo di gruppo
+		OGNI utente deve visualizzare per poter mettere lo status seen.
+		creo una mappa [user:boolean] e se ogni ogni boolean è true allora
+		status seen (per chat di gruppo.)
+
+
+	*/
+	PrivateMsgStatusUpdater(found_conversation, logged_struct)
+
 	// Risposta con la conversazione trovata
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Conversazione trovata",
@@ -172,17 +187,6 @@ func GetMyConversation(c *gin.Context) {
 	})
 
 }
-
-/*
-
-	// TODO UPDATER DELLO STATUS QUANDO VISUALIZZO O RISPONDO.
-
-		A scrive "hello" a B
-		hello.status = delivered
-
-		hello.status = delivered <=> B GetMyConversation(ID) or SendMessage ad A...
-
-*/
 
 // POST, path /conversations/messages
 func SendMessage(c *gin.Context) {
@@ -219,7 +223,7 @@ func SendMessage(c *gin.Context) {
 	// USO COSTRUTTORE PER GENERARE ANCHE L'ID MESSAGGIO UNIVOCO
 	newMessage := ConstrMessage(msgc)
 
-	//estraggo l'ID dal body (se c'è)
+	//estraggo l'ID dalla query (se c'è)
 	conversationID := c.DefaultQuery("ID", "")
 	// se tra parametri ho ID
 	if conversationID != "" {
@@ -229,6 +233,9 @@ func SendMessage(c *gin.Context) {
 		//aggiungo il messaggio alla lista dei messaggi su quella convo
 		convo.Messages = append(convo.Messages, newMessage)
 		UpdateConversationWLastMSG(convo)
+
+		// se mando un msg => leggo i messaggi dell'altro utente => aggiorno i loro status.
+		PrivateMsgStatusUpdater(convo, sender_struct)
 
 		// aggiorno le liste personali di entrambi gli utenti...
 		scs.UserConvosDB[SenderUsername] = append(scs.UserConvosDB[SenderUsername], convo)
@@ -250,7 +257,7 @@ func SendMessage(c *gin.Context) {
 			} else if private.FirstUser.Username == req.RecipientUsername && private.SecondUser.Username == SenderUsername {
 				found_private = private
 				break
-			} else if private.FirstUser.Username == private.SecondUser.Username {
+			} else if private.FirstUser.Username == req.RecipientUsername && req.RecipientUsername == private.SecondUser.Username {
 				found_private = private
 				break
 			}
@@ -289,11 +296,65 @@ func SendMessage(c *gin.Context) {
 		} else { // se esiste
 
 			found_private.Conversation.Messages = append(found_private.Conversation.Messages, newMessage)
+
+			// se mando un msg => leggo i messaggi dell'altro utente => aggiorno i loro status.
+			PrivateMsgStatusUpdater(found_private.Conversation, sender_struct)
 			c.JSON(http.StatusOK, gin.H{"Status": "Ho trovato una convo esistente con questo utente... Messaggio inviato!", "Conversation": found_private.Conversation})
 
 		}
 
 		return
 	}
+
+}
+
+// POST, path /messages/{ID}/forward
+
+// todo collaudo
+func ForwardMSG(c *gin.Context) {
+
+	//autorizzo il current user
+	_, sender_struct, er1 := QuickAuth(c)
+	if len(er1) != 0 {
+		return
+	}
+
+	// leggo l'ID messggio dal body
+	type requestLol struct {
+		ConvoID string `json:"ConvoID"`
+	}
+
+	var req requestLol
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON non valido", "details": err.Error()})
+		return
+	}
+
+	//estraggo l'ID messaggio dalla query (se c'è)
+	MsgID := c.DefaultQuery("MsgID", "")
+
+	msg, exists := scs.MsgDB[MsgID]
+	convo, exists2 := scs.ConvoDB[req.ConvoID]
+
+	if MsgID == "" || !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "ID not found"})
+	}
+
+	if !exists2 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Conversation not found"})
+	}
+
+	// Devo "clonare" il messaggio e aggiungerlo alla conversazione.
+	var react_list []scs.Reaction
+	newMsg := ConstrMessage(MsgCONSTR{
+		Timestamp: time.Now(),
+		Content:   msg.Content,
+		Author:    sender_struct, //maschero da chi inoltro
+		Status:    "delivered",
+		Reactions: react_list, //resetto lista reazioni
+
+	})
+
+	convo.Messages = append(convo.Messages, newMsg)
 
 }

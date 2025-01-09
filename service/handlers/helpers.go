@@ -118,3 +118,29 @@ func UpdateConversationWLastMSG(convo *scs.ConversationELT) {
 	convo.Preview = PreviewMaker(lst_msg.Content)
 
 }
+
+/*
+Aggiorna i messaggi "delivered" come "seen" dell'utente opposto.
+Basically implies che ho visualizzato i suoi messaggi
+*/
+func PrivateMsgStatusUpdater(convo *scs.ConversationELT, logged_user *scs.User) {
+
+	for _, msg := range convo.Messages {
+
+		if msg.Author != logged_user && msg.Status != "seen" {
+			msg.Status = "seen"
+		}
+
+	}
+
+}
+
+/*
+Aggiorna i messaggi (x)"delivered" come "seen"
+<=>
+Ogni utente del gruppo ha inviato un messaggio dopo x oppure ha visualizzato la chat
+HINT: Usa mappa boolean [group_user: seen (bool)]
+*/
+func GroupMsgStatusUpdater(group_convo *scs.ConversationELT, logged_user *scs.User) {
+
+}

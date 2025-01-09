@@ -15,7 +15,6 @@ type User struct {
 type Status string // enumerativo per Message
 const (
 	Delivered Status = "delivered"
-	Recieved  Status = "recieved"
 	Seen      Status = "seen"
 )
 

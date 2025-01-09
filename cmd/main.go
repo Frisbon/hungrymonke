@@ -42,6 +42,10 @@ func main() {
 		handlers.SendMessage(c)
 	})
 
+	r.POST("/messages/:ID/forward", func(c *gin.Context) {
+		handlers.ForwardMSG(c)
+	})
+
 	r.Run(":8080")
 
 }
