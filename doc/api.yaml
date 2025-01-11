@@ -128,7 +128,7 @@ components:
         Status:
           description: An ENUM representing the checkmarks/status of the message.
           type: string 
-          enum: ['recieved', 'seen','delivered']
+          enum:  ['seen','delivered']
           example: 'delivered'
           # TODO setStatus i guess?
         Reactions:
@@ -137,7 +137,16 @@ components:
           items:
             $ref: "#/components/schemas/Reaction"
         
-            
+          
+    SendReactionRequest:
+      type: object
+      properties:
+        Emoticon:
+          description: An emoticon symbol representing the reaction.
+          type: string
+          maxLength: 1
+          example: 🍆
+
     Reaction:
       type: object
       properties:
@@ -448,7 +457,7 @@ paths:
           description: Message not found error.
     
   /messages/{ID}/comments:
-    description: Path utilizzato per l'operazione di commentMessage
+    description: Path utilizzato per l'operazione di commentMessage e uncommentMessage
   
     post: #commentMessage (Reaction)
       description: Lascia una reazione, contenuta nel body, sul messaggio identificato dal parametro
@@ -473,7 +482,7 @@ paths:
           application/json:
             schema: 
               description: Reference alla reaction
-              $ref: "#/components/schemas/Reaction"
+              $ref: "#/components/schemas/SendReactionRequest"
       
       responses:
         200:
@@ -486,11 +495,8 @@ paths:
         400:
           description: Message not found error.
   
-  /messages/{ID}/comments/{commentID}:
-    description: Path usato per operazione uncommentMessage
-  
     delete: #uncommentMessage (Delete Reaction)
-      description: Rimuove il commento identificato dal parametro, dal messaggio altrettanto identificato dal parametro 
+      description: Rimuove il commento (unico) del logged user dal messaggio identificato dal parametro 
       
       security:
         - bearerAuth: []
@@ -504,14 +510,6 @@ paths:
           schema:
             description: Reference all'id del messaggio
             $ref: "#/components/schemas/GenericID" 
-        
-        - name: commentID
-          in: path
-          description: L'id del commento da eliminare
-          required: true
-          schema:
-            description: Reference all'id del commento
-            $ref: "#/components/schemas/GenericID"
             
       responses:
         200:

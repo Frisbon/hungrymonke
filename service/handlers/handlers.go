@@ -189,7 +189,6 @@ func GetMyConversation(c *gin.Context) {
 }
 
 // POST, path /conversations/messages
-// si rompe quando metto sia id che nickname
 func SendMessage(c *gin.Context) {
 
 	//autorizzo il current user
@@ -320,7 +319,6 @@ func SendMessage(c *gin.Context) {
 }
 
 // POST, path /messages/{ID}/forward
-// todo collaudo
 func ForwardMSG(c *gin.Context) {
 	// Note: Se inoltro non implica che leggo per forza il messaggio dell'altro.
 
@@ -370,8 +368,112 @@ func ForwardMSG(c *gin.Context) {
 	})
 
 	convo.Messages = append(convo.Messages, newMsg)
-	c.JSON(http.StatusOK, gin.H{"error": "Messaggio inoltrato", "Convo": convo})
+	c.JSON(http.StatusOK, gin.H{"success": "Messaggio inoltrato", "MSG": newMsg})
 
 	//bwt non faccio controlli delle fonti del messaggio ecc ecc perchè non mi va, basta che funge :)
+
+}
+
+// POST, path /messages/{ID}/comments
+func CommentMSG(c *gin.Context) {
+
+	//autorizzo il current user
+	_, sender_struct, er1 := QuickAuth(c)
+	if len(er1) != 0 {
+		return
+	}
+
+	//estraggo l'ID messaggio dal path (se c'è)
+	MsgID := c.Param("ID")
+
+	if MsgID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID vuoto"})
+		return
+	}
+
+	// leggo la reaction dal body
+	type requestLol struct {
+		Emoticon string `json:"Emoticon"`
+	}
+
+	var req requestLol
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON non valido", "details": err.Error()})
+		return
+	}
+
+	MsgStruct, exists := scs.MsgDB[MsgID]
+
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "nun trovo u msg man"})
+		return
+	}
+
+	//NB posso commentare max 1 volta....
+
+	for _, R := range MsgStruct.Reactions {
+
+		if R.Author == sender_struct {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "bro u already commented, delete ur last reaction"})
+			return
+		}
+
+	}
+
+	MsgStruct.Reactions = append(MsgStruct.Reactions, scs.Reaction{
+		Timestamp: time.Now(),
+		Author:    sender_struct,
+		Emoticon:  req.Emoticon,
+	})
+
+	c.JSON(http.StatusOK, gin.H{"Success": "Messaggio inoltrato", "MSG": MsgStruct})
+
+}
+
+// DELETE, path /messages/{ID}/comments
+func UncommentMSG(c *gin.Context) {
+
+	//autorizzo il current user
+	_, sender_struct, er1 := QuickAuth(c)
+	if len(er1) != 0 {
+		return
+	}
+
+	//estraggo l'ID messaggio dal path (se c'è)
+	MsgID := c.Param("ID")
+
+	if MsgID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID messaggio vuoto"})
+		return
+	}
+
+	MsgStruct, exists := scs.MsgDB[MsgID]
+
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "nun trovo u msg man"})
+		return
+	}
+
+	//NB posso commentare max 1 volta....
+
+	found := false
+	toDelete := 0
+	for i, R := range MsgStruct.Reactions {
+
+		if R.Author == sender_struct {
+			found = true
+			toDelete = i
+			break
+		}
+
+	}
+	if !found {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "you left no reaction on that msg man"})
+		return
+	}
+
+	MsgStruct.Reactions = append(MsgStruct.Reactions[:toDelete], MsgStruct.Reactions[toDelete+1:]...)
+
+	c.JSON(http.StatusOK, gin.H{"Success": "Reaction deleted", "MSG": MsgStruct})
 
 }

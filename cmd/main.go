@@ -46,6 +46,14 @@ func main() {
 		handlers.ForwardMSG(c)
 	})
 
+	r.POST("/messages/:ID/comments", func(c *gin.Context) {
+		handlers.CommentMSG(c)
+	})
+
+	r.DELETE("/messages/:ID/comments", func(c *gin.Context) {
+		handlers.UncommentMSG(c)
+	})
+
 	r.GET("/debug", func(c *gin.Context) {
 		handlers.DebugPrintDatabases()
 	})
