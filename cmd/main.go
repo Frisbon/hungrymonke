@@ -46,88 +46,10 @@ func main() {
 		handlers.ForwardMSG(c)
 	})
 
+	r.GET("/debug", func(c *gin.Context) {
+		handlers.DebugPrintDatabases()
+	})
+
 	r.Run(":8080")
 
 }
-
-/*
-
-Collaudo CreateUser handler
-
-COMANDO UNICO PER CREARE DUE UTENTI
-
-	curl -X POST http://localhost:8080/admin \
-		-H "Content-Type: application/json" \
-		-d '{
-			"username": {"userid": "Primo1"},
-			"photo": {"photofile": []}
-			}' && \
-
-	curl -X POST http://localhost:8080/admin \
-		-H "Content-Type: application/json" \
-		-d '{
-			"username": {"userid": "Secondo2"},
-			"photo": {"photofile": []}
-			}'
-
-e delle conversazioni tra loro....
-
-
-
-COMANDO PER...
-
-login
-	curl -X POST http://localhost:8080/login \
-    -H "Content-Type: application/json" \
-    -d '{"username": {"userid": "Secondo2"}}'
-
-setmyusername
-	curl -X POST http://localhost:8080/users/me/username \
-	-H "Content-Type: application/json" \
-	-H "Authorization: Bearer <token>" \
-	-d "francesco totti"
-
-setmyphoto
-	curl -X POST http://localhost:8080/users/me/photo \
-    -H "Authorization: Bearer <token>" \
-    -F "file=@service/pictureslol/2x2 pink pixel.jpg"
-
-getmyconvos
-	curl -X GET http://localhost:8080/conversations \
-	-H "Authorization: Bearer <token>" \
-
-getmyconvo
-
-
-sendmessage
-
-
-	SENZA ID
-
-	curl -X POST http://localhost:8080/conversations//messages \
-	-H "Authorization: Bearer <your_token>" \
-	-H "Content-Type: application/json" \
-	-d '{
-	"recipientusername": "Secondo2",
-	"message": {
-		"text": "Hello!",
-		"timestamp": "2025-01-06T00:00:00Z"
-	}
-	}'
-
-	CON ID
-
-	curl -X POST http://localhost:8080/conversations//messages \
-	-H "Authorization: Bearer <your_token>" \
-	-H "Content-Type: application/json" \
-	-d '{
-	"recipientusername": "Secondo2",
-	"message": {
-		"text": "Hello!",
-		"timestamp": "2025-01-06T00:00:00Z"
-	}
-	}'
-
-*/
-
-// TODO: Funzioni per debug e per visualizzare correttamente liste di messaggi conversazioni ecc.

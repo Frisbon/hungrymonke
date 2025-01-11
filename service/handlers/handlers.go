@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GET, path /admin
+// GET, path /admin/users
 func ListUsers(c *gin.Context) {
 
 	if len(scs.UserDB) == 0 {
@@ -189,6 +189,7 @@ func GetMyConversation(c *gin.Context) {
 }
 
 // POST, path /conversations/messages
+// si rompe quando metto sia id che nickname
 func SendMessage(c *gin.Context) {
 
 	//autorizzo il current user
@@ -225,8 +226,16 @@ func SendMessage(c *gin.Context) {
 
 	//estraggo l'ID dalla query (se c'è)
 	conversationID := c.DefaultQuery("ID", "")
-	// se tra parametri ho ID
-	if conversationID != "" {
+
+	// se mando sia ID che Username, do errore
+	if conversationID != "" && req.RecipientUsername != "" {
+
+		c.JSON(http.StatusBadRequest, gin.H{"Status": "Non puoi inviare entrambi ID e Nickname nel json! :O"})
+		return
+	}
+
+	// se tra parametri ho ID e il nome è clear
+	if conversationID != "" && req.RecipientUsername == "" {
 
 		// prendo conversazione con l'ID che mi è stato fornito.
 		convo := scs.ConvoDB[conversationID]
@@ -292,6 +301,7 @@ func SendMessage(c *gin.Context) {
 			scs.PrivateDB[newConversation.ConvoID] = p
 
 			c.JSON(http.StatusOK, gin.H{"Status": "Non ho trovato una convo con questo utente... Perciò l'ho creata!", "Private_Conversation": &p})
+			return
 
 		} else { // se esiste
 
@@ -299,19 +309,20 @@ func SendMessage(c *gin.Context) {
 
 			// se mando un msg => leggo i messaggi dell'altro utente => aggiorno i loro status.
 			PrivateMsgStatusUpdater(found_private.Conversation, sender_struct)
+			UpdateConversationWLastMSG(found_private.Conversation)
 			c.JSON(http.StatusOK, gin.H{"Status": "Ho trovato una convo esistente con questo utente... Messaggio inviato!", "Conversation": found_private.Conversation})
+			return
 
 		}
 
-		return
 	}
 
 }
 
 // POST, path /messages/{ID}/forward
-
 // todo collaudo
 func ForwardMSG(c *gin.Context) {
+	// Note: Se inoltro non implica che leggo per forza il messaggio dell'altro.
 
 	//autorizzo il current user
 	_, sender_struct, er1 := QuickAuth(c)
@@ -330,18 +341,21 @@ func ForwardMSG(c *gin.Context) {
 		return
 	}
 
-	//estraggo l'ID messaggio dalla query (se c'è)
-	MsgID := c.DefaultQuery("MsgID", "")
+	//estraggo l'ID messaggio dal path (se c'è)
+	MsgID := c.Param("ID")
 
 	msg, exists := scs.MsgDB[MsgID]
+
 	convo, exists2 := scs.ConvoDB[req.ConvoID]
 
 	if MsgID == "" || !exists {
-		c.JSON(http.StatusNotFound, gin.H{"error": "ID not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "MSG not found"})
+		return
 	}
 
 	if !exists2 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Conversation not found"})
+		return
 	}
 
 	// Devo "clonare" il messaggio e aggiungerlo alla conversazione.
@@ -356,5 +370,8 @@ func ForwardMSG(c *gin.Context) {
 	})
 
 	convo.Messages = append(convo.Messages, newMsg)
+	c.JSON(http.StatusOK, gin.H{"error": "Messaggio inoltrato", "Convo": convo})
+
+	//bwt non faccio controlli delle fonti del messaggio ecc ecc perchè non mi va, basta che funge :)
 
 }

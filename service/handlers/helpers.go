@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -143,4 +145,29 @@ HINT: Usa mappa boolean [group_user: seen (bool)]
 */
 func GroupMsgStatusUpdater(group_convo *scs.ConversationELT, logged_user *scs.User) {
 
+}
+
+func DebugPrintDatabases() {
+	// Funzione helper per stampare le mappe in formato JSON leggibile
+	printMap := func(name string, data interface{}) {
+		if len(fmt.Sprintf("%v", data)) == 0 {
+			fmt.Printf("%s è vuoto.\n", name)
+			return
+		}
+		fmt.Printf("Contenuto di %s:\n", name)
+		jsonData, err := json.MarshalIndent(data, "", "  ")
+		if err != nil {
+			fmt.Printf("Errore durante la conversione in JSON di %s: %v\n", name, err)
+			return
+		}
+		fmt.Println(string(jsonData))
+	}
+
+	printMap("GenericDB", scs.GenericDB)
+	printMap("UserDB", scs.UserDB)
+	printMap("PrivateDB", scs.PrivateDB)
+	printMap("GroupDB", scs.GroupDB)
+	printMap("MsgDB", scs.MsgDB)
+	printMap("ConvoDB", scs.ConvoDB)
+	printMap("UserConvosDB", scs.UserConvosDB)
 }
