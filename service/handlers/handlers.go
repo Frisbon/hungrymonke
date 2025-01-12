@@ -78,7 +78,7 @@ func SetMyPhoto(c *gin.Context) {
 		return
 	}
 
-	// aggiurnamento foto con quella che si trova nel body (c)
+	// aggiornamento foto con quella che si trova nel body (c)
 	// estraggo il file dalla richiesta multipart/form-data
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -475,5 +475,302 @@ func UncommentMSG(c *gin.Context) {
 	MsgStruct.Reactions = append(MsgStruct.Reactions[:toDelete], MsgStruct.Reactions[toDelete+1:]...)
 
 	c.JSON(http.StatusOK, gin.H{"Success": "Reaction deleted", "MSG": MsgStruct})
+
+}
+
+// DELETE, path /message/{ID}
+func DeleteMSG(c *gin.Context) {
+
+	//autorizzo il current user
+	_, sender_struct, er1 := QuickAuth(c)
+	if len(er1) != 0 {
+		return
+	}
+
+	//estraggo l'ID messaggio dal path (se c'è)
+	MsgID := c.Param("ID")
+
+	if MsgID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID messaggio vuoto"})
+		return
+	}
+
+	// devo trovare il messaggio nella conversazione, eliminarlo da lì e successivamente dal DB dei Messaggi + libero l'ID
+	MsgStruct, exists := scs.MsgDB[MsgID]
+
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "nun trovo ur msg in the MsgDB man"})
+		return
+	}
+
+	if _, exists2 := scs.GenericDB[MsgID]; !exists2 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Unregistered GenericID"})
+		return
+	}
+
+	if MsgStruct.Author != sender_struct {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "This is not YOUR message!"})
+		return
+	}
+
+	//cerco il messaggio nella convo.
+	found := false
+	var foundConvo *scs.ConversationELT
+	toDelete := 0
+	for _, convo := range scs.ConvoDB {
+
+		for i2, msg := range convo.Messages {
+			if msg.MsgID == MsgID {
+				found = true
+				foundConvo = convo
+				toDelete = i2
+				break
+			}
+		}
+	}
+	if !found {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cant find ID through all convos."})
+		return
+	}
+
+	// elimino il messaggio dall'array...
+	foundConvo.Messages = append(foundConvo.Messages[:toDelete], foundConvo.Messages[toDelete+1:]...)
+	// elimino dai DBs...
+	delete(scs.MsgDB, MsgID)
+	delete(scs.GenericDB, MsgID)
+
+	// devo fixare il preview della convo ora...
+	if len(foundConvo.Messages) != 0 {
+		UpdateConversationWLastMSG(foundConvo)
+	} else {
+		foundConvo.DateLastMessage = time.Now()
+		foundConvo.Preview = "*msg deleted* :)"
+	}
+
+	c.JSON(http.StatusOK, gin.H{"Success": "Message deleted", "MSG": MsgStruct})
+}
+
+// PUT, path /groups/members
+func AddToGroup(c *gin.Context) {
+
+	//autorizzo il current user
+	logged_username, logged_struct, er1 := QuickAuth(c)
+	if len(er1) != 0 {
+		return
+	}
+
+	//estraggo l'ID conversazione_gruppo dalla query (se c'è)
+	ConvoID := c.DefaultQuery("ID", "")
+
+	// mi passa l'utente nel request body (text/plain)
+
+	userToAdd, err := c.GetRawData()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "nun riesc a legg u body"})
+		return
+	}
+
+	if string(userToAdd) == logged_username {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "stai ad aggiunge te stesso ao"})
+		return
+	}
+
+	structToAdd, exists := scs.UserDB[string(userToAdd)]
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "sto utente non è nel db..."})
+		return
+	}
+
+	if ConvoID == "" {
+
+		// Creo Gruppo e aggiungo i due user alla lista utenti...
+		userList := []*scs.User{logged_struct, structToAdd}
+		g := ConstrGroup(userList)
+		scs.UserConvosDB[logged_username] = append(scs.UserConvosDB[logged_username], g.Conversation)
+		scs.UserConvosDB[structToAdd.Username] = append(scs.UserConvosDB[structToAdd.Username], g.Conversation)
+
+		c.JSON(http.StatusOK, gin.H{"success": "creato gruppo + aggiunto utenti", "group": g})
+		return
+
+	} else {
+
+		if _, exists := scs.GroupDB[ConvoID]; !exists {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Cant find convo (group) w that ID"})
+			return
+		}
+
+		// controllo se appartengo al gruppo...
+		found := false
+		for _, user := range scs.GroupDB[ConvoID].Users {
+			if user == logged_struct {
+				found = true
+				break
+			}
+		}
+		if !found {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "bro ur not in that group... wyd?"})
+			return
+		}
+
+		// controllo se l'utente da aggiungere sta già nel gruppo...
+		found2 := false
+		for _, user := range scs.GroupDB[ConvoID].Users {
+			if user == logged_struct {
+				found2 = true
+				break
+			}
+		}
+		if found2 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "user already in the group"})
+			return
+		}
+		// Trovo Gruppo dal GroupDB e aggiungo l'utente
+
+		scs.GroupDB[ConvoID].Users = append(scs.GroupDB[ConvoID].Users, structToAdd)
+		c.JSON(http.StatusOK, gin.H{"success": "aggiunto utente al gruppo indicato"})
+		return
+
+	}
+
+}
+
+// DELETE, path /groups/members
+func LeaveGroup(c *gin.Context) {
+
+	//autorizzo il current user
+	_, logged_struct, er1 := QuickAuth(c)
+	if len(er1) != 0 {
+		return
+	}
+
+	//estraggo l'ID conversazione_gruppo dalla query (se c'è)
+	ConvoID := c.DefaultQuery("ID", "")
+
+	g, exists := scs.GroupDB[ConvoID]
+
+	if exists {
+		toDelete := -1
+		found := false
+		for i, user := range g.Users {
+			if user == logged_struct {
+				toDelete = i
+				found = true
+				break
+			}
+		}
+		if !found {
+			c.JSON(http.StatusForbidden, gin.H{"Error": " You are not in that group! >:O "})
+			return
+
+		}
+		g.Users = append(g.Users[:toDelete], g.Users[toDelete+1:]...)
+		delete(scs.UserConvosDB, ConvoID)
+		c.JSON(http.StatusOK, gin.H{"Success": "You left the group and the convo was removed from your list..."})
+		return
+	}
+
+	c.JSON(http.StatusNotFound, gin.H{"Error": "Invalid Convo (group) ID!"})
+
+}
+
+// PUT, path /groups/{ID}/name
+func SetGroupName(c *gin.Context) {
+
+	//autorizzo il current user
+	_, logged_struct, er1 := QuickAuth(c)
+	if len(er1) != 0 {
+		return
+	}
+
+	ConvoID := c.Param("ID")
+
+	group, exists := scs.GroupDB[ConvoID]
+
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"Error": "Cant find convo (group) ID"})
+		return
+	}
+
+	groupName, err := c.GetRawData()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "nun riesc a legg u body"})
+		return
+	}
+
+	found := false
+	for _, user := range group.Users {
+		if user == logged_struct {
+			found = true
+			break
+		}
+	}
+	if !found {
+		c.JSON(http.StatusForbidden, gin.H{"Error": " You are not in that group! >:O "})
+		return
+
+	}
+
+	group.Name = string(groupName)
+	c.JSON(http.StatusOK, gin.H{"Success": "Name Updated!", "Group": group})
+
+}
+
+// PUT, path /groups/{ID}/photo
+func SetGroupPhoto(c *gin.Context) {
+
+	//autorizzo il current user
+	_, logged_struct, er1 := QuickAuth(c)
+	if len(er1) != 0 {
+		return
+	}
+
+	ConvoID := c.Param("ID")
+
+	group, exists := scs.GroupDB[ConvoID]
+
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"Error": "Cant find convo (group) ID"})
+		return
+	}
+
+	found := false
+	for _, user := range group.Users {
+		if user == logged_struct {
+			found = true
+			break
+		}
+	}
+	if !found {
+		c.JSON(http.StatusForbidden, gin.H{"Error": " You are not in that group! >:O "})
+		return
+
+	}
+
+	// aggiornamento foto con quella che si trova nel body (c)
+	// estraggo il file dalla richiesta multipart/form-data
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File invalido :P"})
+		return
+	}
+
+	// apro il file appena estratto
+	openedFile, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "non riesco ad apri, ao me apri"})
+		return
+	}
+	defer openedFile.Close()
+
+	// Leggo il file in modo da salvarlo come []byte dentro al content. Lo faccio perchè PhotoFile è di tipo []byte
+	nudePic, err := io.ReadAll(openedFile)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "che hai scritto nel file?? non leggo..."})
+		return
+	}
+
+	group.GroupPhoto = nudePic
+
+	c.JSON(http.StatusOK, gin.H{"Success": "Photo Updated!", "Group": group})
 
 }

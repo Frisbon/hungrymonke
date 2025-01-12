@@ -62,3 +62,17 @@ func ConstrConvo(data ConvoCONSTR) *scs.ConversationELT {
 	return c
 
 }
+
+func ConstrGroup(Users []*scs.User) *scs.Group {
+
+	g := &scs.Group{
+
+		Conversation: ConstrConvo(ConvoCONSTR{}),
+		Name:         "NewGroup :)",
+		Users:        Users,
+	}
+
+	scs.GroupDB[g.Conversation.ConvoID] = g
+	return g
+
+}

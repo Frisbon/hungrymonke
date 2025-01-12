@@ -15,7 +15,6 @@ func main() {
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/doc/api.yaml")))
 
-	// nota: puoi fare una fuzione per tutti i get e dentro la funzione separare per parametro passato nel body c
 	r.GET("/admin/listUsers", func(c *gin.Context) {
 		handlers.ListUsers(c)
 	})
@@ -52,6 +51,26 @@ func main() {
 
 	r.DELETE("/messages/:ID/comments", func(c *gin.Context) {
 		handlers.UncommentMSG(c)
+	})
+
+	r.DELETE("/messages/:ID", func(c *gin.Context) {
+		handlers.DeleteMSG(c)
+	})
+
+	r.PUT("/groups/members", func(c *gin.Context) {
+		handlers.AddToGroup(c)
+	})
+
+	r.DELETE("/groups/members", func(c *gin.Context) {
+		handlers.LeaveGroup(c)
+	})
+
+	r.PUT("/groups/:ID/name", func(c *gin.Context) {
+		handlers.SetGroupName(c)
+	})
+
+	r.PUT("/groups/:ID/photo", func(c *gin.Context) {
+		handlers.SetGroupPhoto(c)
 	})
 
 	r.GET("/debug", func(c *gin.Context) {
