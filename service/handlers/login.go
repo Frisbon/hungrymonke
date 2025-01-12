@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Frisbon/hungrymonke/service/structures"
+	scs "github.com/Frisbon/hungrymonke/service/structures"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
@@ -34,18 +34,20 @@ func GeneraToken(username string) (string, error) {
 }
 
 // handler per il login
-func Login(c *gin.Context, UserDB map[string]structures.User) {
-	var reqUserID string
+func Login(c *gin.Context) {
 
-	//creo una struttura user e vedo se nel body mi arriva quello.
-	if err := c.ShouldBind(&reqUserID); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "il dato del curl non funge fra non è stringa"}) // se non funge
+	body, err := c.GetRawData()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "impossibile leggere il corpo"})
 		return
 	}
 
+	reqUserID := string(body)
+
+	println(reqUserID)
 	// vedo se esiste user nel sistema, se non esiste lo creo
-	if _, exists := UserDB[reqUserID]; !exists {
-		UserDB[reqUserID] = structures.User{Username: reqUserID}
+	if _, exists := scs.UserDB[reqUserID]; !exists {
+		scs.UserDB[reqUserID] = &scs.User{Username: reqUserID}
 	}
 
 	//genero token x user e lo returno
@@ -55,5 +57,5 @@ func Login(c *gin.Context, UserDB map[string]structures.User) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": UserDB[reqUserID]})
+	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": scs.UserDB[reqUserID]})
 }
