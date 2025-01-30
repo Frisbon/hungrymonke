@@ -21,8 +21,6 @@ components:
 
     # TODO: METTI TUTTE LE RESPONSE CODES CORRETTAMENTE 
 
-
-
     SendMessageRequest:
       type: object
       properties:
@@ -67,8 +65,14 @@ components:
                 - Photo
                 - Text
         
-        
-
+    SendReactionRequest:
+      type: object
+      properties:
+        Emoticon:
+          description: An emoticon symbol representing the reaction.
+          type: string
+          maxLength: 1
+          example: 🍆
   
     Photo:
       description: A binary file that represent the image.
@@ -136,16 +140,7 @@ components:
           description: A collection of Reaction(s)
           type: array
           items:
-            $ref: "#/components/schemas/Reaction"
-              
-    SendReactionRequest:
-      type: object
-      properties:
-        Emoticon:
-          description: An emoticon symbol representing the reaction.
-          type: string
-          maxLength: 1
-          example: 🍆
+            $ref: "#/components/schemas/Reaction"        
 
     Reaction:
       type: object
@@ -163,7 +158,6 @@ components:
           type: string
           maxLength: 1
           example: 🍆
-
           
     ConversationELT:
       description: This is a resource representing a conversation (collection of messages) that will apear in the conversations list. 
@@ -188,7 +182,6 @@ components:
           items:
             $ref: '#/components/schemas/Message'
         
-
     Group:
       description: Resource representing a Group (A Conversation element and a collection of users.)
       type: object
@@ -225,8 +218,6 @@ components:
           description: Reference to one of the users in a conversation
           $ref: '#/components/schemas/User'
     
-    
-    #it does not differentiate between group and private conversations.
     Conversations:
       description: Resource representing the list of the user's conversations..
       type: array
@@ -270,33 +261,49 @@ paths:
               $ref: "#/components/schemas/UserID"
         required: true
       responses:
-        '201':
-          description: User log-in action successful
+        '200':
+          description: Login riuscito e token generato.
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   token:
-                    description: Il token creato dal login
                     type: string
+                    description: Il token JWT generato per l'utente.
                   user:
-                    description: Reference allo User
-                    $ref: "#/components/schemas/User"
+                    type: object
+                    properties:
+                      Username:
+                        type: string
+                        description: L'ID dell'utente loggato.
+        '400':
+          description: Richiesta non valida, impossibile leggere il corpo.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: impossibile leggere il corpo
         '500':
-          description: er token nun se crea ao
+          description: Errore interno del server, impossibile generare il token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: non riesco a crea il token
     
-
-    
-    
-  # "me" rappresenta il current user loggato (suppongo? scrivo senza capire na minchia lol, ma prima si fa e dopo si capisce, questa è la filosofia della sapienza), mentre uso /{id} quando non deve essere per forza l'utente corrente (sono un admin ecc.)
-  
   /users/me/username:
     description: Path utilizzato per l'operazione di setMyUserName
   
     put:  #setMyUserName
       operationId: setMyUserName
-      summary: Aggiorna il nome utente di un utente loggato
+      summary: Aggiorna Username
       description: Utilizza la stringa passata come parametro per impostare il nuovo nome utente all'utente loggato in questo momento.
       
       security:
@@ -326,9 +333,9 @@ paths:
   /conversations: 
     description: Conversations implica le conversazioni del CURRENT USER. Utilizzato per l'operazione di getMyConversations.
 
-    get: #getMyConversations
+    get: #getMyConversationss
       description: Recupera le conversazioni dell'utente loggato in questo momento 
-      summary: Recupera lista messaggi.
+      summary: Recupera lista convos.
       security:
         - bearerAuth: []
       operationId: getMyConversations
@@ -346,7 +353,7 @@ paths:
   
     get:  #getConversation
       description: Recupera la conversazione dell'utente loggato in questo momento tramite l'ID fornito come parametro 
-      summary: Recupera una conversazione tramite il suo ID
+      summary: Recupera la convo by ID
       
       security:
         - bearerAuth: []
@@ -377,7 +384,7 @@ paths:
   
     post: #sendMessage 
       description: Invia il messaggio contenuto nel body sulla conversazione identificata dal parametro.
-      summary: Invia un messaggio in una convo data dall'id oppure direttamente ad un utente (se non esiste convo la crea).
+      summary: Send Message by ConvoID or Username
       security:
         - bearerAuth: []
       operationId: sendMessage
@@ -413,14 +420,12 @@ paths:
         400:
           description: Parametri de schifo mhai dato
       
-  #per il forwarding non mi serve la conversazione originaria, solo l'id del messaggio e la convo di destinazione come parametro perciò uso /messages come path, siccome ci sono più operazioni le separo in path (forward/comment ecc.)
-  
   /messages/{ID}/forward:
     description: Path utilizzato per l'operazione di forwardMessage
   
     post: #forwardMessage
       description: Inoltra il messaggio, aggiungengo il suo id (passato come parametro) alla conversazione (contenuta nel body).
-      summary: Inoltra un messaggio usando il suo id e convo elt.
+      summary: Forward MsgID to ConvoID.
       
       security:
         - bearerAuth: []
@@ -461,7 +466,8 @@ paths:
   
     post: #commentMessage (Reaction)
       description: Lascia una reazione, contenuta nel body, sul messaggio identificato dal parametro
-      
+      summary: React to MsgID
+    
       security:
         - bearerAuth: []
       operationId: commentMessage
@@ -497,7 +503,8 @@ paths:
   
     delete: #uncommentMessage (Delete Reaction)
       description: Rimuove il commento (unico) del logged user dal messaggio identificato dal parametro 
-      
+      summary: Unreact to MsgID
+
       security:
         - bearerAuth: []
       operationId: uncommentMessage
@@ -529,7 +536,7 @@ paths:
   
     delete: #deleteMessage
       description: Elimina il messaggio identificato dal parametro
-    
+      summary: Delete MsgID
     
       security:
         - bearerAuth: []
@@ -555,7 +562,7 @@ paths:
   
     put: #addToGroup
       description: Aggiunge l'utente passato nel body al gruppo identificato dal parametro.
-    
+      summary: Add UserID to Group (ConvoID)
       security:
         - bearerAuth: []
       operationId: addToGroup
@@ -590,7 +597,7 @@ paths:
   
     delete: #leaveGroup
       description: Elimina l'utente loggato dalla lista degli utenti del gruppo identificato dall'id passato come parametro.
-    
+      summary: Leave Group (ConvoID)
       security:
         - bearerAuth: []
       operationId: leaveGroup
@@ -615,7 +622,7 @@ paths:
     
     put:  #setGroupName
       description: Cambia il nome del gruppo identificato dall'id usando la stringa nel body.
-    
+      summary: Set Group (ConvoID) name (body)
       security:
         - bearerAuth: []
       operationId: setGroupName
@@ -654,6 +661,7 @@ paths:
     
     put:  #setMyPhoto
       description: Imposta la foto profilo dell'utente loggato al momento.
+      summary: Set MY photo (body)
       
       security:
         - bearerAuth: []
@@ -687,6 +695,7 @@ paths:
   
     put:  #setGroupPhoto
       description: Imposta la foto profilo del gruppo identificato dal parametro
+      summary: Set Group (ConvoID) photo (body)
       security:
         - bearerAuth: []
       operationId: setGroupPhoto
@@ -716,11 +725,10 @@ paths:
               schema: 
                 description: Reference alla risorsa Group.
                 $ref: "#/components/schemas/Group"   
-      
-      
+          
   /debug:
     get:
-      description: Terminal DBs content viewer
+      summary: Terminal DBs content viewer
       operationId: debugDBs
       
       
