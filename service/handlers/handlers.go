@@ -405,7 +405,7 @@ func CommentMSG(c *gin.Context) {
 	MsgStruct, exists := scs.MsgDB[MsgID]
 
 	if !exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "nun trovo u msg man"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "nun trovo u msg man"})
 		return
 	}
 
@@ -499,17 +499,17 @@ func DeleteMSG(c *gin.Context) {
 	MsgStruct, exists := scs.MsgDB[MsgID]
 
 	if !exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "nun trovo ur msg in the MsgDB man"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "nun trovo ur msg in the MsgDB man"})
 		return
 	}
 
 	if _, exists2 := scs.GenericDB[MsgID]; !exists2 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Unregistered GenericID"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Unregistered GenericID"})
 		return
 	}
 
 	if MsgStruct.Author != sender_struct {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "This is not YOUR message!"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "This is not YOUR message!"})
 		return
 	}
 
@@ -665,7 +665,7 @@ func LeaveGroup(c *gin.Context) {
 		}
 		g.Users = append(g.Users[:toDelete], g.Users[toDelete+1:]...)
 		delete(scs.UserConvosDB, ConvoID)
-		c.JSON(http.StatusOK, gin.H{"Success": "You left the group and the convo was removed from your list..."})
+		c.JSON(http.StatusNoContent, gin.H{"Success": "You left the group and the convo was removed from your list..."})
 		return
 	}
 
