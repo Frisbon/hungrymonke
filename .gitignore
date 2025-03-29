@@ -1,0 +1,12 @@
+# Existing entries for Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Vue.js front-end
+webui/node_modules/
+webui/dist/

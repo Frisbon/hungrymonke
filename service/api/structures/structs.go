@@ -37,6 +37,7 @@ type Message struct {
 	Status    Status     `json:"status"`
 	Reactions []Reaction `json:"reactions"`
 	MsgID     string     `json:"msgid"`
+	SeenBy    []*User    `json:"seenby"` // new record for group msgs.
 }
 
 /*La struct MessagePreviewXorPhoto era inutile da dichiarare (vedi Preview sotto.) */
@@ -54,6 +55,12 @@ type Group struct {
 	GroupPhoto   []byte           `json:"groupphoto"`
 	Name         string           `json:"name"`
 	Users        []*User          `json:"users"`
+}
+
+// Questa struct serve per aiutare a decidere lo status "Seen" in una convo di gruppo.
+type GroupMessage struct {
+	Msg   Message `json:"message"`
+	Users []*User `json:"users"`
 }
 
 type Private struct {

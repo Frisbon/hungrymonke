@@ -3,7 +3,7 @@ package handlers
 import (
 	"time"
 
-	scs "github.com/Frisbon/hungrymonke/service/structures"
+	scs "github.com/Frisbon/hungrymonke/service/api/structures"
 )
 
 /*

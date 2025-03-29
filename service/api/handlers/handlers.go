@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	scs "github.com/Frisbon/hungrymonke/service/structures"
+	scs "github.com/Frisbon/hungrymonke/service/api/structures"
 	"github.com/gin-gonic/gin"
 )
 
@@ -120,8 +120,10 @@ func GetMyConversations(c *gin.Context) {
 		return
 	}
 
+	fmt.Print("\n\n mi hai passato: `", username, "`\n\n")
+
 	if len(scs.UserConvosDB[username]) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"Error": "Non ci sono conversazioni per questo utente", "Username": username})
+		c.JSON(http.StatusOK, gin.H{"Error": "Non ci sono conversazioni per questo utente", "Username": username})
 	}
 
 	c.JSON(http.StatusOK, gin.H{"Username": username, "User Conversations": scs.UserConvosDB[username]})
@@ -173,12 +175,13 @@ func GetMyConversation(c *gin.Context) {
 
 		in caso fosse una convo di gruppo
 		OGNI utente deve visualizzare per poter mettere lo status seen.
-		creo una mappa [user:boolean] e se ogni ogni boolean è true allora
-		status seen (per chat di gruppo.)
-
 
 	*/
-	PrivateMsgStatusUpdater(found_conversation, logged_struct)
+
+	statusErr := statusUpdater(found_conversation, logged_struct)
+	if statusErr {
+		c.JSON(http.StatusInternalServerError, gin.H{"Status": "oh sh*t"}) // todo add to open api (below too)
+	}
 
 	// Risposta con la conversazione trovata
 	c.JSON(http.StatusOK, gin.H{
@@ -233,7 +236,7 @@ func SendMessage(c *gin.Context) {
 		return
 	}
 
-	// se tra parametri ho ID e il nome è clear
+	// se tra parametri ho solo ID
 	if conversationID != "" && req.RecipientUsername == "" {
 
 		// prendo conversazione con l'ID che mi è stato fornito.
@@ -243,7 +246,11 @@ func SendMessage(c *gin.Context) {
 		UpdateConversationWLastMSG(convo)
 
 		// se mando un msg => leggo i messaggi dell'altro utente => aggiorno i loro status.
-		PrivateMsgStatusUpdater(convo, sender_struct)
+		//devo distinguere se la convo è privata o di gruppo
+		statusErr := statusUpdater(convo, sender_struct)
+		if statusErr {
+			c.JSON(http.StatusInternalServerError, gin.H{"Status": "oh sh*t"}) // todo add to open api (below too)
+		}
 
 		// aggiorno le liste personali di entrambi gli utenti...
 		scs.UserConvosDB[SenderUsername] = append(scs.UserConvosDB[SenderUsername], convo)
@@ -377,6 +384,8 @@ func ForwardMSG(c *gin.Context) {
 // POST, path /messages/{ID}/comments
 func CommentMSG(c *gin.Context) {
 
+	//nota: se commento => visualizzo il messaggio
+
 	//autorizzo il current user
 	_, sender_struct, er1 := QuickAuth(c)
 	if len(er1) != 0 {
@@ -425,6 +434,20 @@ func CommentMSG(c *gin.Context) {
 		Author:    sender_struct,
 		Emoticon:  req.Emoticon,
 	})
+
+	//recupero la convo in cui si trova il messaggio
+	for _, convo := range scs.ConvoDB {
+		for _, imsg := range convo.Messages {
+			if MsgStruct.MsgID == imsg.MsgID {
+
+				statusErr := statusUpdater(convo, sender_struct)
+				if statusErr {
+					c.JSON(http.StatusInternalServerError, gin.H{"Status": "oh sh*t"}) // todo add to open api (below too)
+				}
+				break
+			}
+		}
+	}
 
 	c.JSON(http.StatusOK, gin.H{"Success": "Messaggio inoltrato", "MSG": MsgStruct})
 

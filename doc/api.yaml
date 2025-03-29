@@ -250,7 +250,7 @@ paths:
         "404":
           description: Users not found 
   
-  /login:
+  /api/login:
     description: Login/Authentication path
     
     post:
@@ -289,7 +289,7 @@ paths:
     
   # "me" rappresenta il current user loggato (suppongo? scrivo senza capire na minchia lol, ma prima si fa e dopo si capisce, questa è la filosofia della sapienza), mentre uso /{id} quando non deve essere per forza l'utente corrente (sono un admin ecc.)
   
-  /users/me/username:
+  /api/users/me/username:
     description: Path utilizzato per l'operazione di setMyUserName
   
     put:  #setMyUserName
@@ -321,7 +321,7 @@ paths:
         "400":
             description: Input non valido...  
 
-  /conversations: 
+  /api/conversations: 
     description: Conversations implica le conversazioni del CURRENT USER. Utilizzato per l'operazione di getMyConversations.
 
     get: #getMyConversations
@@ -527,7 +527,7 @@ paths:
           description: Non sei l'autore del messaggio!
 
     
-  /messages/{ID}:
+  /api/messages/{ID}:
     description: Path usato per operazione deleteMessage
   
     delete: #deleteMessage
@@ -558,7 +558,7 @@ paths:
         '400':
           description: Message not found error.
   
-  /groups/members:
+  /api/groups/members:
     description: Path usato per operazione addToGroup e leaveGroup
   
     put: #addToGroup
@@ -618,7 +618,7 @@ paths:
         '400':
           description: Group not found error.
   
-  /groups/{ID}/name:
+  /api/groups/{ID}/name:
     description: Path usato per operazione setGroupName
     
     put:  #setGroupName
@@ -657,7 +657,7 @@ paths:
         "404": 
             description: Gruppo non trovato :(   
   
-  /users/me/photo:
+  /api/users/me/photo:
     description: Path usato per operazione setMyPhoto
     
     put:  #setMyPhoto
@@ -690,7 +690,7 @@ paths:
               schema: 
                 $ref: "#/components/schemas/User"
       
-  /groups/{ID}/photo:
+  /api/groups/{ID}/photo:
     description: Path usato per operazione setGroupPhoto
   
   

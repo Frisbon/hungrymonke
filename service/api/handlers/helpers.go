@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	scs "github.com/Frisbon/hungrymonke/service/structures"
+	scs "github.com/Frisbon/hungrymonke/service/api/structures"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
@@ -22,6 +22,9 @@ func QuickAuth(c *gin.Context) (string, *scs.User, string) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token non trovato, te sei loggato ve?"})
 		return "", nil, "err"
 	}
+
+	fmt.Println("Token ricevuto:", tokenString)
+
 	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 	claims := &jwt.StandardClaims{}
 
@@ -39,7 +42,8 @@ func QuickAuth(c *gin.Context) (string, *scs.User, string) {
 	}
 
 	// ora posso usare claims
-	username := claims.Subject // username è il nome del current user
+	// Rimuove eventuali virgolette extra dal claim Subject
+	username := strings.Trim(claims.Subject, "\"") // username è il nome del current user
 
 	user, exists := scs.UserDB[username]
 	if !exists { // se non esiste utente dai claims
@@ -137,6 +141,15 @@ func PrivateMsgStatusUpdater(convo *scs.ConversationELT, logged_user *scs.User) 
 
 }
 
+func ContainsUser(users []*scs.User, target *scs.User) bool {
+	for _, user := range users {
+		if user == target {
+			return true
+		}
+	}
+	return false
+}
+
 /*
 Aggiorna i messaggi (x)"delivered" come "seen"
 <=>
@@ -145,6 +158,46 @@ HINT: Usa mappa boolean [group_user: seen (bool)]
 */
 func GroupMsgStatusUpdater(group_convo *scs.ConversationELT, logged_user *scs.User) {
 
+	for _, msg := range group_convo.Messages {
+
+		// prendo un messaggio
+
+		// aggiungo il mio "seen"
+
+		// se il seen array ha tutti gli utenti allora status = seen
+		if !ContainsUser(msg.SeenBy, logged_user) {
+			msg.SeenBy = append(msg.SeenBy, logged_user)
+		}
+
+		// se non è seen comincio a controllare se è stato visto da tutti gli utenti
+		seen := true
+		if msg.Status != "seen" { // Compare with the Seen constant, not the string "seen"
+			for _, convoUser := range scs.GroupDB[group_convo.ConvoID].Users { // Added 'range' keyword
+				if !ContainsUser(msg.SeenBy, convoUser) {
+					seen = false
+					break // Optional: break early since we already know it's not seen by all
+				}
+			}
+		}
+
+		if msg.Author != logged_user && seen {
+			msg.Status = "seen"
+		}
+
+	}
+	// TODO, clearup inconsistency between private "seen" and group one.
+}
+
+func statusUpdater(convo *scs.ConversationELT, current_user *scs.User) bool {
+	if _, exists := scs.PrivateDB[convo.ConvoID]; exists {
+		PrivateMsgStatusUpdater(convo, current_user)
+		return true
+	} else if _, exists := scs.GroupDB[convo.ConvoID]; exists {
+		GroupMsgStatusUpdater(convo, current_user)
+		return true
+	} else {
+		return false
+	}
 }
 
 func DebugPrintDatabases() {

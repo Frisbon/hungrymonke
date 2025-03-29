@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	scs "github.com/Frisbon/hungrymonke/service/structures"
+	scs "github.com/Frisbon/hungrymonke/service/api/structures"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
