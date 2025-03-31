@@ -120,8 +120,6 @@ func GetMyConversations(c *gin.Context) {
 		return
 	}
 
-	fmt.Print("\n\n mi hai passato: `", username, "`\n\n")
-
 	if len(scs.UserConvosDB[username]) == 0 {
 		c.JSON(http.StatusOK, gin.H{"Error": "Non ci sono conversazioni per questo utente", "Username": username})
 	}
