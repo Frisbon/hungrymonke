@@ -20,7 +20,7 @@
       
       <ConversationList @select-conversation="selectConversation"/>
 
-      <ChatMessages :selectedConvoID="selectedConvoID" />
+      <ChatMessages :selectedConvoID="selectedConvoID" :recipientUsername="recipientUsername"/>
     </div>
   </div>
 </template>
@@ -42,6 +42,7 @@ export default {
       username: '',
       loginError: '',
       selectedConvoID: null,
+      recipientUsername: "",
     };
   },
   methods: {
@@ -70,6 +71,8 @@ export default {
       console.log("Hai selezionato la chat con ID: "+convoID)
       // ora renderizzo i messaggi?
     },
+
+    //TODO: NewConversation(), con recipientUsername...
 
   },
 

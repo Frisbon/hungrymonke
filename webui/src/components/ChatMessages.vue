@@ -73,7 +73,36 @@
           this.messages = [];
         }
       },
+
+      // TODO, Ridichiara sendMessage in App.Vue per chat nuova
+      // questo send message da per scontato che la convo esiste
+      async sendMessage() {
+        if (!this.newMessage || !this.selectedConvoID) return; // se non seleziono convo oppure non invio messaggio...
+
+        try {
+          const content = { text: this.newMessage };
+
+          const messageToSend = {
+            message: content, // Il backend si aspetta un campo "message" che contiene l'oggetto Content
+            recipientUsername: "" // do per scontato che ho l'ID
+          };
+
+          await api.sendMessage(this.selectedConvoID, messageToSend);
+          
+          // resetto il messaggio e ricarico quelli nuovi
+          this.newMessage = '';
+          this.fetchMessages(this.selectedConvoID);
+
+
+        }
+        catch(error){
+          console.log("Error: ",error)
+        }
+      },
     },
+
+
+
   };
 </script>
   

@@ -70,8 +70,8 @@ const apiClient = axios.create({
 
   sendMessage(convoID, message) {
     const token = localStorage.getItem('token');
-    return apiClient.post(`/conversations/messages`, 
-      { convoID, ...message }, 
+    return apiClient.post(`/conversations/messages?ID=${convoID}`, 
+      { ...message }, 
       { headers: { Authorization: `Bearer ${token}` } }
     );
   },
