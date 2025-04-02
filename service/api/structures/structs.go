@@ -8,8 +8,9 @@ import "time"
 */
 
 type User struct {
-	Username string `json:"username"`
-	Photo    []byte `json:"photo"`
+	Username      string `json:"username"`
+	Photo         []byte `json:"photo"`
+	PhotoMimeType string `json:"photoMimeType,omitempty"`
 }
 
 type Status string // enumerativo per Message
@@ -25,8 +26,9 @@ type Reaction struct {
 }
 
 type Content struct {
-	Text  *string `json:"text,omitempty"`  // Uso i puntatori qui per distinguere i valori non forniti
-	Photo *[]byte `json:"photo,omitempty"` // Alternativa per il contenuto
+	Text          *string `json:"text,omitempty"`  // Uso i puntatori qui per distinguere i valori non forniti
+	Photo         *[]byte `json:"photo,omitempty"` // Alternativa per il contenuto
+	PhotoMimeType string  `json:"photoMimeType,omitempty"`
 }
 
 type Message struct {
@@ -51,10 +53,11 @@ type ConversationELT struct {
 type Conversations []*ConversationELT
 
 type Group struct {
-	Conversation *ConversationELT `json:"conversation"`
-	GroupPhoto   []byte           `json:"groupphoto"`
-	Name         string           `json:"name"`
-	Users        []*User          `json:"users"`
+	Conversation  *ConversationELT `json:"conversation"`
+	GroupPhoto    []byte           `json:"groupphoto"`
+	PhotoMimeType string           `json:"photoMimeType,omitempty"`
+	Name          string           `json:"name"`
+	Users         []*User          `json:"users"`
 }
 
 // Questa struct serve per aiutare a decidere lo status "Seen" in una convo di gruppo.

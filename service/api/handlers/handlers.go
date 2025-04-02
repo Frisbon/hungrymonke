@@ -101,8 +101,11 @@ func SetMyPhoto(c *gin.Context) {
 		return
 	}
 
+	contentType := http.DetectContentType(content)
+
 	// Aggiorna l'utente con il percorso del file salvato
 	user.Photo = content
+	user.PhotoMimeType = contentType // tipo MIME
 	scs.UserDB[username] = user
 
 	c.JSON(http.StatusOK, gin.H{
@@ -209,6 +212,9 @@ func SendMessage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON non valido", "details": err.Error()})
 		return
 	}
+
+	//siccome non manderò direttamente il mimetype, dovrò farci qualcosa...
+	// TODO: if mimetype = null, converti dalla stringa binaria e metti in req.msg.photomimetype
 
 	var reactlist []scs.Reaction
 
@@ -790,7 +796,10 @@ func SetGroupPhoto(c *gin.Context) {
 		return
 	}
 
+	contentType := http.DetectContentType(nudePic)
+
 	group.GroupPhoto = nudePic
+	group.PhotoMimeType = contentType
 
 	c.JSON(http.StatusOK, gin.H{"Success": "Photo Updated!", "Group": group})
 

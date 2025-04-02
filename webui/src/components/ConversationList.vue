@@ -3,11 +3,11 @@
     <h2>Conversations</h2>
     <ul>
       <li
-        v-for="(convo, index) in validConversations"
+        v-for="(convo, index) in this.conversations"
         :key="convo.convoid || index"
         @click="selectConversation(convo.convoid)"
       >
-        {{ convo.convoid }} 
+        {{ convo.convoid }}
       </li>
     </ul>
   </div>
@@ -18,43 +18,57 @@ import api from '../api';
 
 export default {
   name: 'ConversationList',
+  
   data() {
     return {
       conversations: [],
     };
   },
-  computed: {
-    validConversations() {
-      return this.conversations.filter(convo => typeof convo === 'object' && convo.convoid);
-    }
-  },
+
+/*
+
+TODO => SORT CONVOS BY TIME + RENDER CONVO PROPERTIES 
+
+*/
+
   methods: {
     selectConversation(convoID) {
       if (convoID) {
-        this.$emit('select-conversation', convoID);
+        this.$emit('select-conversation', convoID); // Emit a Select-conversation signal
       }
     },
+
+    //
     async fetchConversations() {
       try {
-        const response = await api.getConversations();
+        const response = await api.getConversations(); // tecnicamente mi ritorna un JSON
+
+        // se dovesser ritorare una stringa, trasformala in json, altrimenti lascia così
         const responseData = typeof response === 'string' ? JSON.parse(response) : response;
+
         console.log("Parsed response data:", responseData);
         
+        // Se esistono dati ricevuti e ricevo effettivamente un array di conversazioni...
         if (responseData && Array.isArray(responseData['User Conversations'])) {
-          this.conversations = responseData['User Conversations'];
+          this.conversations = responseData['User Conversations'];  
         } else {
           console.error('Unexpected response format:', responseData);
           this.conversations = [];
         }
+      
       } catch (error) {
         console.error('Error fetching conversations:', error);
         this.conversations = [];
       }
     },
   },
+
+
+  /* Appena carico la pagina recupera le conversazioni */
   mounted() {
     this.fetchConversations();
   },
+
 };
 </script>
 

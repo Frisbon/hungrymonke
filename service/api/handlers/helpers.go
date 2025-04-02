@@ -188,15 +188,21 @@ func GroupMsgStatusUpdater(group_convo *scs.ConversationELT, logged_user *scs.Us
 	// TODO, clearup inconsistency between private "seen" and group one.
 }
 
+/*returns true if error!!!!*/
 func statusUpdater(convo *scs.ConversationELT, current_user *scs.User) bool {
+
 	if _, exists := scs.PrivateDB[convo.ConvoID]; exists {
+
 		PrivateMsgStatusUpdater(convo, current_user)
-		return true
-	} else if _, exists := scs.GroupDB[convo.ConvoID]; exists {
-		GroupMsgStatusUpdater(convo, current_user)
-		return true
-	} else {
 		return false
+
+	} else if _, exists := scs.GroupDB[convo.ConvoID]; exists {
+
+		GroupMsgStatusUpdater(convo, current_user)
+		return false
+
+	} else {
+		return true
 	}
 }
 

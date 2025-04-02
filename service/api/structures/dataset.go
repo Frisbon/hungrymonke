@@ -92,7 +92,7 @@ func init() {
 
 	msg4 := Message{
 		Timestamp: time.Date(2023, 10, 10, 12, 33, 0, 0, time.UTC),
-		Content:   Content{Text: stringPtr("Vi mando il mio gatto"), Photo: &photoData}, // todo add photo
+		Content:   Content{Text: stringPtr("Vi mando il mio gatto"), Photo: &photoData, PhotoMimeType: "image/jpg"}, // todo add photo
 		Author:    &arturo,
 		Status:    Seen,
 		Reactions: []Reaction{},
@@ -148,14 +148,14 @@ func init() {
 	}
 
 	// Load the photo file for msg8 and 11
-	photoData, err = os.ReadFile("service/api/pictureslol/ritrovo.png") // Adjust the path to match your file location
+	photoData2, err := os.ReadFile("service/api/pictureslol/ritrovo.png") // Adjust the path to match your file location
 	if err != nil {
 		panic("Failed to read image " + err.Error()) // Panic during init if the file can't be read
 	}
 
 	msg8 := Message{
 		Timestamp: time.Date(2023, 10, 10, 16, 2, 0, 0, time.UTC),
-		Content:   Content{Text: stringPtr("Vediamoci alle 18:00 in Via Obelisco 3, in questo punto qui:"), Photo: &photoData},
+		Content:   Content{Text: stringPtr("Vediamoci alle 18:00 in Via Obelisco 3, in questo punto qui:"), Photo: &photoData2, PhotoMimeType: "image/png"},
 		Author:    &arturo,
 		Status:    Seen,
 		Reactions: []Reaction{},
@@ -198,7 +198,7 @@ func init() {
 	}
 	msg11 := Message{
 		Timestamp: time.Date(2023, 10, 10, 16, 5, 0, 0, time.UTC),
-		Content:   Content{Text: stringPtr("Vediamoci alle 18:00 in Via Obelisco 3, in questo punto qui:"), Photo: &photoData},
+		Content:   Content{Text: stringPtr("Vediamoci alle 18:00 in Via Obelisco 3, in questo punto qui:"), Photo: &photoData2, PhotoMimeType: "image/png"},
 		Author:    &betta,
 		Status:    Seen,
 		Reactions: []Reaction{},
@@ -244,14 +244,14 @@ func init() {
 	}
 
 	// Load the photo file for msg14
-	photoData, err = os.ReadFile("service/api/pictureslol/sorella.png") // Adjust the path to match your file location
+	photoData3, err := os.ReadFile("service/api/pictureslol/sorella.png") // Adjust the path to match your file location
 	if err != nil {
 		panic("Failed to read image " + err.Error()) // Panic during init if the file can't be read
 	}
 
 	msg14 := Message{
 		Timestamp: time.Date(2023, 10, 10, 13, 31, 0, 0, time.UTC),
-		Content:   Content{Photo: &photoData},
+		Content:   Content{Photo: &photoData3, PhotoMimeType: "image/png"},
 		Author:    &arturo,
 		Status:    Seen,
 		Reactions: []Reaction{},

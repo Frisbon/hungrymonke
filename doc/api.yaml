@@ -341,7 +341,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Conversations'
     
-  /conversations/{ID}:
+  /api/conversations/{ID}:
     description: Path utilizzato per l'operazione di getConversation
   
     get:  #getConversation
@@ -373,7 +373,7 @@ paths:
         "400":
           description: Convo not found man :C
     
-  /conversations/messages:
+  /api/conversations/messages:
     description: Path utilizzato per l'operazione di sendMessage  
   
     post: #sendMessage 
@@ -415,7 +415,7 @@ paths:
       
   #per il forwarding non mi serve la conversazione originaria, solo l'id del messaggio e la convo di destinazione come parametro perciò uso /messages come path, siccome ci sono più operazioni le separo in path (forward/comment ecc.)
   
-  /messages/{ID}/forward:
+  /api/messages/{ID}/forward:
     description: Path utilizzato per l'operazione di forwardMessage
   
     post: #forwardMessage
@@ -456,7 +456,7 @@ paths:
                 $ref: "#/components/schemas/Message"
         "400":
           description: Message not found error.
-  /messages/{ID}/comments:
+  /api/messages/{ID}/comments:
     
     description: Path utilizzato per l'operazione di commentMessage e uncommentMessage
   

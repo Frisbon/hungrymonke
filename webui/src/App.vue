@@ -3,6 +3,7 @@
     <!-- Form di login se l'utente non è loggato -->
     <div v-if="!isLoggedIn" class="login">
       <h2>Login</h2>
+      <!-- ascolto per l'evento @submit e impedisco al browser la funzionalità di default (ricarica pagina) usando .prevent -->
       <form @submit.prevent="handleLogin">
         <div>
           <label>Username:</label>
@@ -16,8 +17,10 @@
     <!-- Interfaccia chat se l'utente è loggato -->
     <div v-else class="container">
       <button @click="handleLogout" class="logout-btn">Logout</button>
-      <ConversationList @select-conversation="selectConversation" />
-      <ChatMessages :selected-convo-id="selectedConvoID" />
+      
+      <ConversationList @select-conversation="selectConversation"/>
+
+      <ChatMessages :selectedConvoID="selectedConvoID" />
     </div>
   </div>
 </template>
@@ -46,8 +49,8 @@ export default {
       try {
         const credentials = this.username;
         const response = await api.login(credentials);
-        
         console.log('Login successful:', response.data);
+        
         this.isLoggedIn = true;
         this.loginError = '';
       } catch (error) {
@@ -55,15 +58,22 @@ export default {
         this.loginError = error.response?.data?.error || 'Login failed';
       }
     },
+
     handleLogout() {
       api.logout();
       this.isLoggedIn = false;
       this.username = '';
     },
+
     selectConversation(convoID) {
       this.selectedConvoID = convoID;
+      console.log("Hai selezionato la chat con ID: "+convoID)
+      // ora renderizzo i messaggi?
     },
+
   },
+
+  /*Appena carico il DOM, questo sarà il primo ad essere eseguito*/ 
   mounted() {
     // Controlla se l'utente è già loggato (token salvato)
     if (localStorage.getItem('token')) {
