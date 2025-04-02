@@ -362,13 +362,15 @@ func ForwardMSG(c *gin.Context) {
 
 	// Devo "clonare" il messaggio e aggiungerlo alla conversazione.
 	var react_list []scs.Reaction
+	var seenby_list []scs.User
 	newMsg := ConstrMessage(MsgCONSTR{
-		Timestamp: time.Now(),
-		Content:   msg.Content,
-		Author:    sender_struct, //maschero da chi inoltro
-		Status:    "delivered",
-		Reactions: react_list, //resetto lista reazioni
-
+		Timestamp:   time.Now(),
+		Content:     msg.Content,
+		Author:      sender_struct, //maschero da chi inoltro
+		Status:      "delivered",
+		Reactions:   react_list, //resetto lista reazioni
+		SeenBy:      seenby_list,
+		IsForwarded: true,
 	})
 
 	convo.Messages = append(convo.Messages, newMsg)

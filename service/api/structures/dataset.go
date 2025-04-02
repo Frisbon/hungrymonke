@@ -104,7 +104,7 @@ func init() {
 	groupFrens := ConversationELT{
 		ConvoID:         "group_frens",
 		DateLastMessage: msg4.Timestamp,
-		Preview:         "Vi mando il mio gatto",
+		Preview:         "[FOTO] Vi mando...",
 		Messages:        []*Message{&msg1, &msg2, &msg3, &msg4},
 	}
 	ConvoDB["group_frens"] = &groupFrens
@@ -113,7 +113,7 @@ func init() {
 	group := Group{
 		Conversation: &groupFrens,
 		GroupPhoto:   []byte{},
-		Name:         "FRENS*",
+		Name:         "FRENS",
 		Users:        []*User{&arturo, &betta, &carlo},
 	}
 	GroupDB["group_frens"] = &group
@@ -174,7 +174,7 @@ func init() {
 	privateArturoBetta := ConversationELT{ // TODO: Siccome il pov varia tra betta e arturo, se last msg è di autore, compare anche status in UI
 		ConvoID:         "private_arturo_betta",
 		DateLastMessage: msg9.Timestamp,
-		Preview:         "Lui non ne sa ancora...",
+		Preview:         "Lui non ne...",
 		Messages:        []*Message{&msg5, &msg6, &msg7, &msg8, &msg9},
 	}
 
@@ -219,7 +219,7 @@ func init() {
 	privateBettaCarlo := ConversationELT{
 		ConvoID:         "private_betta_carlo",
 		DateLastMessage: msg12.Timestamp,
-		Preview:         "È buona",
+		Preview:         "Grazie donna...",
 		Messages:        []*Message{&msg10, &msg11, &msg12},
 	}
 
@@ -288,7 +288,7 @@ func init() {
 	privateArturoCarlo := ConversationELT{
 		ConvoID:         "private_arturo_carlo",
 		DateLastMessage: msg17.Timestamp,
-		Preview:         "fammela conoscere 💀😂",
+		Preview:         "fammela...",
 		Messages:        []*Message{&msg13, &msg14, &msg15, &msg16, &msg17},
 	}
 	ConvoDB["private_arturo_carlo"] = &privateArturoCarlo

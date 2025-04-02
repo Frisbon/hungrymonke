@@ -13,6 +13,7 @@ const apiClient = axios.create({
 });
 
   
+// TODO, fai in modo che anche lo username si salvi per app.vue e convolist
 
   // Funzione per impostare/rimuovere il token negli header di Axios per login e logout
   function setAuthToken(token) {

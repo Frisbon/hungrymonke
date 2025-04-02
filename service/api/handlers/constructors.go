@@ -15,11 +15,13 @@ import (
 
 // STRUCT SENZA ID PASSATAMI DALL'ESTERNO
 type MsgCONSTR struct {
-	Timestamp time.Time      `json:"timestamp"`
-	Content   scs.Content    `json:"content"`
-	Author    *scs.User      `json:"author"` // sender_struct pointer
-	Status    scs.Status     `json:"status"`
-	Reactions []scs.Reaction `json:"reactions"`
+	Timestamp   time.Time      `json:"timestamp"`
+	Content     scs.Content    `json:"content"`
+	Author      *scs.User      `json:"author"` // sender_struct pointer
+	Status      scs.Status     `json:"status"`
+	Reactions   []scs.Reaction `json:"reactions"`
+	SeenBy      []scs.User     `json:"seenby"` // new record for group msgs.
+	IsForwarded bool           `json:"isforwarded,omitempty"`
 }
 
 // Costruisce il messaggio, lo salva nel DB e ritorna il puntatore a come argomento.

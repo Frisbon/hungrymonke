@@ -16,12 +16,23 @@
 
     <!-- Interfaccia chat se l'utente è loggato -->
     <div v-else class="container">
-      <button @click="handleLogout" class="logout-btn">Logout</button>
       
-      <ConversationList :username="username" @select-conversation="selectConversation"/>
+      
+      <ConversationList 
+        :username="username" 
+        :userPfp="userPfp" 
+        :userPfpType="userPfpType" 
+        @select-conversation="selectConversation"
+        @logout = "handleLogout"
+      />
 
       <div class="chat-area">
-      <ChatMessages :selectedConvoID="selectedConvoID" :recipientUsername="recipientUsername"/>
+
+        <ChatMessages 
+          :selectedConvoID="selectedConvoID" 
+          :recipientUsername="recipientUsername"
+        />
+
       </div>
       
     </div>
@@ -43,6 +54,8 @@ export default {
     return {
       isLoggedIn: false,
       username: '',
+      userPfp: 'https://i.imgur.com/D95gXlb.png', //setto pfp di default
+      userPfpType: null,
       loginError: '',
       selectedConvoID: null,
       recipientUsername: "",
@@ -57,6 +70,8 @@ export default {
         
         this.isLoggedIn = true;
         this.loginError = '';
+        this.userPfp = response.data.user.photo
+        this.userPfpType = response.data.user.photoMimeType
       } catch (error) {
         console.error('Login failed:', error);
         this.loginError = error.response?.data?.error || 'Login failed';
@@ -68,8 +83,10 @@ export default {
       this.isLoggedIn = false;
       this.username = '';
       this.selectedConvoID = '';
-      this.recipientUsername= '';
-    },
+      this.recipientUsername = '';
+      this.userPfp = 'https://i.imgur.com/D95gXlb.png';
+      this.userPfpType = null;
+    },  
 
     selectConversation(convoID) {
       this.selectedConvoID = convoID;
@@ -128,16 +145,8 @@ export default {
 .error {
   color: red;
 }
-.logout-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: #e74c3c;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  cursor: pointer;
-}
+
+
 .logout-btn:hover {
   background-color: #c0392b;
 }
@@ -145,6 +154,7 @@ export default {
   width: 30%; /* Adjust as needed */
   border-right: 1px solid #ccc;
   padding: 10px;
+  padding-right: 20px;
   height: 100%;
   overflow-y: auto;
 }

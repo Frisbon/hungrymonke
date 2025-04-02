@@ -34,12 +34,13 @@ type Content struct {
 type Message struct {
 	Timestamp time.Time `json:"timestamp"`
 	/* NB Content type is either Text o Photo or both*/
-	Content   Content    `json:"content"`
-	Author    *User      `json:"author"`
-	Status    Status     `json:"status"`
-	Reactions []Reaction `json:"reactions"`
-	MsgID     string     `json:"msgid"`
-	SeenBy    []*User    `json:"seenby"` // new record for group msgs.
+	Content     Content    `json:"content"`
+	Author      *User      `json:"author"`
+	Status      Status     `json:"status"`
+	Reactions   []Reaction `json:"reactions"`
+	MsgID       string     `json:"msgid"`
+	SeenBy      []*User    `json:"seenby"` // new record for group msgs.
+	IsForwarded bool       `json:"isforwarded,omitempty"`
 }
 
 /*La struct MessagePreviewXorPhoto era inutile da dichiarare (vedi Preview sotto.) */

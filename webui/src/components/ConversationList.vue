@@ -1,18 +1,55 @@
 <template>
   <div class="conversation-list">
-    <h2>Hello {{ this.username }}!</h2>
+
+
+    <div class="logged_user_menu">
+      <div class="user-info">
+
+        <img 
+          @click="changePfp" class="pfp" 
+          v-if="userPfp != 'https://i.imgur.com/D95gXlb.png' || userPfp != '' " 
+          :src="'data:' + this.userPfpType + ';base64,' + this.userPfp">
+
+        <img @click="changePfp" class="pfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
+        
+        <h2 @click="changeName">Hello {{ this.username }}!</h2>
+      </div>
+
+      <div class="logged_menu_buttons">
+
+        <button>New Chat</button>
+        <button @click="handleLogout" class="logout-btn">Logout</button>
+
+      </div>
+    </div>
 
     <ul>
       <li class="convoBubble"
         v-for="(c, index) in this.convertedConvos"
         :key="c.convoid || index"
         @click="selectConversation(c.convoid)"
-        
-      >
-          <p>{{ c.chatName }}</p>
-          <p>{{ c.chatStatus +" | "+ c.chatPreview }}</p>
-          <p>{{ c.chatTime }}</p>
+        >
 
+          <div class="convoBubbleLeft">
+            <h3 class='chatName'>{{ c.chatName }}</h3>
+
+            <div v-if="c.lastSender == this.username" style="display: flex;align-items: center;">
+
+                <p style="color: teal; font-style: italic;">({{c.chatStatus}})   </p>
+                {{"   " + c.chatPreview}}
+            </div>
+            <p v-else>
+                {{c.chatPreview}}
+            </p>
+          </div>
+
+          <div class="convoBubbleRight">
+            <p class="notificationDot" v-if="c.chatStatus == 'delivered' && c.lastSender != this.username"></p>
+            <br v-else>
+
+            <p>{{ c.chatTime.substring(11, 16) }}</p>
+          
+          </div>
 
       </li>
     </ul>
@@ -27,6 +64,8 @@ export default {
   
   props: {
     username: String,
+    userPfp: String,
+    userPfpType: String,
   },
 
 
@@ -37,12 +76,11 @@ export default {
     };
   },
 
-/*
-
-TODO => SORT CONVOS BY TIME + RENDER CONVO PROPERTIES 
-
-*/
   methods: {
+
+    handleLogout() {
+      this.$emit('logout');
+    },
 
     selectConversation(convoID) {
       if (convoID) {
@@ -93,6 +131,7 @@ TODO => SORT CONVOS BY TIME + RENDER CONVO PROPERTIES
           chatPreview: c.preview,
           chatTime: c.datelastmessage,
           chatStatus: c.messages?.[c.messages.length - 1]?.status, 
+          lastSender: c.messages?.[c.messages.length - 1]?.author?.username,
 
           chatPic: null,
           chatName: null,
@@ -109,8 +148,8 @@ TODO => SORT CONVOS BY TIME + RENDER CONVO PROPERTIES
           toRender.chatPicType = response.data.Group.photoMimeType;
           toRender.chatName = response.data.Group.name;
         }
-        else if(response?.data?.Private){
-          var x = response.data.Private;
+        else if(response?.data?.PrivateConvo){
+          var x = response.data.PrivateConvo;
           var otherDude = x.firstuser ? (this.username != x.firstuser.username ? x.firstuser : x.seconduser) : x.seconduser;
           toRender.chatPic   = otherDude?.photo;
           toRender.chatPicType = otherDude?.photoMimeType;
@@ -126,12 +165,22 @@ TODO => SORT CONVOS BY TIME + RENDER CONVO PROPERTIES
       this.convertedConvos.sort((a, b) => new Date(b.chatTime).getTime() - new Date(a.chatTime).getTime());
       console.log("Contenuto finale di convertedConvos:", this.convertedConvos);
     },
+
+
+    //todo
+    changeName(){
+      console.log("Trying to change name...")
+    },
+
+    changePfp(){
+      console.log("Trying to change the profile picture...")
+    }
+
 },
  /* Appena carico la pagina recupera le conversazioni */
  mounted() {
     console.log("ConversationList component mounted!");
     this.fetchConversations();
-    console.log("now trying to render chats!");
     
   },
 };
@@ -153,5 +202,112 @@ li {
 }
 li:hover {
   background-color: #f0f0f0;
+}
+
+.pfp {
+  /* Make the element a square to ensure a perfect circle */
+  width: 50px; /* Adjust the size as needed */
+  height: 50px; /* Should be the same as the width */
+  border-radius: 50%; /* This makes the element circular */
+  overflow: hidden; /* Clips content that goes outside the circle */
+  display: inline-block; /* Allows multiple profile pictures to sit on the same line */
+  margin-top: 10px;
+  border: 1px solid #ccc
+}
+
+/* If your .pfp elements contain images, you might want to style the image inside */
+.pfp img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ensures the image covers the entire circle without distortion */
+}
+
+.logged_user_menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: #ccc 1px solid;
+}
+
+.user-info {
+  display: flex;
+  width: 100%;
+  justify-content: space-evenly;
+  align-items: center; /* Vertically align items in the user info section */
+}
+
+.logged_menu_buttons {
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
+  padding: 10px;
+  background-color: white;
+  border-radius: 10px; /* Adjust this value to control the roundness */
+}
+
+.logged_menu_buttons button {
+
+  background-color: white;
+  padding: 15px 20px 15px 20px;
+  font-weight: bold;
+  border-radius: 10px; /* Adjust this value to control the roundness */
+  border: #ccc 1px solid
+}
+
+
+.convoBubble {
+  display: flex;
+  border: 1px solid #ccc;
+  margin: 0px 10px 10px;
+
+  border-radius: 10px;
+  padding: 0 15px; /* Add some padding inside the bubble */
+  justify-content: space-between; /* Puts space between the left and right sections */
+  align-items: center; /* Vertically aligns items in the center */
+}
+
+
+.convoBubbleRight {
+  margin-left: 20px;
+  display: flex;
+  flex-direction: column; /* Stack the notification and time vertically */
+  align-items: flex-end; /* Align items to the right */
+}
+
+.notificationDot {
+  border: 3px;
+  color: green;
+  background-color: lightgreen;
+  border-color: green;
+  border-radius: 50%;
+  padding: 5px; /* Adjust padding as needed */
+  margin-bottom: 5px; /* Add some space between the dot and the time */
+  width: 10px; /* Set a fixed width */
+  height: 10px; /* Make height equal to width for a circle */
+
+}
+
+h3.chatName {
+    justify-self: left;
+    padding-left: 15px;
+}
+
+.chatTime {
+  font-size: 0.8em; /* Adjust font size as needed */
+  color: #777; /* Adjust color as needed */
+}
+
+/* Remove the default styling that might interfere */
+.convoBubbleLeft {
+  justify-content: left; /* Remove this */
+}
+
+.convoBubbleRight {
+  justify-content: right; /* Remove this */
+}
+
+br[v-else] {
+  display: none; /* Hide the <br> tag when the notification dot is visible */
 }
 </style>
