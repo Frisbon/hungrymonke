@@ -18,9 +18,12 @@
     <div v-else class="container">
       <button @click="handleLogout" class="logout-btn">Logout</button>
       
-      <ConversationList @select-conversation="selectConversation"/>
+      <ConversationList :username="username" @select-conversation="selectConversation"/>
 
+      <div class="chat-area">
       <ChatMessages :selectedConvoID="selectedConvoID" :recipientUsername="recipientUsername"/>
+      </div>
+      
     </div>
   </div>
 </template>
@@ -94,12 +97,14 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+  height: 100vh; /* Make the app container take full viewport height */
+  overflow: hidden; /* Prevent scrolling on the main container */
 }
 .container {
   display: flex;
   max-width: 1200px;
   margin: 0 auto;
-  position: relative;
+  height: 100%; /* Make the chat container take full height */
 }
 .login {
   max-width: 400px;
@@ -135,5 +140,18 @@ export default {
 }
 .logout-btn:hover {
   background-color: #c0392b;
+}
+.conversation-list {
+  width: 30%; /* Adjust as needed */
+  border-right: 1px solid #ccc;
+  padding: 10px;
+  height: 100%;
+  overflow-y: auto;
+}
+.chat-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 </style>

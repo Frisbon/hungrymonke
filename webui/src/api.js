@@ -37,6 +37,14 @@ const apiClient = axios.create({
   export default {
 
 
+  getConvoInfo(convoID){
+    const token = localStorage.getItem('token');
+    return apiClient.get(`/utils/getconvoinfo/${convoID}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+  },
+
   getConversations() {
 
         /*

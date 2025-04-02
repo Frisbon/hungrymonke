@@ -93,6 +93,10 @@ func main() {
 		handlers.DebugPrintDatabases()
 	})
 
+	r.GET("/api/utils/getconvoinfo/:ID", func(c *gin.Context) {
+		handlers.GetConvoInfo(c)
+	})
+
 	r.Run(":8082")
 
 }

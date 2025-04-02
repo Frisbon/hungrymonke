@@ -213,9 +213,6 @@ func SendMessage(c *gin.Context) {
 		return
 	}
 
-	//siccome non manderò direttamente il mimetype, dovrò farci qualcosa...
-	// TODO: if mimetype = null, converti dalla stringa binaria e metti in req.msg.photomimetype
-
 	var reactlist []scs.Reaction
 
 	// DEFINISCO NUOVO MESSAGGIO CON PARAMETRI GIUSTI
@@ -255,13 +252,6 @@ func SendMessage(c *gin.Context) {
 		if statusErr {
 			c.JSON(http.StatusInternalServerError, gin.H{"Status": "oh sh*t"}) // todo add to open api (below too)
 		}
-
-		/*
-			FIXED: Bug cancellato, tengo come commento se mi servirà un update...
-				// aggiorno le liste personali di entrambi gli utenti...
-			 	scs.UserConvosDB[SenderUsername] = append(scs.UserConvosDB[SenderUsername], convo)
-			 	scs.UserConvosDB[req.RecipientUsername] = append(scs.UserConvosDB[req.RecipientUsername], convo)
-		*/
 
 		c.JSON(http.StatusOK, gin.H{"Status": "Inviato sulla convo indicata dall'ID!", "Conversation": &convo})
 
@@ -805,5 +795,53 @@ func SetGroupPhoto(c *gin.Context) {
 	group.PhotoMimeType = contentType
 
 	c.JSON(http.StatusOK, gin.H{"Success": "Photo Updated!", "Group": group})
+
+}
+
+/* HANDLER NON RICHIESTI */
+
+// PUT /utils/getconvoinfo/{ID}
+/* Serve al front-end per capire se una convo è privata o di gruppo, per renderizzare le info nella convo-list*/
+func GetConvoInfo(c *gin.Context) {
+
+	//autorizzo il current user
+	_, logged_struct, er1 := QuickAuth(c)
+	if len(er1) != 0 {
+		return
+	}
+
+	ConvoID := c.Param("ID")
+
+	group, exists := scs.GroupDB[ConvoID]
+	private, exists2 := scs.PrivateDB[ConvoID]
+
+	// se è una convo di gruppo
+	if exists {
+		found := false
+		for _, user := range group.Users {
+			if user == logged_struct {
+				found = true
+				break
+			}
+		}
+		if !found {
+			c.JSON(http.StatusForbidden, gin.H{"Error": " You are not in that group! >:O "})
+			return
+
+		}
+
+		c.JSON(http.StatusOK, gin.H{"Group": group})
+	} else if exists2 {
+		if logged_struct != private.FirstUser && logged_struct != private.SecondUser {
+			c.JSON(http.StatusForbidden, gin.H{"Error": " You are not in that convo! >:O "})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"PrivateConvo": private})
+
+	} else {
+		//todo check if its at least in ConvoDB and theres an alignment error.\
+		c.JSON(http.StatusNoContent, gin.H{"Error": "no convo bro"})
+	}
 
 }
