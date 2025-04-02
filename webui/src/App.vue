@@ -64,6 +64,8 @@ export default {
       api.logout();
       this.isLoggedIn = false;
       this.username = '';
+      this.selectedConvoID = '';
+      this.recipientUsername= '';
     },
 
     selectConversation(convoID) {

@@ -256,9 +256,12 @@ func SendMessage(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"Status": "oh sh*t"}) // todo add to open api (below too)
 		}
 
-		// aggiorno le liste personali di entrambi gli utenti...
-		scs.UserConvosDB[SenderUsername] = append(scs.UserConvosDB[SenderUsername], convo)
-		scs.UserConvosDB[req.RecipientUsername] = append(scs.UserConvosDB[req.RecipientUsername], convo)
+		/*
+			FIXED: Bug cancellato, tengo come commento se mi servirà un update...
+				// aggiorno le liste personali di entrambi gli utenti...
+			 	scs.UserConvosDB[SenderUsername] = append(scs.UserConvosDB[SenderUsername], convo)
+			 	scs.UserConvosDB[req.RecipientUsername] = append(scs.UserConvosDB[req.RecipientUsername], convo)
+		*/
 
 		c.JSON(http.StatusOK, gin.H{"Status": "Inviato sulla convo indicata dall'ID!", "Conversation": &convo})
 
