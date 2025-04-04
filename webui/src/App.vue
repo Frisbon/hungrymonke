@@ -32,6 +32,7 @@
           :selectedConvoID="selectedConvoID" 
           :username="username" 
           :isGroup="isGroup"
+          :selectedConvoRender = "selectedConvoRender"
         />
 
       </div>
@@ -61,6 +62,7 @@ export default {
       selectedConvoID: null,
       recipientUsername: "",
       isGroup: null,
+      selectedConvoRender: null,
     };
   },
   methods: {
@@ -99,21 +101,24 @@ export default {
       localStorage.removeItem('userPfp');
       localStorage.removeItem('userPfpType');
       this.isGroup = null;
+      this.selectedConvoRender = null;
 
     },  
 
-    async selectConversation(convoID) {
+    async selectConversation(convoID, convoRender) {
       this.selectedConvoID = convoID;
-      console.log("Hai selezionato la chat con ID: "+convoID)
-      // ora renderizzo i messaggi?
+      this.selectedConvoRender = convoRender;
+      console.log("Hai selezionato la chat, ecco il render:");
+      console.log(convoRender)
 
       const response = await api.getConvoInfo(convoID);
-      if (response?.data?.Group) {this.isGroup = true}
-      else{this.isGroup = false}
-
+      if (response?.data?.Group) {
+        this.isGroup = true;
+      } else {
+        this.isGroup = false;
+      }
     },
 
-    //TODO: NewConversation(), con recipientUsername...
 
   },
 
@@ -143,7 +148,7 @@ export default {
   display: flex;
   max-width: 1200px;
   margin: 0 auto;
-  height: 100%; /* Make the chat container take full height */
+  height: fit-content;
 }
 .login {
   max-width: 400px;

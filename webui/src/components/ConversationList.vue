@@ -102,7 +102,16 @@ export default {
 
     selectConversation(convoID) {
       if (convoID) {
-        this.$emit('select-conversation', convoID); // Emit a Select-conversation signal
+        // Trova l'oggetto toRender corrispondente al convoID
+        const selectedConvo = this.convertedConvos.find(c => c.convoid === convoID);
+        if (selectedConvo) {
+          // Emetti l'evento con convoID e selectedConvo (toRender)
+          this.$emit('select-conversation', convoID, selectedConvo);
+          console.log("Ho fatto l'emit, ecco le info:");
+          console.log(selectedConvo);
+        } else {
+          console.error('Convo non trovata per ID:', convoID);
+        }
       }
     },
 

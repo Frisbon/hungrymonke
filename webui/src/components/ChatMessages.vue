@@ -7,6 +7,27 @@
 
     <!-- If a chat is selected -->
     <div v-else class="conversation-active">
+
+      <div class="chatMenu">
+          
+        <img 
+        class="chatpfp" style="margin-top: 0px;"
+        v-if="this.selectedConvoRender.chatPic != null" 
+        :src="'data:' + this.selectedConvoRender.chatPicType + ';base64,' + this.selectedConvoRender.chatPic">
+
+        <img @click="changePfp" class="chatpfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
+        
+        <h1>{{ this.selectedConvoRender.chatName }}</h1>
+
+        
+        <button :disabled="!this.isGroup" @click="groupchatOptions">
+          ...
+        </button>
+
+      </div>
+
+
+
       <div class="message-list"> 
 
           <div class="message-bubble"
@@ -57,6 +78,7 @@ export default {
     selectedConvoID: String,
     username: String,
     isGroup: Boolean,
+    selectedConvoRender: Object,
   },
 
   data() {
@@ -165,6 +187,28 @@ export default {
   height: 100%; /* Fill the height of the chat-area in App.vue */
 }
 
+.chatMenu {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  margin: 0px 10px;
+  border-bottom: #ccc 1px solid;
+  border-top: #ccc 1px solid;
+  
+}
+
+.chatMenu button {
+  background-color: white;
+  padding: 15px 20px 15px 20px;
+  font-weight: bold;
+  border-radius: 10px; /* Adjust this value to control the roundness */
+  border: #ccc 1px solid
+}
+
+.conversation-list {
+  border-bottom: #ccc 1px solid;
+  border-top: #ccc 1px solid;
+}
 .no-conversation {
   display: flex;
   align-items: center;
@@ -178,6 +222,20 @@ export default {
   flex-direction: column;
   height: 100%;
 }
+
+.chatpfp {
+  /* Make the element a square to ensure a perfect circle */
+  width: 60px; /* Adjust the size as needed */
+  height: 60px; /* Should be the same as the width */
+  border-radius: 50%; /* This makes the element circular */
+  overflow: hidden; /* Clips content that goes outside the circle */
+  display: inline-block; /* Allows multiple profile pictures to sit on the same line */
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  object-fit: cover
+
+}
+
 
 .message-list {
   overflow-y: auto; /* Enable scrolling */
@@ -260,11 +318,12 @@ export default {
   cursor: not-allowed;
 }
 
-/* Rende roba trasparente ma comunque la renderizza */
-.transparent{ 
-  background-color: hsla(0, 0%, 100%, 0);
-  border-color: hsla(0, 0%, 100%, 0);
-  color: hsla(0, 0%, 100%, 0);
-  color-scheme: hsla(0, 0%, 100%, 0);
-  }
+.chatMenu button:disabled {
+  cursor: not-allowed;
+}
+
+.chatMenu button:hover {
+  background-color: #f0f0f0; 
+}
+
 </style>
