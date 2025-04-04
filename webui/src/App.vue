@@ -67,11 +67,18 @@ export default {
         const credentials = this.username;
         const response = await api.login(credentials);
         console.log('Login successful:', response.data);
-        
+
         this.isLoggedIn = true;
         this.loginError = '';
-        this.userPfp = response.data.user.photo
-        this.userPfpType = response.data.user.photoMimeType
+        this.userPfp = response.data.user.photo;
+        this.userPfpType = response.data.user.photoMimeType;
+
+        // salva anche lo username e foto profilo
+        localStorage.setItem('username', this.username);
+        localStorage.setItem('userPfp', this.userPfp);
+        localStorage.setItem('userPfpType', this.userPfpType);
+        
+
       } catch (error) {
         console.error('Login failed:', error);
         this.loginError = error.response?.data?.error || 'Login failed';
@@ -86,6 +93,10 @@ export default {
       this.recipientUsername = '';
       this.userPfp = 'https://i.imgur.com/D95gXlb.png';
       this.userPfpType = null;
+      localStorage.removeItem('username');
+      localStorage.removeItem('userPfp');
+      localStorage.removeItem('userPfpType');
+
     },  
 
     selectConversation(convoID) {
@@ -100,9 +111,12 @@ export default {
 
   /*Appena carico il DOM, questo sarà il primo ad essere eseguito*/ 
   mounted() {
-    // Controlla se l'utente è già loggato (token salvato)
+    // Controlla se l'utente è già loggato (token e username salvato)
     if (localStorage.getItem('token')) {
       this.isLoggedIn = true;
+      this.username = localStorage.getItem('username') || '';
+      this.userPfp = localStorage.getItem('userPfp') || 'https://i.imgur.com/D95gXlb.png';
+      this.userPfpType = localStorage.getItem('userPfpType') || null;
     }
   },
 };

@@ -6,13 +6,19 @@
       <div class="user-info">
 
         <img 
-          @click="changePfp" class="pfp" 
+          @click="changePfp" class="mainpfp" style="margin-top: 0px; "
           v-if="userPfp != 'https://i.imgur.com/D95gXlb.png' || userPfp != '' " 
           :src="'data:' + this.userPfpType + ';base64,' + this.userPfp">
 
-        <img @click="changePfp" class="pfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
+        <img @click="changePfp" class="mainpfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
         
-        <h2 @click="changeName">Hello {{ this.username }}!</h2>
+        <div style="display: flex; align-items: center; justify-items: flex-start;">
+
+          <h1 style="">Hello,</h1>
+          <h1 @click="changeName" class="changeName">{{ this.username }}</h1>
+
+        </div>
+        
       </div>
 
       <div class="logged_menu_buttons">
@@ -31,15 +37,26 @@
         >
 
           <div class="convoBubbleLeft">
-            <h3 class='chatName'>{{ c.chatName }}</h3>
+            
+            <div style="display: flex; align-items: center; justify-items: flex-start;">
 
-            <div v-if="c.lastSender == this.username" style="display: flex;align-items: center;">
-
-                <p style="color: teal; font-style: italic;">({{c.chatStatus}})   </p>
-                {{"   " + c.chatPreview}}
+              <img class="pfp" v-if="c.chatPic != null && c.chatPic != 'https://i.imgur.com/D95gXlb.png' && c.chatPic != ''"    
+              :src="'data:' + c.chatPicType + ';base64,' + c.chatPic">                 
+              
+              <img class="pfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
+              <h3 class='chatName'>{{ c.chatName }}</h3>
+            
             </div>
-            <p v-else>
-                {{c.chatPreview}}
+            <div v-if="c.lastSender == this.username" style="display: flex; align-items: center;">
+
+
+                <p style="color: teal" v-if="c.chatStatus == `seen`">🗸🗸</p>
+                <p style="color: gray" v-if="c.chatStatus == `delivered`">🗸</p>
+                <p style="padding-left: 10px">{{c.chatPreview}}</p>
+
+            </div>
+            <p v-else style="padding-left: 5px">
+              {{c.chatPreview}}
             </p>
           </div>
 
@@ -204,6 +221,30 @@ li:hover {
   background-color: #f0f0f0;
 }
 
+.logged_menu_buttons button:hover {
+  background-color: #f0f0f0;
+}
+
+.mainpfp {
+  /* Make the element a square to ensure a perfect circle */
+  width: 60px; /* Adjust the size as needed */
+  height: 60px; /* Should be the same as the width */
+  border-radius: 50%; /* This makes the element circular */
+  overflow: hidden; /* Clips content that goes outside the circle */
+  display: inline-block; /* Allows multiple profile pictures to sit on the same line */
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  object-fit: cover
+
+}
+
+.mainpfp:hover{
+
+  border-color: lightseagreen;
+
+}
+
+
 .pfp {
   /* Make the element a square to ensure a perfect circle */
   width: 50px; /* Adjust the size as needed */
@@ -212,15 +253,10 @@ li:hover {
   overflow: hidden; /* Clips content that goes outside the circle */
   display: inline-block; /* Allows multiple profile pictures to sit on the same line */
   margin-top: 10px;
-  border: 1px solid #ccc
+  border: 1px solid #ccc;
+  object-fit: cover
 }
 
-/* If your .pfp elements contain images, you might want to style the image inside */
-.pfp img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Ensures the image covers the entire circle without distortion */
-}
 
 .logged_user_menu {
   display: flex;
@@ -291,6 +327,9 @@ li:hover {
 h3.chatName {
     justify-self: left;
     padding-left: 15px;
+    margin-bottom: 0px;
+    margin-top: 15px;
+
 }
 
 .chatTime {
@@ -310,4 +349,15 @@ h3.chatName {
 br[v-else] {
   display: none; /* Hide the <br> tag when the notification dot is visible */
 }
+
+.changeName:hover{
+  color: lightseagreen;
+}
+.changeName{
+  padding-left: 8px;
+  text-decoration: underline;
+  color: teal;
+}
+
+
 </style>

@@ -6,47 +6,46 @@ import (
 )
 
 /*
+In questo file creo dei record di utenti e messaggi
+in modo da non dover ri-registrarli per testare l'applicazione.
 
-	In questo file creo dei record di utenti e messaggi
-	in modo da non dover ri-registrarli per testare l'applicazione.
-
-	Una rappresentazione grafica dei contenuti è stampata su dataset.png
-
+Una rappresentazione grafica dei contenuti è stampata su dataset.png
 */
+var DATASET_INITIALIZED = false
 
 func init() {
 
-	// // load the pfps
-	// pfp, errpfp := os.ReadFile("service/api/pictureslol/cat2 Arturo.jpg")
-	// if errpfp != nil {
-	// 	panic("Failed to read image " + errpfp.Error()) // Panic during init if the file can't be read
-	// }
+	// load the pfps
+	pfp, errpfp := os.ReadFile("service/api/pictureslol/cat2 Arturo.jpg")
+	if errpfp != nil {
+		panic("Failed to read image " + errpfp.Error()) // Panic during init if the file can't be read
+	}
 
-	// // load the pfps
-	// pfp2, errpfp2 := os.ReadFile("service/api/pictureslol/Betta.png")
-	// if errpfp2 != nil {
-	// 	panic("Failed to read image " + errpfp2.Error()) // Panic during init if the file can't be read
-	// }
+	// load the pfps
+	pfp2, errpfp2 := os.ReadFile("service/api/pictureslol/Betta.png")
+	if errpfp2 != nil {
+		panic("Failed to read image " + errpfp2.Error()) // Panic during init if the file can't be read
+	}
 
-	// // load the pfps
-	// pfp3, errpfp3 := os.ReadFile("service/api/pictureslol/Carlo.jpg")
-	// if errpfp3 != nil {
-	// 	panic("Failed to read image " + errpfp3.Error()) // Panic during init if the file can't be read
-	// }
+	// load the pfps
+	pfp3, errpfp3 := os.ReadFile("service/api/pictureslol/Carlo.jpg")
+	if errpfp3 != nil {
+		panic("Failed to read image " + errpfp3.Error()) // Panic during init if the file can't be read
+	}
 
-	// // Initialize users
-	// arturo := User{Username: "arturo", Photo: pfp}
-	// betta := User{Username: "betta", Photo: pfp2}
-	// carlo := User{Username: "carlo", Photo: pfp3}
+	// Initialize users
+	arturo := User{Username: "Arturo", Photo: pfp}
+	betta := User{Username: "Betta", Photo: pfp2}
+	carlo := User{Username: "Carlo", Photo: pfp3}
 
-	arturo := User{Username: "arturo", Photo: []byte{}}
-	betta := User{Username: "betta", Photo: []byte{}}
-	carlo := User{Username: "carlo", Photo: []byte{}}
+	// arturo := User{Username: "arturo", Photo: []byte{}}
+	// betta := User{Username: "betta", Photo: []byte{}}
+	// carlo := User{Username: "carlo", Photo: []byte{}}
 
 	// Add users to UserDB
-	UserDB["arturo"] = &arturo
-	UserDB["betta"] = &betta
-	UserDB["carlo"] = &carlo
+	UserDB["Arturo"] = &arturo
+	UserDB["Betta"] = &betta
+	UserDB["Carlo"] = &carlo
 
 	// **Group Conversation: "FRENS*"**
 	// Messages for the group conversation
@@ -104,16 +103,22 @@ func init() {
 	groupFrens := ConversationELT{
 		ConvoID:         "group_frens",
 		DateLastMessage: msg4.Timestamp,
-		Preview:         "[FOTO] Vi mando...",
+		Preview:         "[📷 Photo] Vi mando il mio...",
 		Messages:        []*Message{&msg1, &msg2, &msg3, &msg4},
 	}
 	ConvoDB["group_frens"] = &groupFrens
 
+	// load the group photo
+	pfpg, errpfpg := os.ReadFile("service/api/pictureslol/cat frens.jpg")
+	if errpfpg != nil {
+		panic("Failed to read image " + errpfpg.Error()) // Panic during init if the file can't be read
+	}
+
 	// Initialize group
 	group := Group{
 		Conversation: &groupFrens,
-		GroupPhoto:   []byte{},
-		Name:         "FRENS",
+		GroupPhoto:   pfpg,
+		Name:         "FRENS 😼",
 		Users:        []*User{&arturo, &betta, &carlo},
 	}
 	GroupDB["group_frens"] = &group
@@ -174,7 +179,7 @@ func init() {
 	privateArturoBetta := ConversationELT{ // TODO: Siccome il pov varia tra betta e arturo, se last msg è di autore, compare anche status in UI
 		ConvoID:         "private_arturo_betta",
 		DateLastMessage: msg9.Timestamp,
-		Preview:         "Lui non ne...",
+		Preview:         "Lui non ne sa niente...",
 		Messages:        []*Message{&msg5, &msg6, &msg7, &msg8, &msg9},
 	}
 
@@ -219,7 +224,7 @@ func init() {
 	privateBettaCarlo := ConversationELT{
 		ConvoID:         "private_betta_carlo",
 		DateLastMessage: msg12.Timestamp,
-		Preview:         "Grazie donna...",
+		Preview:         "Grazie donna 😘",
 		Messages:        []*Message{&msg10, &msg11, &msg12},
 	}
 
@@ -288,7 +293,7 @@ func init() {
 	privateArturoCarlo := ConversationELT{
 		ConvoID:         "private_arturo_carlo",
 		DateLastMessage: msg17.Timestamp,
-		Preview:         "fammela...",
+		Preview:         "fammela conoscere 💀😂",
 		Messages:        []*Message{&msg13, &msg14, &msg15, &msg16, &msg17},
 	}
 	ConvoDB["private_arturo_carlo"] = &privateArturoCarlo
@@ -308,15 +313,17 @@ func init() {
 	}
 
 	// Initialize UserConvosDB
-	UserConvosDB["arturo"] = Conversations{&groupFrens, &privateArturoBetta, &privateArturoCarlo}
-	UserConvosDB["betta"] = Conversations{&groupFrens, &privateArturoBetta, &privateBettaCarlo}
-	UserConvosDB["carlo"] = Conversations{&groupFrens, &privateBettaCarlo, &privateArturoCarlo}
+	UserConvosDB["Arturo"] = Conversations{&groupFrens, &privateArturoBetta, &privateArturoCarlo}
+	UserConvosDB["Betta"] = Conversations{&groupFrens, &privateArturoBetta, &privateBettaCarlo}
+	UserConvosDB["Carlo"] = Conversations{&groupFrens, &privateBettaCarlo, &privateArturoCarlo}
 
 	// Add all IDs to GenericDB to ensure uniqueness
 	ids := []string{"group_frens", "private_arturo_betta", "private_betta_carlo", "private_arturo_carlo", "msg1", "msg2", "msg3", "msg4", "msg5", "msg6", "msg7", "msg8", "msg9", "msg10", "msg11", "msg12", "msg13", "msg14", "msg15", "msg16", "msg17"}
 	for _, id := range ids {
 		GenericDB[id] = struct{}{}
 	}
+
+	DATASET_INITIALIZED = true
 
 }
 

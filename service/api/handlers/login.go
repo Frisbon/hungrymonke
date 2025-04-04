@@ -3,10 +3,13 @@ package handlers
 // login handlers + functions
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	scs "github.com/Frisbon/hungrymonke/service/api/structures"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
@@ -42,12 +45,11 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	reqUserID := string(body)
+	reqUserID := strings.Trim(string(body), "\"")
 
-	println(reqUserID)
-	// vedo se esiste user nel sistema, se non esiste lo creo
 	if _, exists := scs.UserDB[reqUserID]; !exists {
 		scs.UserDB[reqUserID] = &scs.User{Username: reqUserID}
+		fmt.Println("Non trovo utente perciò lo creo...")
 	}
 
 	//genero token x user e lo returno

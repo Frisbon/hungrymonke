@@ -96,6 +96,8 @@ const apiClient = axios.create({
     const token = response.data.token;
 
     console.log("Ho appena loggato l'utente ("+response.data.user.username+")")
+    console.log("Ecco il response del login in api.js:")
+    console.log(response)
 
     setAuthToken(token);
     return response;
