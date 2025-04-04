@@ -30,7 +30,8 @@
 
         <ChatMessages 
           :selectedConvoID="selectedConvoID" 
-          :recipientUsername="recipientUsername"
+          :username="username" 
+          :isGroup="isGroup"
         />
 
       </div>
@@ -59,6 +60,7 @@ export default {
       loginError: '',
       selectedConvoID: null,
       recipientUsername: "",
+      isGroup: null,
     };
   },
   methods: {
@@ -96,13 +98,19 @@ export default {
       localStorage.removeItem('username');
       localStorage.removeItem('userPfp');
       localStorage.removeItem('userPfpType');
+      this.isGroup = null;
 
     },  
 
-    selectConversation(convoID) {
+    async selectConversation(convoID) {
       this.selectedConvoID = convoID;
       console.log("Hai selezionato la chat con ID: "+convoID)
       // ora renderizzo i messaggi?
+
+      const response = await api.getConvoInfo(convoID);
+      if (response?.data?.Group) {this.isGroup = true}
+      else{this.isGroup = false}
+
     },
 
     //TODO: NewConversation(), con recipientUsername...

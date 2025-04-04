@@ -281,7 +281,7 @@ func init() {
 	msg17 := Message{
 		Timestamp: time.Date(2023, 10, 10, 13, 34, 0, 0, time.UTC),
 		Content:   Content{Text: stringPtr("fammela conoscere 💀😂")},
-		Author:    &carlo,
+		Author:    &arturo,
 		Status:    Seen,
 		Reactions: []Reaction{
 			{Author: &betta, Emoticon: "🤦", Timestamp: time.Date(2023, 10, 10, 13, 35, 0, 0, time.UTC)},

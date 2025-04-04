@@ -1,26 +1,49 @@
 <template>
   <div class="chat-messages-container">
-    <!-- Se ancora non ho selezionato la chat-->
+    <!-- If no chat is selected -->
     <div v-if="!selectedConvoID" class="no-conversation">
       <p>Select a conversation to view messages.</p>
     </div>
 
-    <!-- Se la chat è selezionata-->
+    <!-- If a chat is selected -->
     <div v-else class="conversation-active">
-      <ul class="message-list">
-        <li class="messageBubble" v-for="message in messages" :key="message.msgID">
-          <strong>{{ message.author.username }}:</strong> {{ message.content.text }}
-          <br v-if="message.content.photo && message.content.text">
-          <img class="sent-img" v-if="message.content.photo" :src="'data:' + message.content.photoMimeType + ';base64,' + message.content.photo" alt="Immagine allegata">
-        </li>
-      </ul>
+      <div class="message-list"> 
+
+          <div class="message-bubble"
+          v-for="message in messages"
+          :key="message.msgID"
+          :class="{'other-message': message.author.username !== username,
+                   'my-message': message.author.username === username}">
+            
+            <div v-if="message.author.username !== this.username && this.isGroup">
+            <strong class="author-name">{{ message.author.username }}:</strong> 
+            <br>
+            </div>
+
+            {{ message.content.text }}
+            <br v-if="message.content.photo && message.content.text">
+            
+            <img class="sent-img" v-if="message.content.photo" 
+            :src="'data:' + message.content.photoMimeType + ';base64,' 
+            + message.content.photo" alt="Immagine allegata">
+          
+          </div>
+      </div>
 
       <form @submit.prevent="sendMessage" class="message-input-form">
+        <div style="display: flex">
+          <input type="file" @change="handleFileUpload" accept="image/*" />
+          <button type="submit" :disabled="isSubmitDisabled">
+            <strong>→</strong>
+          </button>
+        </div>  
         <input v-model="newMessage" placeholder="Type a message..." />
-        <input type="file" @change="handleFileUpload" accept="image/*">
-        <button type="submit" :disabled="isSubmitDisabled"> <strong>→</strong></button>
+        
       </form>
+
     </div>
+
+    
   </div>
 </template>
 
@@ -32,6 +55,8 @@ export default {
 
   props: {
     selectedConvoID: String,
+    username: String,
+    isGroup: Boolean,
   },
 
   data() {
@@ -155,40 +180,69 @@ export default {
 }
 
 .message-list {
-  flex-grow: 1; /* Make the message list take up available vertical space */
-  overflow-y: auto; /* Enable scrolling for messages */
+  overflow-y: auto; /* Enable scrolling */
   padding: 10px;
+  display: flex;
+  flex-direction: column;
 }
 
-.messageBubble {
+
+.other-message {
+  background-color: #f0f0f0;
+  align-self: flex-start;
+
+  text-align: left;
+}
+
+.my-message {
+  background-color: lightpink; /* Light green for your messages */
+
+  align-self: flex-end;
+
+}
+
+.author-name {
+  font-weight: bold;
+  font-size: small;
+}
+
+.message-bubble {
   padding: 8px 12px;
   margin-bottom: 5px;
-  background-color: #f0f0f0;
   border-radius: 8px;
   word-break: break-word;
+  width: fit-content;
 }
 
-.sent-img{
-  max-height: 150px; /* Imposta l'altezza massima desiderata (puoi cambiarla) */
-  width: auto; /* La larghezza si adatterà proporzionalmente */
+
+.sent-img {
+  padding-top: 5px;
+  max-height: 200px;
+  width: auto;
+}
+
+.sent-img:hover{
+  border: rgb(112, 92, 111) 1px solid;
+  max-height: 500px;
+  width: auto;
 }
 
 .message-input-form {
   padding: 10px;
-  border-top: 1px solid #ccc;
-  display: flex; /* Arrange input and button horizontally */
-  gap: 10px; /* Space between input and button */
+    border-top: 1px solid #ccc;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-direction: column-reverse;
+    flex-wrap: wrap;
+    align-content: center;
+    margin-right: 10px;
+    margin-left: 10px;
 }
 
-.message-input-form input[type="text"] {
-  flex-grow: 1; /* Make the input take up remaining width */
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
+
 
 .message-input-form input[type="file"] {
-  /* Basic styling, adjust as needed */
   width: auto;
 }
 
@@ -205,4 +259,12 @@ export default {
   background-color: #ccc;
   cursor: not-allowed;
 }
+
+/* Rende roba trasparente ma comunque la renderizza */
+.transparent{ 
+  background-color: hsla(0, 0%, 100%, 0);
+  border-color: hsla(0, 0%, 100%, 0);
+  color: hsla(0, 0%, 100%, 0);
+  color-scheme: hsla(0, 0%, 100%, 0);
+  }
 </style>

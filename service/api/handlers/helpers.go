@@ -90,15 +90,15 @@ func PreviewMaker(Content scs.Content) string {
 
 	if Content.Text != nil && Content.Photo != nil {
 
-		if len(*Content.Text) > 8 {
-			return "📷 " + (*Content.Text)[:8] + "..."
+		if len(*Content.Text) > 16 {
+			return "📷 " + (*Content.Text)[:16] + "..."
 		}
-		// uso tutta la stringa se è più corta di 8 caratteri
+		// uso tutta la stringa se è più corta di 16 caratteri
 		return "📷 " + *Content.Text
 
 	} else if Content.Text != nil {
-		if len(*Content.Text) > 8 {
-			return (*Content.Text)[:8] + "..."
+		if len(*Content.Text) > 16 {
+			return (*Content.Text)[:16] + "..."
 		}
 		return *Content.Text
 

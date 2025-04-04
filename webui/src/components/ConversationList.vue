@@ -23,7 +23,7 @@
 
       <div class="logged_menu_buttons">
 
-        <button>New Chat</button>
+        <button @click="newChat">New Chat</button>
         <button @click="handleLogout" class="logout-btn">Logout</button>
 
       </div>
@@ -88,8 +88,9 @@ export default {
 
   data() {
     return {
-      conversations: [],
-      convertedConvos: [],
+      conversations: [], // usato per ricevere dati dall'api
+      convertedConvos: [], // usato dal ciclo for per renderizzare le chat
+      updatedConvertedConvos: [], // usata per auto-fetchare e confontare in live
     };
   },
 
@@ -105,20 +106,92 @@ export default {
       }
     },
 
-    //
-    async fetchConversations() {
+
+    //todo, oddio potrebbe essere easy...
+    changeName(){
+      console.log("Trying to change name...")
+      this.$emit('changeName');
+    },
+
+    changePfp(){
+      console.log("Trying to change the profile picture...")
+      this.$emit('changePfp');
+    },
+
+    newChat(){
+      console.log("Trying to start a new chat..")
+      this.$emit('newChat');
+    },
+
+    // helper function for fetching
+    arrayEquals(a, b) {
+            if (a === b) return true; // Se sono lo stesso oggetto, sono identici
+            if (a == null || b == null) return false;
+            if (a.length !== b.length) return false;
+
+            for (let i = 0; i < a.length; i++) {
+              if (a[i] !== b[i]) return false;
+            }
+            return true;
+          },
+
+    async pollingFetcher(){
+
       try {
-        const response = await api.getConversations(); // tecnicamente mi ritorna un JSON
-
-        // se dovesser ritorare una stringa, trasformala in json, altrimenti lascia così
+        const response = await api.getConversations(); 
         const responseData = typeof response === 'string' ? JSON.parse(response) : response;
-
-        console.log("Parsed response data:", responseData);
         
         // Se esistono dati ricevuti e ricevo effettivamente un array di conversazioni...
         if (responseData && Array.isArray(responseData['User Conversations'])) {
           this.conversations = responseData['User Conversations'];  
-          this.convoDataRenderer();
+
+          this.updatedConvertedConvos = []; // Reset the array before populating it
+
+          for (let i = 0; i < this.conversations.length; i++) {
+            var c = this.conversations[i];
+
+            // prima imposto i parametri che posso ricavare da convo
+            var toRender = {
+              convoid: c.convoid,
+              chatPreview: c.preview,
+              chatTime: c.datelastmessage,
+              chatStatus: c.messages?.[c.messages.length - 1]?.status, 
+              lastSender: c.messages?.[c.messages.length - 1]?.author?.username,
+
+              chatPic: null,
+              chatName: null,
+              chatPicType: null
+            };
+
+            // poi vedo se è di gruppo o privata per il render corretto...
+            var response2 = await api.getConvoInfo(c.convoid);
+
+            if (response2?.data?.Group){
+              toRender.chatPic   = response2.data.Group.groupphoto;
+              toRender.chatPicType = response2.data.Group.photoMimeType;
+              toRender.chatName = response2.data.Group.name;
+            }
+            else if(response2?.data?.PrivateConvo){
+              var x = response2.data.PrivateConvo;
+              var otherDude = x.firstuser ? (this.username != x.firstuser.username ? x.firstuser : x.seconduser) : x.seconduser;
+              toRender.chatPic   = otherDude?.photo;
+              toRender.chatPicType = otherDude?.photoMimeType;
+              toRender.chatName = otherDude?.username;
+            }
+
+            this.updatedConvertedConvos.push(toRender);
+          
+          }
+
+          // Ordina l'array 'this.updatedConvertedConvos' in base a 'chatTime' (dal più recente al più vecchio)
+          this.updatedConvertedConvos.sort((a, b) => new Date(b.chatTime).getTime() - new Date(a.chatTime).getTime());
+
+          if (!this.arrayEquals(this.updatedConvertedConvos, this.convertedConvos)) //se ho trovato qualcosa di nuovo...
+          {
+            this.convertedConvos = this.updatedConvertedConvos
+          }
+
+
         } else {
           console.error('Unexpected response format:', responseData);
           this.conversations = [];
@@ -129,77 +202,33 @@ export default {
         this.conversations = [];
       }
 
-      
     },
 
-    async convoDataRenderer(){
-      console.log("Starting convoDataRenderer");
-      this.convertedConvos = []; // Reset the array before populating it
+    startPolling() {
+      // Fetch conversations every 3 seconds (adjust the interval as needed)
+      this.pollingInterval = setInterval(() => {
+        console.log("Polling for new conversations...");
+        this.pollingFetcher();
+      }, 3000); // 3000ms = 3 second
+    },
 
-      console.log("Contenuto di this.conversations prima del ciclo:", this.conversations);
-
-      for (let i = 0; i < this.conversations.length; i++) {
-        var c = this.conversations[i];
-        console.log("Elaborazione conversazione:", i, c);
-
-        // prima imposto i parametri che posso ricavare da convo
-        var toRender = {
-          convoid: c.convoid,
-          chatPreview: c.preview,
-          chatTime: c.datelastmessage,
-          chatStatus: c.messages?.[c.messages.length - 1]?.status, 
-          lastSender: c.messages?.[c.messages.length - 1]?.author?.username,
-
-          chatPic: null,
-          chatName: null,
-          chatPicType: null
-        };
-
-        // poi vedo se è di gruppo o privata per il render corretto...
-        var response = await api.getConvoInfo(c.convoid);
-
-        console.log(`Risposta per convo ${c.convoid}:`, response);
-
-        if (response?.data?.Group){
-          toRender.chatPic   = response.data.Group.groupphoto;
-          toRender.chatPicType = response.data.Group.photoMimeType;
-          toRender.chatName = response.data.Group.name;
-        }
-        else if(response?.data?.PrivateConvo){
-          var x = response.data.PrivateConvo;
-          var otherDude = x.firstuser ? (this.username != x.firstuser.username ? x.firstuser : x.seconduser) : x.seconduser;
-          toRender.chatPic   = otherDude?.photo;
-          toRender.chatPicType = otherDude?.photoMimeType;
-          toRender.chatName = otherDude?.username;
-        }
-
-        console.log("Oggetto toRender prima del push:", toRender);
-        this.convertedConvos.push(toRender);
-        console.log("Lunghezza di convertedConvos dopo il push:", this.convertedConvos.length);
+    stopPolling() {
+      if (this.pollingInterval) {
+        clearInterval(this.pollingInterval);
+        this.pollingInterval = null;
+        console.log("Polling stopped.");
       }
-
-      // Ordina l'array 'this.convertedConvos' in base a 'chatTime' (dal più recente al più vecchio)
-      this.convertedConvos.sort((a, b) => new Date(b.chatTime).getTime() - new Date(a.chatTime).getTime());
-      console.log("Contenuto finale di convertedConvos:", this.convertedConvos);
     },
-
-
-    //todo
-    changeName(){
-      console.log("Trying to change name...")
-    },
-
-    changePfp(){
-      console.log("Trying to change the profile picture...")
-    }
-
-},
+  },
  /* Appena carico la pagina recupera le conversazioni */
  mounted() {
     console.log("ConversationList component mounted!");
-    this.fetchConversations();
-    
+    this.startPolling();
   },
+  beforeUnmount() {
+    this.stopPolling(); // Stop polling when the component is destroyed
+  },
+  
 };
 </script>
 
