@@ -82,10 +82,37 @@ const apiClient = axios.create({
     return apiClient.post(`/conversations/messages?ID=${convoID}`, 
       { ...message }, 
       { headers: { Authorization: `Bearer ${token}` } }
-    );
+    ); 
+  },
+
+  changeUsername(newName) {
+    const token = localStorage.getItem('token');
+    return apiClient.put(`/users/me/username`, newName, 
+      { headers: { Authorization: `Bearer ${token}` } }
+    ).then(response => 
+        {
+          if (response.data && response.data.error) {
+          // Scenario 1: Ricevuto JSON con solo il campo 'error'
+          console.error("Errore durante il cambio username:", response.data.error);
+          return response.data.error
+        } else if (response.data && response.data.message && response.data.user && response.data.new_token) {
+          // Scenario 2: Ricevuto JSON con { message, user, new_token }
+          console.log("Username cambiato con successo:", response.data.message);
+          setAuthToken(response.data.new_token)
+          return response.data;
+        } else {
+          console.warn("Risposta in formato inatteso:", response);
+          return response;
+        }
+    })
+
+    
+  
+    
   },
 
 
+  
   /*
   Questa funzione invia la stringa "credentials" (nickname) nel body della richiesta al back-end
   Il back-end converte il body in una stringa e usa il nickname ricevuto per loggare l'utente,

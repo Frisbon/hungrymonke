@@ -48,10 +48,22 @@ func SetMyUsername(c *gin.Context) {
 	}
 
 	usernameString := string(newUsername)
+	usernameString = usernameString[1 : len(usernameString)-1]
+	println("Ho ricevuto [" + usernameString + "] come nuovo username...")
+
 	if usernameString == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Input non valido, stringa vuota"})
 		return
 	}
+	if _, exists := scs.UserDB[usernameString]; exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Questo nome è già occupato! :("})
+		return
+	}
+
+	//trasferisco le convo sull'altro nickname
+	var convos = scs.UserConvosDB[username]
+	delete(scs.UserConvosDB, username)
+	scs.UserConvosDB[usernameString] = convos
 
 	delete(scs.UserDB, username) // elimino il current user dal db
 	user.Username = usernameString

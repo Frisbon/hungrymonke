@@ -1,29 +1,37 @@
 <template>
   <div id="app">
     <!-- Form di login se l'utente non è loggato -->
+
+    
     <div v-if="!isLoggedIn" class="login">
-      <h2>Login</h2>
+
+
+      <h2>WasaText 🌟</h2>
       <!-- ascolto per l'evento @submit e impedisco al browser la funzionalità di default (ricarica pagina) usando .prevent -->
       <form @submit.prevent="handleLogin">
         <div>
-          <label>Username:</label>
+          <label>Insert your username:</label>
+          <br>
           <input v-model="username" type="text" required />
         </div>
         <button type="submit">Login</button>
-        <p v-if="loginError" class="error">{{ loginError }}</p>
       </form>
+
+      <p v-if="loginError" class="error">{{ loginError }}</p>
     </div>
 
     <!-- Interfaccia chat se l'utente è loggato -->
     <div v-else class="container">
       
-      
       <ConversationList 
         :username="username" 
         :userPfp="userPfp" 
-        :userPfpType="userPfpType" 
+        :userPfpType="userPfpType"
+        :newUsernameTaken = "newUsernameTaken"
         @select-conversation="selectConversation"
+        @changeUsername="changeUsername"
         @logout = "handleLogout"
+        
       />
 
       <div class="chat-area">
@@ -60,9 +68,10 @@ export default {
       userPfpType: null,
       loginError: '',
       selectedConvoID: null,
-      recipientUsername: "",
+
       isGroup: null,
       selectedConvoRender: null,
+      newUsernameTaken: false,
     };
   },
   methods: {
@@ -119,6 +128,17 @@ export default {
       }
     },
 
+    async changeUsername(newName){
+      console.log("Sono in App.vue dentro changeUsername(), mi connetto al back-end...")
+      const response = await api.changeUsername(newName)
+      if (!response.error){
+        this.username = response.user.username
+        this.newUsernameTaken = false
+      }
+      else{this.newUsernameTaken = true}
+      
+
+    }
 
   },
 
@@ -140,35 +160,66 @@ export default {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   text-align: center;
   color: #2c3e50;
+  
   margin-top: 60px;
   height: 100vh; /* Make the app container take full viewport height */
   overflow: hidden; /* Prevent scrolling on the main container */
 }
+
+#app .login{ justify-items: center; }
+
 .container {
   display: flex;
   max-width: 1200px;
   margin: 0 auto;
   height: fit-content;
 }
+
 .login {
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  font-weight: bold;
+  border-radius: 10px; /* Adjust this value to control the roundness */
+  border: #ccc 1px solid;
+  max-height: fit-content;
+  max-width: fit-content;
+  justify-self: center;
+  padding: 0px 20px;
 }
-.login div {
+
+.login h2{ margin: 10px 0px;}
+
+.login form {
+
+  
+  border-top: #ccc 1px solid;
+  padding: 0px 40px;
+  padding-top: 10px;
+}
+
+#app button{
+
+  background-color: white;
+  font-weight: bold;
+  border-radius: 10px; /* Adjust this value to control the roundness */
+  border: #ccc 1px solid;
   margin-bottom: 10px;
+  padding: 15px 20px 15px 20px;
 }
-.login label {
-  display: inline-block;
-  width: 100px;
+
+.login input{
+
+background-color: white;
+font-weight: bold;
+border-radius: 10px; /* Adjust this value to control the roundness */
+border: #ccc 1px solid;
+margin: 10px 0px;
+text-align: center;
+font-weight: normal;
+
 }
-.login input {
-  padding: 5px;
-  width: 200px;
-}
-.login button {
-  padding: 5px 10px;
-}
+
 .error {
   color: red;
 }

@@ -14,19 +14,44 @@
         
         <div style="display: flex; align-items: center; justify-items: flex-start;">
 
-          <h1 style="">Hello,</h1>
-          <h1 @click="changeName" class="changeName">{{ this.username }}</h1>
+          <h2 style="">Hello,</h2>
+          <h2 @click="changeUsernameInputField" class="changeName">{{ this.username }}</h2>
 
         </div>
         
       </div>
 
-      <div class="logged_menu_buttons">
+      <div class="logged_menu_buttons" v-if="!showUsernameInput">
 
         <button @click="newChat">New Chat</button>
         <button @click="handleLogout" class="logout-btn">Logout</button>
 
       </div>
+
+      <form @submit.prevent="changeUsername" v-if="showUsernameInput">
+        <div>
+          <label>Insert a new username:</label>
+          <br>
+          <input v-model="newUsername" type="text"/>
+        </div>
+        <div style="display: flex; justify-content: space-evenly;">
+
+        <button @click="cancelChangeName">Cancel</button>
+        <button type="submit">Set New Name</button> 
+        
+      </div>
+         <p style="color: red; font-weight: bold;" v-if="newUsernameError">
+          Username not valid
+        </p>
+        <p style="color: red; font-weight: bold;" v-if="newUsernameTaken">
+          Username already taken!
+        </p>
+         
+      </form>
+
+
+
+
     </div>
 
     <ul>
@@ -83,6 +108,7 @@ export default {
     username: String,
     userPfp: String,
     userPfpType: String,
+    newUsernameTaken: Boolean,
   },
 
 
@@ -91,10 +117,17 @@ export default {
       conversations: [], // usato per ricevere dati dall'api
       convertedConvos: [], // usato dal ciclo for per renderizzare le chat
       updatedConvertedConvos: [], // usata per auto-fetchare e confontare in live
+
+      showUsernameInput: false,
+      newUsername:'',
+      newUsernameError: false,
+      
     };
   },
 
   methods: {
+
+    cancelChangeName(){ this.changeUsernameInputField = false},
 
     handleLogout() {
       this.$emit('logout');
@@ -115,21 +148,47 @@ export default {
       }
     },
 
-
     //todo, oddio potrebbe essere easy...
-    changeName(){
-      console.log("Trying to change name...")
-      this.$emit('changeName');
+    changeUsernameInputField(){
+      console.log("Opening Username Field");
+      this.showUsernameInput = true;
+    },
+
+    changeUsername(){
+      if( this.newUsername !== ''){
+        console.log("Trying to change username to "+this.newUsername+"...");
+        this.$emit("changeUsername", this.newUsername)
+        this.showUsernameInput = false
+
+        this.convertedConvos = []
+        setTimeout(function()
+          {
+          
+          }, 1000); 
+        this.pollingFetcher();
+      }else{
+        this.newUsernameError = true
+      }
+      
+     
+            
+      
     },
 
     changePfp(){
       console.log("Trying to change the profile picture...")
       this.$emit('changePfp');
+
+
+      this.pollingFetcher();
     },
 
     newChat(){
       console.log("Trying to start a new chat..")
       this.$emit('newChat');
+
+
+      this.pollingFetcher();
     },
 
     // helper function for fetching
@@ -218,7 +277,7 @@ export default {
       this.pollingInterval = setInterval(() => {
         console.log("Polling for new conversations...");
         this.pollingFetcher();
-      }, 3000); // 3000ms = 3 second
+      }, 30000); // 3000ms = 3 second
     },
 
     stopPolling() {
@@ -232,6 +291,7 @@ export default {
  /* Appena carico la pagina recupera le conversazioni */
  mounted() {
     console.log("ConversationList component mounted!");
+    this.pollingFetcher();
     this.startPolling();
   },
   beforeUnmount() {
@@ -300,7 +360,6 @@ li:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 10px;
   border-bottom: #ccc 1px solid;
 }
 
@@ -318,9 +377,35 @@ li:hover {
   padding: 10px;
   background-color: white;
   border-radius: 10px; /* Adjust this value to control the roundness */
+  margin-left: 5px;
+  margin-right: 5px;
 }
 
-.logged_menu_buttons button {
+form {
+
+  font-weight: bold;
+  margin-top: 10px;
+  border-top: #ccc 1px solid;
+  padding: 0px 40px;
+  padding-top: 10px;
+  width: 100%;
+}
+
+
+
+input{
+
+background-color: white;
+font-weight: normal;
+border-radius: 10px; /* Adjust this value to control the roundness */
+border: #ccc 1px solid;
+margin: 10px 0px;
+text-align: center;
+font-weight: normal;
+
+}
+
+button {
 
   background-color: white;
   padding: 15px 20px 15px 20px;

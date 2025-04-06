@@ -23,8 +23,6 @@ func QuickAuth(c *gin.Context) (string, *scs.User, string) {
 		return "", nil, "err"
 	}
 
-	fmt.Println("Token ricevuto:", tokenString)
-
 	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 	claims := &jwt.StandardClaims{}
 
