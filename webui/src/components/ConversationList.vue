@@ -5,20 +5,21 @@
     <div class="logged_user_menu">
       <div class="user-info">
 
-        <img 
+        <img
           @click="changePfp" class="mainpfp" style="margin-top: 0px; "
-          v-if="userPfp != 'https://i.imgur.com/D95gXlb.png' || userPfp != '' " 
+          v-if="this.userPfp != 'https://i.imgur.com/D95gXlb.png' && this.userPfp != ''&& this.userPfp != null"
           :src="'data:' + this.userPfpType + ';base64,' + this.userPfp">
 
         <img @click="changePfp" class="mainpfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
-        
+        <input type="file" @change="handleFileUpload" accept="image/*" style="display: none;" ref="fileInput">
+
         <div style="display: flex; align-items: center; justify-items: flex-start;">
 
           <h2 style="">Hello,</h2>
           <h2 @click="changeUsernameInputField" class="changeName">{{ this.username }}</h2>
 
         </div>
-        
+
       </div>
 
       <div class="logged_menu_buttons" v-if="!showUsernameInput">
@@ -26,35 +27,29 @@
         <button @click="newChat">New Chat</button>
         <button @click="handleLogout" class="logout-btn">Logout</button>
 
+
       </div>
 
-      <form @submit.prevent="changeUsername" v-if="showUsernameInput">
+      <div class="form" v-if="showUsernameInput">
+      <form @submit.prevent="changeUsername">
         <div>
           <label>Insert a new username:</label>
           <br>
-          <input v-model="newUsername" type="text"/>
+          <input v-model="newUsername" required type="text"/>
+          <p style="color: red; font-weight: bold; margin-top: 0px;" v-if="newUsernameTaken">
+            Username already taken!
+          </p>
         </div>
-        <div style="display: flex; justify-content: space-evenly;">
-
-        <button @click="cancelChangeName">Cancel</button>
-        <button type="submit">Set New Name</button> 
-        
-      </div>
-         <p style="color: red; font-weight: bold;" v-if="newUsernameError">
-          Username not valid
-        </p>
-        <p style="color: red; font-weight: bold;" v-if="newUsernameTaken">
-          Username already taken!
-        </p>
-         
+        <button type="submit">Set New Name</button>
       </form>
-
-
+      <button v-if="showUsernameInput" @click="cancelChangeName">Cancel</button>
+      </div>
 
 
     </div>
 
     <ul>
+      <p v-if="noMessages" style="text-align: center; color: #999999;">You have no conversations!</p>
       <li class="convoBubble"
         v-for="(c, index) in this.convertedConvos"
         :key="c.convoid || index"
@@ -62,15 +57,16 @@
         >
 
           <div class="convoBubbleLeft">
-            
+
             <div style="display: flex; align-items: center; justify-items: flex-start;">
 
-              <img class="pfp" v-if="c.chatPic != null && c.chatPic != 'https://i.imgur.com/D95gXlb.png' && c.chatPic != ''"    
-              :src="'data:' + c.chatPicType + ';base64,' + c.chatPic">                 
-              
+              <img class="pfp" v-if="c.chatPic != null && c.chatPic != 'https://i.imgur.com/D95gXlb.png' && c.chatPic != ''"
+              :src="'data:' + c.chatPicType + ';base64,' + c.chatPic">
+
+
               <img class="pfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
               <h3 class='chatName'>{{ c.chatName }}</h3>
-            
+
             </div>
             <div v-if="c.lastSender == this.username" style="display: flex; align-items: center;">
 
@@ -90,7 +86,7 @@
             <br v-else>
 
             <p>{{ c.chatTime.substring(11, 16) }}</p>
-          
+
           </div>
 
       </li>
@@ -103,7 +99,7 @@ import api from '../api';
 
 export default {
   name: 'ConversationList',
-  
+
   props: {
     username: String,
     userPfp: String,
@@ -120,14 +116,29 @@ export default {
 
       showUsernameInput: false,
       newUsername:'',
-      newUsernameError: false,
-      
+
+
+      noMessages: false,
+      selectedFile: null,
+
+      fileInput: null, // Add a ref to the file input
     };
   },
 
   methods: {
 
-    cancelChangeName(){ this.changeUsernameInputField = false},
+
+    //NB: permette di inviare una foto per volta, e non in bulk (TODO)
+    handleFileUpload(event) {
+      this.selectedFile = event.target.files[0];
+      if (this.selectedFile) {
+        this.$emit('changeUserPfp', this.selectedFile);
+        console.log("Profile picture selected:", this.selectedFile);
+      }
+    },
+
+
+    cancelChangeName(){ this.showUsernameInput = false; this.$emit("resetNameError")},
 
     handleLogout() {
       this.$emit('logout');
@@ -155,32 +166,40 @@ export default {
     },
 
     changeUsername(){
-      if( this.newUsername !== ''){
         console.log("Trying to change username to "+this.newUsername+"...");
         this.$emit("changeUsername", this.newUsername)
-        this.showUsernameInput = false
+        
+        // chiudi interfaccia solo se non ho errore
+        if(this.newUsernameTaken == true){
 
-        this.convertedConvos = []
-        setTimeout(function()
-          {
-          
-          }, 1000); 
-        this.pollingFetcher();
-      }else{
-        this.newUsernameError = true
-      }
-      
-     
-            
-      
+          console.log("Hai cambiato nome, chiudo interfaccia e ricarico chat...")
+          this.showUsernameInput = false
+          this.convertedConvos = []
+
+
+        // per 2 secondi faccio polling molto veloce,.
+        let seconds = 2;
+        const timer = setInterval(() => {
+          console.log("Eseguito!");
+          seconds--;
+          this.pollingFetcher();
+          if (seconds <= 0) clearInterval(timer);
+        }, 500);
+
+        }else{
+          console.log("Errore con il nome, l'interfaccia rimane aperta")
+        }
+        
+        
+        
+
+
     },
 
     changePfp(){
       console.log("Trying to change the profile picture...")
-      this.$emit('changePfp');
-
-
-      this.pollingFetcher();
+      // Programmatically click the file input
+      this.$refs.fileInput.click();
     },
 
     newChat(){
@@ -193,25 +212,25 @@ export default {
 
     // helper function for fetching
     arrayEquals(a, b) {
-            if (a === b) return true; // Se sono lo stesso oggetto, sono identici
-            if (a == null || b == null) return false;
-            if (a.length !== b.length) return false;
+          if (a === b) return true; // Se sono lo stesso oggetto, sono identici
+          if (a == null || b == null) return false;
+          if (a.length !== b.length) return false;
 
-            for (let i = 0; i < a.length; i++) {
-              if (a[i] !== b[i]) return false;
-            }
-            return true;
-          },
+          for (let i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) return false;
+          }
+          return true;
+        },
 
     async pollingFetcher(){
 
       try {
-        const response = await api.getConversations(); 
+        const response = await api.getConversations();
         const responseData = typeof response === 'string' ? JSON.parse(response) : response;
-        
+
         // Se esistono dati ricevuti e ricevo effettivamente un array di conversazioni...
         if (responseData && Array.isArray(responseData['User Conversations'])) {
-          this.conversations = responseData['User Conversations'];  
+          this.conversations = responseData['User Conversations'];
 
           this.updatedConvertedConvos = []; // Reset the array before populating it
 
@@ -223,7 +242,7 @@ export default {
               convoid: c.convoid,
               chatPreview: c.preview,
               chatTime: c.datelastmessage,
-              chatStatus: c.messages?.[c.messages.length - 1]?.status, 
+              chatStatus: c.messages?.[c.messages.length - 1]?.status,
               lastSender: c.messages?.[c.messages.length - 1]?.author?.username,
 
               chatPic: null,
@@ -248,7 +267,7 @@ export default {
             }
 
             this.updatedConvertedConvos.push(toRender);
-          
+
           }
 
           // Ordina l'array 'this.updatedConvertedConvos' in base a 'chatTime' (dal più recente al più vecchio)
@@ -263,10 +282,12 @@ export default {
         } else {
           console.error('Unexpected response format:', responseData);
           this.conversations = [];
+          this.noMessages = false
         }
-      
+
       } catch (error) {
         console.error('Error fetching conversations:', error);
+        this.noMessages = true
         this.conversations = [];
       }
 
@@ -289,7 +310,7 @@ export default {
     },
   },
  /* Appena carico la pagina recupera le conversazioni */
- mounted() {
+  mounted() {
     console.log("ConversationList component mounted!");
     this.pollingFetcher();
     this.startPolling();
@@ -297,7 +318,7 @@ export default {
   beforeUnmount() {
     this.stopPolling(); // Stop polling when the component is destroyed
   },
-  
+
 };
 </script>
 
@@ -320,7 +341,7 @@ li:hover {
 }
 
 .logged_menu_buttons button:hover {
-  background-color: #f0f0f0;
+  background-color: #f0f0f0 !important;
 }
 
 .mainpfp {
@@ -381,7 +402,7 @@ li:hover {
   margin-right: 5px;
 }
 
-form {
+.form {
 
   font-weight: bold;
   margin-top: 10px;

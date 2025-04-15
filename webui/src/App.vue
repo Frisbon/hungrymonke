@@ -29,8 +29,10 @@
         :userPfpType="userPfpType"
         :newUsernameTaken = "newUsernameTaken"
         @select-conversation="selectConversation"
+        @changeUserPfp = "changeUserPfp"
         @changeUsername="changeUsername"
         @logout = "handleLogout"
+        @resetNameError = "resetNameError"
         
       />
 
@@ -83,8 +85,7 @@ export default {
 
         this.isLoggedIn = true;
         this.loginError = '';
-        this.userPfp = response.data.user.photo;
-        this.userPfpType = response.data.user.photoMimeType;
+        if (response.data.user.photo != null){this.userPfp = response.data.user.photo; this.userPfpType = response.data.user.photoMimeType;}
 
         // salva anche lo username e foto profilo
         localStorage.setItem('username', this.username);
@@ -111,6 +112,7 @@ export default {
       localStorage.removeItem('userPfpType');
       this.isGroup = null;
       this.selectedConvoRender = null;
+      this.newUsernameTaken = false
 
     },  
 
@@ -128,15 +130,50 @@ export default {
       }
     },
 
+    resetNameError(){ this.newUsernameTaken = false},
+    
     async changeUsername(newName){
       console.log("Sono in App.vue dentro changeUsername(), mi connetto al back-end...")
       const response = await api.changeUsername(newName)
       if (!response.error){
         this.username = response.user.username
+        this.userPfp = response.user.photo
+        this.userPfpType = response.user.photoMimeType
+
+        //resetto tutto!
+        localStorage.removeItem('username');
+        localStorage.removeItem('userPfp');
+        localStorage.removeItem('userPfpType');
+        this.selectedConvoID = '';
+        localStorage.setItem('username', this.username);
+        localStorage.setItem('userPfp', this.userPfp);
+        localStorage.setItem('userPfpType', this.userPfpType);
         this.newUsernameTaken = false
+
       }
-      else{this.newUsernameTaken = true}
+      else{
+        this.newUsernameTaken = true
+      }
       
+
+    },
+
+    async changeUserPfp(newPfp){
+      console.log("Sono in App.vue dentro changeUserPfp(), mi connetto al back-end...")
+      const response = await api.changeUserPfp(newPfp)
+      if (!response.error){
+        this.userPfp = response.user.photo
+        this.userPfpType = response.user.photoMimeType
+
+        //resetto tutto!
+        localStorage.removeItem('userPfp');
+        localStorage.removeItem('userPfpType');
+        this.selectedConvoID = '';
+        localStorage.setItem('userPfp', this.userPfp);
+        localStorage.setItem('userPfpType', this.userPfpType);
+        console.log("La pfp dovrebbe essere stata cambiata!")
+      }
+
 
     }
 
@@ -208,6 +245,17 @@ export default {
   padding: 15px 20px 15px 20px;
 }
 
+#app button :hover{
+
+  background-color: #f0f0f0;
+
+}
+
+#app button :disabled{
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 .login input{
 
 background-color: white;
@@ -225,9 +273,6 @@ font-weight: normal;
 }
 
 
-.logout-btn:hover {
-  background-color: #c0392b;
-}
 .conversation-list {
   width: 30%; /* Adjust as needed */
   border-right: 1px solid #ccc;

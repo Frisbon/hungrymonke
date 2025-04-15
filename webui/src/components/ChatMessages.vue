@@ -58,7 +58,7 @@
             <strong>→</strong>
           </button>
         </div>  
-        <input v-model="newMessage" placeholder="Type a message..." />
+        <input class="textInput" v-model="newMessage" placeholder="Type a message..." />
         
       </form>
 
@@ -305,17 +305,17 @@ export default {
 }
 
 .message-input-form button {
-  padding: 8px 15px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+  padding: 8px 15px !important; 
+  background-color: #007bff !important; 
+  color: white !important; 
+  border: none !important; 
+  border-radius: 5px !important; 
+  cursor: pointer !important; 
 }
 
 .message-input-form button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+  background-color: #ccc !important;
+  cursor: not-allowed !important;
 }
 
 .chatMenu button:disabled {
@@ -324,6 +324,19 @@ export default {
 
 .chatMenu button:hover {
   background-color: #f0f0f0; 
+}
+
+
+.textInput{
+
+background-color: white;
+font-weight: normal;
+border-radius: 10px; /* Adjust this value to control the roundness */
+border: #ccc 1px solid;
+margin: 10px 0px;
+text-align: center;
+font-weight: normal;
+
 }
 
 </style>

@@ -91,14 +91,46 @@ const apiClient = axios.create({
       { headers: { Authorization: `Bearer ${token}` } }
     ).then(response => 
         {
+         if (response.data && response.data.message && response.data.user && response.data.new_token) {
+          // Scenario 2: Ricevuto JSON con { message, user, new_token }
+          console.log("Username cambiato con successo:");
+          setAuthToken(response.data.new_token)
+          console.log(response.data)
+          return response.data;
+        } else {
+          console.warn("Risposta in formato inatteso:", response);
+          return response;
+        }
+    }).catch(error => {
+        console.error("Errore durante il cambio username:", error.response.data.error);
+        console.log("Ritorno:")
+        console.log(error.response.data)
+        return error.response.data
+      })
+
+    
+  },
+
+  changeUserPfp(newPfpFile) {
+    const token = localStorage.getItem('token');
+
+    const formData = new FormData();      
+    formData.append('file', newPfpFile);
+
+
+    return apiClient.put(`/users/me/photo`, formData, 
+      { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data',} }
+    ).then(response => 
+        {
           if (response.data && response.data.error) {
           // Scenario 1: Ricevuto JSON con solo il campo 'error'
-          console.error("Errore durante il cambio username:", response.data.error);
-          return response.data.error
-        } else if (response.data && response.data.message && response.data.user && response.data.new_token) {
+          console.error("Errore durante il cambio foto:", response.data.error);
+          return response.data
+        } else if (response.data && response.data.message && response.data.user) {
           // Scenario 2: Ricevuto JSON con { message, user, new_token }
-          console.log("Username cambiato con successo:", response.data.message);
-          setAuthToken(response.data.new_token)
+          console.log("Foto cambiata con successo:");
+          console.log(response.data)
+
           return response.data;
         } else {
           console.warn("Risposta in formato inatteso:", response);
@@ -106,12 +138,12 @@ const apiClient = axios.create({
         }
     })
 
+
+  
     
   
     
   },
-
-
   
   /*
   Questa funzione invia la stringa "credentials" (nickname) nel body della richiesta al back-end

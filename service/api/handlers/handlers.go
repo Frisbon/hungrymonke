@@ -81,7 +81,7 @@ func SetMyUsername(c *gin.Context) {
 
 }
 
-// POST, path /users/me/photo
+// PUT, path /users/me/photo
 func SetMyPhoto(c *gin.Context) {
 
 	// AUTENTICAZIONE UTENTE
