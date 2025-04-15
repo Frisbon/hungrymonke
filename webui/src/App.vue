@@ -131,11 +131,13 @@ export default {
     },
 
     resetNameError(){ this.newUsernameTaken = false},
-    
+
     async changeUsername(newName){
       console.log("Sono in App.vue dentro changeUsername(), mi connetto al back-end...")
       const response = await api.changeUsername(newName)
       if (!response.error){
+
+        console.log()
         this.username = response.user.username
         this.userPfp = response.user.photo
         this.userPfpType = response.user.photoMimeType
@@ -200,7 +202,7 @@ export default {
   
   margin-top: 60px;
   height: 100vh; /* Make the app container take full viewport height */
-  overflow: hidden; /* Prevent scrolling on the main container */
+  
 }
 
 #app .login{ justify-items: center; }

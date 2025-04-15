@@ -38,6 +38,7 @@
             
             <div v-if="message.author.username !== this.username && this.isGroup">
             <strong class="author-name">{{ message.author.username }}:</strong> 
+            <!-- ADD FORWARDED OR REPLIED CONTENT HERE-->
             <br>
             </div>
 
@@ -48,6 +49,25 @@
             :src="'data:' + message.content.photoMimeType + ';base64,' 
             + message.content.photo" alt="Immagine allegata">
           
+            <!-- ADD REACTIONS, TIME AND SEEN STATUS HERE-->
+            <div class='messageStats'>
+              <!-- la reaction bubble avrà foto in minuscolo e reaction accanto tutto accerchiato alla telegram-->
+              <div class="reactionBubble" v-for="reaction in message.reactions" v-bind:key="reaction.author.username">
+                <img class="reactionImage" :src="'data:undefined;base64,'+ reaction.author.photo" >
+                <div class="reactionEmoticon">{{ reaction.emoticon }}</div>
+              </div>
+
+              <div class ="timestampAndStatus">
+                
+                <p class="noParagraph">{{ message.timestamp.substring(11, 16) }}</p>
+
+                <p class="noParagraph" style="color: teal; margin: 0px 5px" v-if="message.status == `seen` && message.author.username == this.username">🗸🗸</p>
+                <p class="noParagraph" style="color: gray; margin: 0px 5px" v-if="message.status == `delivered` && message.author.username == this.username">🗸</p>
+                
+                
+             </div>
+             <!-- Se sono io, vedo status time e reactions, altrimenti solo time e reactions-->
+            </div>
           </div>
       </div>
 
@@ -221,6 +241,7 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
+
 }
 
 .chatpfp {
@@ -238,7 +259,8 @@ export default {
 
 
 .message-list {
-  overflow-y: auto; /* Enable scrolling */
+  overflow-y: scroll; /* Enable scrolling */
+  max-height: 50vh;
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -253,7 +275,7 @@ export default {
 }
 
 .my-message {
-  background-color: lightpink; /* Light green for your messages */
+  background-color: rgb(235, 232, 255); 
 
   align-self: flex-end;
 
@@ -337,6 +359,44 @@ margin: 10px 0px;
 text-align: center;
 font-weight: normal;
 
+}
+
+.reactionImage{
+
+  width: 20px; /* Adjust the size as needed */
+  height: 20px; /* Should be the same as the width */
+  border-radius: 50%; /* This makes the element circular */
+  overflow: hidden; /* Clips content that goes outside the circle */
+  display: inline-block; /* Allows multiple profile pictures to sit on the same line */
+  border: 1px solid #ccc;
+  object-fit: cover
+
+}
+
+.reactionBubble{
+
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  background-color: #fae5f0;
+  font-style: normal;
+  font-size: larger;
+}
+
+.messageStats{
+  display: flex; 
+  justify-content: space-around;
+  align-items:center;
+  font-style: italic;
+  color: #808080;
+}
+
+.noParagraph{margin: 0px;}
+
+.timestampAndStatus{
+  display: flex;
 }
 
 </style>
