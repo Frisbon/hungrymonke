@@ -35,6 +35,26 @@
         :class="{'other-message': message.author.username !== username,
                     'my-message': message.author.username === username}"
         >
+          
+          <!-- Fallo comparire  a sx di un messaggio guardando username-->
+          <MessageOptions 
+          :username = "this.username"
+          :selectedMessage = "this.selectedMessage"
+          v-if="!this.reactionsOpen && this.messageOptionsOpen && this.selectedMessage && this.selectedMessage.msgid == message.msgid && this.selectedMessage.author.username == this.username"
+
+          @closeMessageOptions = 'closeMessageOptions'
+          @openReactions = 'switchReactions'
+          
+          />
+          <EmojiButtons
+            @emojiSelected = "reactionWindow"
+            v-if="this.reactionsOpen && this.messageOptionsOpen && this.selectedMessage && this.selectedMessage.msgid == message.msgid && this.selectedMessage.author.username == this.username"
+            @closeReactions = 'switchReactions'
+          />
+        
+          
+          
+          
           <div class="message-bubble"
             @click="handleMessageClick(message)"
             :class="{'other-message-bubble': message.author.username !== username,
@@ -75,10 +95,20 @@
               </div>
          </div>
 
+          <!-- Fallo comparire a destra o a sx di un messaggio guardando username-->
           <MessageOptions 
           :username = "this.username"
           :selectedMessage = "this.selectedMessage"
-          v-if="this.selectedMessage && this.selectedMessage.msgid == message.msgid"
+          v-if="!this.reactionsOpen && this.messageOptionsOpen && this.selectedMessage && this.selectedMessage.msgid == message.msgid && this.selectedMessage.author.username != this.username"
+
+          @closeMessageOptions = 'closeMessageOptions'
+          @openReactions = 'switchReactions'
+          
+          />
+          <EmojiButtons
+            @emojiSelected = "reactionWindow"
+            v-if="this.reactionsOpen && this.messageOptionsOpen && this.selectedMessage && this.selectedMessage.msgid == message.msgid && this.selectedMessage.author.username != this.username"
+            @closeReactions = 'switchReactions'
           />
 
         </div> 
@@ -104,12 +134,13 @@
 
 <script>
 import api from '../api';
+import EmojiButtons from './EmojiButtons.vue';
 import MessageOptions from './MessageOptions.vue';
 
 export default {
   name: 'ChatMessages',
 
-  components:{MessageOptions},
+  components:{MessageOptions, EmojiButtons},
 
   props: {
     selectedConvoID: String,
@@ -125,6 +156,9 @@ export default {
       selectedFile: null,
       base64Image: '', // Per memorizzare la foto
       selectedMessage: null,
+      selectedEmoji: '',
+      reactionsOpen: false,
+      messageOptionsOpen: false,
     };
   },
 
@@ -144,6 +178,18 @@ export default {
 
 
   methods: {
+
+    reactionWindow(emoji){console.log("Mi hai passato: "+emoji)},
+
+    switchReactions(){
+
+      console.log("reactionsOpen=="+this.reactionsOpen)
+      this.reactionsOpen = !this.reactionsOpen
+    },
+
+    closeMessageOptions(){
+      this.messageOptionsOpen = false; 
+    },
 
     //NB: permette di inviare una foto per volta, e non in bulk (TODO)
     handleFileUpload(event) {
@@ -223,6 +269,8 @@ export default {
       }
 
       this.selectedMessage = message
+      this.messageOptionsOpen = true
+      this.reactionsOpen = false
 
     }
 
@@ -317,6 +365,7 @@ export default {
   border-radius: 8px;
   word-break: break-word;
   width: fit-content;
+  height: fit-content;
 }
 
 .message-bubble:hover{
@@ -438,6 +487,11 @@ font-weight: normal;
 
 .message-options{
   display: flex;
-  justify-content: space-evenly;
+    width: fit-content;
+    height: fit-content;
+    flex-direction: row;
+    gap: 5px;
+    max-width: 40%;
+    flex-wrap: wrap;
 }
 </style>

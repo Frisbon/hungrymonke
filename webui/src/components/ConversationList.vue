@@ -117,7 +117,6 @@ export default {
       showUsernameInput: false,
       newUsername:'',
 
-
       noMessages: false,
       selectedFile: null,
 
