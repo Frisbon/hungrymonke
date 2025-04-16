@@ -30,45 +30,59 @@
 
       <div class="message-list"> 
 
+        <div class= "message-container" v-for="message in messages" :key="message.msgID"
+        
+        :class="{'other-message': message.author.username !== username,
+                    'my-message': message.author.username === username}"
+        >
           <div class="message-bubble"
-          v-for="message in messages"
-          :key="message.msgID"
-          :class="{'other-message': message.author.username !== username,
-                   'my-message': message.author.username === username}">
-            
-            <div v-if="message.author.username !== this.username && this.isGroup">
-            <strong class="author-name">{{ message.author.username }}:</strong> 
-            <!-- ADD FORWARDED OR REPLIED CONTENT HERE-->
-            <br>
-            </div>
-
-            {{ message.content.text }}
-            <br v-if="message.content.photo && message.content.text">
-            
-            <img class="sent-img" v-if="message.content.photo" 
-            :src="'data:' + message.content.photoMimeType + ';base64,' 
-            + message.content.photo" alt="Immagine allegata">
-          
-            <!-- ADD REACTIONS, TIME AND SEEN STATUS HERE-->
-            <div class='messageStats'>
-              <!-- la reaction bubble avrà foto in minuscolo e reaction accanto tutto accerchiato alla telegram-->
-              <div class="reactionBubble" v-for="reaction in message.reactions" v-bind:key="reaction.author.username">
-                <img class="reactionImage" :src="'data:undefined;base64,'+ reaction.author.photo" >
-                <div class="reactionEmoticon">{{ reaction.emoticon }}</div>
+            @click="handleMessageClick(message)"
+            :class="{'other-message-bubble': message.author.username !== username,
+                    'my-message-bubble': message.author.username === username}"
+            >
+              
+              <div v-if="message.author.username !== this.username && this.isGroup">
+              <strong class="author-name">{{ message.author.username }}:</strong> 
+              <!-- ADD FORWARDED OR REPLIED CONTENT HERE-->
+              <br>
               </div>
 
-              <div class ="timestampAndStatus">
-                
-                <p class="noParagraph">{{ message.timestamp.substring(11, 16) }}</p>
+              {{ message.content.text }}
+              <br v-if="message.content.photo && message.content.text">
+              
+              <img class="sent-img" v-if="message.content.photo" 
+              :src="'data:' + message.content.photoMimeType + ';base64,' 
+              + message.content.photo" alt="Immagine allegata">
+            
+              <!-- ADD REACTIONS, TIME AND SEEN STATUS HERE-->
+              <div class='messageStats'>
+                <!-- la reaction bubble avrà foto in minuscolo e reaction accanto tutto accerchiato alla telegram-->
+                <div class="reactionBubble" v-for="reaction in message.reactions" v-bind:key="reaction.author.username">
+                  <img class="reactionImage" :src="'data:undefined;base64,'+ reaction.author.photo" >
+                  <div class="reactionEmoticon">{{ reaction.emoticon }}</div>
+                </div>
 
-                <p class="noParagraph" style="color: teal; margin: 0px 5px" v-if="message.status == `seen` && message.author.username == this.username">🗸🗸</p>
-                <p class="noParagraph" style="color: gray; margin: 0px 5px" v-if="message.status == `delivered` && message.author.username == this.username">🗸</p>
-                
-                
-             </div>
-             <!-- Se sono io, vedo status time e reactions, altrimenti solo time e reactions-->
-            </div>
-          </div>
+                <div class ="timestampAndStatus">
+                  
+                  <p class="noParagraph">{{ message.timestamp.substring(11, 16) }}</p>
+
+                  <p class="noParagraph" style="color: teal; margin: 0px 5px" v-if="message.status == `seen` && message.author.username == this.username">🗸🗸</p>
+                  <p class="noParagraph" style="color: gray; margin: 0px 5px" v-if="message.status == `delivered` && message.author.username == this.username">🗸</p>
+                  
+                  
+              </div>
+              <!-- Se sono io, vedo status time e reactions, altrimenti solo time e reactions-->
+              </div>
+         </div>
+
+          <MessageOptions 
+          :username = "this.username"
+          :selectedMessage = "this.selectedMessage"
+          v-if="this.selectedMessage && this.selectedMessage.msgid == message.msgid"
+          />
+
+        </div> 
+
       </div>
 
       <form @submit.prevent="sendMessage" class="message-input-form">
@@ -90,9 +104,12 @@
 
 <script>
 import api from '../api';
+import MessageOptions from './MessageOptions.vue';
 
 export default {
   name: 'ChatMessages',
+
+  components:{MessageOptions},
 
   props: {
     selectedConvoID: String,
@@ -107,6 +124,7 @@ export default {
       newMessage: '',
       selectedFile: null,
       base64Image: '', // Per memorizzare la foto
+      selectedMessage: null,
     };
   },
 
@@ -196,6 +214,18 @@ export default {
         console.log("Error: ",error)
       }
     },
+
+    handleMessageClick(message){
+
+      console.log("Youve clicked on a message!")
+      if (message.author.username == this.username){
+        console.log("And it is yours! :)")
+      }
+
+      this.selectedMessage = message
+
+    }
+
   },
 };
 </script>
@@ -268,17 +298,12 @@ export default {
 
 
 .other-message {
-  background-color: #f0f0f0;
-  align-self: flex-start;
-
+  justify-content: flex-start;
   text-align: left;
 }
 
 .my-message {
-  background-color: rgb(235, 232, 255); 
-
-  align-self: flex-end;
-
+  justify-content: flex-end;
 }
 
 .author-name {
@@ -294,6 +319,12 @@ export default {
   width: fit-content;
 }
 
+.message-bubble:hover{
+  border: 1px solid teal
+}
+
+.message-bubble.my-message-bubble{background-color: rgb(235, 232, 255); }
+.message-bubble.other-message-bubble{background-color:#f0f0f0; }
 
 .sent-img {
   padding-top: 5px;
@@ -343,6 +374,8 @@ export default {
 .chatMenu button:disabled {
   cursor: not-allowed;
 }
+
+.chatMenu button{margin-bottom: 0px !important; } 
 
 .chatMenu button:hover {
   background-color: #f0f0f0; 
@@ -399,4 +432,12 @@ font-weight: normal;
   display: flex;
 }
 
+.message-container{
+  display: flex;
+}
+
+.message-options{
+  display: flex;
+  justify-content: space-evenly;
+}
 </style>
