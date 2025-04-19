@@ -145,6 +145,29 @@ const apiClient = axios.create({
     
   },
   
+  sendReaction(messageID, Emoticon){
+    const token = localStorage.getItem('token');
+    return apiClient.post(`/messages/${messageID}/comments`, 
+      { 'Emoticon': Emoticon }, 
+      { headers: { Authorization: `Bearer ${token}` } }
+    ); 
+  },
+
+  removeReaction(messageID){
+    const token = localStorage.getItem('token');
+    return apiClient.delete(`/messages/${messageID}/comments`, 
+      { headers: { Authorization: `Bearer ${token}` } }
+    ); 
+  },
+  
+  removeMessage(messageID){
+    const token = localStorage.getItem('token');
+    return apiClient.delete(`/messages/${messageID}`, 
+      { headers: { Authorization: `Bearer ${token}` } }
+    ); 
+  },
+  
+
   /*
   Questa funzione invia la stringa "credentials" (nickname) nel body della richiesta al back-end
   Il back-end converte il body in una stringa e usa il nickname ricevuto per loggare l'utente,

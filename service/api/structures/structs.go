@@ -41,6 +41,7 @@ type Message struct {
 	MsgID       string     `json:"msgid"`
 	SeenBy      []*User    `json:"seenby"` // new record for group msgs.
 	IsForwarded bool       `json:"isforwarded,omitempty"`
+	ReplyingTo  *Message   `json:"replyingto,omitempty"`
 }
 
 /*La struct MessagePreviewXorPhoto era inutile da dichiarare (vedi Preview sotto.) */

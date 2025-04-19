@@ -44,6 +44,8 @@
 
           @closeMessageOptions = 'closeMessageOptions'
           @openReactions = 'switchReactions'
+          @reloadMsgs = 'reloadMessages'
+          @reply = 'replyProcedure'
           
           />
           <EmojiButtons
@@ -61,11 +63,30 @@
                     'my-message-bubble': message.author.username === username}"
             >
               
+
+
+
+
               <div v-if="message.author.username !== this.username && this.isGroup">
-              <strong class="author-name">{{ message.author.username }}:</strong> 
-              <!-- ADD FORWARDED OR REPLIED CONTENT HERE-->
-              <br>
+                <div style="display: flex;">
+                <strong >{{ message.author.username }}:</strong> 
+                <!-- ADD FORWARDED OR REPLIED CONTENT HERE-->
+                <i class="message-bubble-heading" v-if="message.isforwarded" style="color: gray;">↪ (Forwarded)</i>
+                </div>
               </div>
+              <div v-else>
+                <div style="display: flex;">
+                <!-- ADD FORWARDED OR REPLIED CONTENT HERE-->
+                <i class="message-bubble-heading" v-if="message.isforwarded" style="color: gray;">↪ (Forwarded)</i>
+                </div>
+              </div>
+              <div class="message-reply" v-if="message.replyingto != null">
+                  <i >↩ {{ message.author.username }}:</i> 
+                  <p class="noParagraph">{{ message.replyingto.content.text.slice(0,16)}}...</p>
+              </div>
+
+
+
 
               {{ message.content.text }}
               <br v-if="message.content.photo && message.content.text">
@@ -103,6 +124,9 @@
 
           @closeMessageOptions = 'closeMessageOptions'
           @openReactions = 'switchReactions'
+          @reloadMsgs = 'reloadMessages'
+          @reply = 'replyProcedure'
+
           
           />
           <EmojiButtons
@@ -115,7 +139,11 @@
 
       </div>
 
+
+      
+
       <form @submit.prevent="sendMessage" class="message-input-form">
+        
         <div style="display: flex">
           <input type="file" @change="handleFileUpload" accept="image/*" />
           <button type="submit" :disabled="isSubmitDisabled">
@@ -123,8 +151,12 @@
           </button>
         </div>  
         <input class="textInput" v-model="newMessage" placeholder="Type a message..." />
-        
       </form>
+      <div class="reply-div" v-if="replyingMsg != ''">
+          <!-- Replying shit + button-->
+           <strong>↪ Replying To: {{replyingMsg.content.text.substring(0,16)}}...</strong> 
+           <button @click="resetReply">⨉</button>
+      </div>
 
     </div>
 
@@ -159,6 +191,8 @@ export default {
       selectedEmoji: '',
       reactionsOpen: false,
       messageOptionsOpen: false,
+
+      replyingMsg: "",
     };
   },
 
@@ -179,7 +213,26 @@ export default {
 
   methods: {
 
-    reactionWindow(emoji){console.log("Mi hai passato: "+emoji)},
+    resetReply(){this.replyingMsg = ""},
+
+    reactionWindow(emoji){
+      console.log("Mi hai passato: "+emoji)
+      api.sendReaction(this.selectedMessage.msgid,emoji)
+      this.reloadMessages()
+    },
+
+    reloadMessages(){
+      // per 2 secondi faccio polling molto veloce,.
+      let seconds = 2;
+        const timer = setInterval(() => {
+          console.log("fetcher messaggi spammato!");
+          seconds--;
+          this.fetchMessages(this.selectedConvoID)
+          if (seconds <= 0) clearInterval(timer);
+        }, 500);
+      this.closeMessageOptions()
+      this.reactionsOpen = false
+    },
 
     switchReactions(){
 
@@ -191,6 +244,11 @@ export default {
       this.messageOptionsOpen = false; 
     },
 
+    replyProcedure(){
+      this.closeMessageOptions()
+      console.log("bruh log")
+      this.replyingMsg = this.selectedMessage;
+    },
     //NB: permette di inviare una foto per volta, e non in bulk (TODO)
     handleFileUpload(event) {
       this.selectedFile = event.target.files[0];
@@ -241,10 +299,21 @@ export default {
           content.photoMimeType = mimeType;
         }
 
-        const messageToSend = {
-          message: content, // Il backend si aspetta un campo "message" che contiene l'oggetto Content
-          recipientUsername: "" // do per scontato che ho l'ID
-        };
+        
+        var messageToSend = {};
+
+        if (this.replyingMsg != ''){
+            messageToSend = {
+              message: content, // Il backend si aspetta un campo "message" che contiene l'oggetto Content
+              recipientUsername: "", // do per scontato che ho l'ID
+              replyingto: this.replyingMsg,
+          };
+        }else{
+          messageToSend = {
+            message: content, 
+            recipientUsername: "", 
+          };
+        }
 
         await api.sendMessage(this.selectedConvoID, messageToSend);
 
@@ -253,6 +322,7 @@ export default {
         this.selectedFile = null;
         this.base64Image = '';
         this.fetchMessages(this.selectedConvoID);
+        this.replyingMsg = "";
 
 
       }
@@ -354,9 +424,26 @@ export default {
   justify-content: flex-end;
 }
 
-.author-name {
-  font-weight: bold;
+.message-bubble-heading {
   font-size: small;
+}
+
+.message-reply{
+  display: flex; color: gray; 
+  justify-content: space-around; font-size: small;
+  flex-direction: column;
+}
+
+.reply-div{
+    padding-top: 10px;
+    border-top: 1px gray solid;
+    font-size: small;
+    display: flex;
+    width: 38%;
+    /* align-content: stretch; */
+    align-items: baseline;
+    justify-content: space-between;
+    align-self: center;
 }
 
 .message-bubble {
@@ -379,6 +466,8 @@ export default {
   padding-top: 5px;
   max-height: 200px;
   width: auto;
+  display: flex;
+  justify-self: center;
 }
 
 .sent-img:hover{
@@ -388,7 +477,7 @@ export default {
 }
 
 .message-input-form {
-  padding: 10px;
+    padding: 10px 10px 0px 10px;
     border-top: 1px solid #ccc;
     display: flex;
     gap: 10px;

@@ -23,9 +23,14 @@
     methods: {
       emitEmoji(emoji) {
         this.$emit('emojiSelected', emoji);
+        this.closeMenu()
+
+        
+
       },
 
       closeMenu(){this.$emit("closeReactions")}
+
     },
   };
   </script>

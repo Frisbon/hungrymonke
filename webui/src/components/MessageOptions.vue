@@ -13,7 +13,9 @@
   
   </template>
   
-  <script>
+<script>
+import api from '@/api';
+
   
   export default {
     name: 'MessageOptions',
@@ -36,12 +38,17 @@
       },
       replyButton(){
         console.log("You've clicked the replyButton()!")
+        this.$emit("reply")
       },
       deleteReactionButton(){
         console.log("You've clicked the deleteReactionButton()!")
+        api.removeReaction(this.selectedMessage.msgid)
+        this.$emit("reloadMsgs")
       },
       deleteMessageButton(){
         console.log("You've clicked the deleteMessageButton()!")
+        api.removeMessage(this.selectedMessage.msgid)
+        this.$emit("reloadMsgs")
       },
       closeButton(){
         console.log("You've clicked the closeButton()!")

@@ -204,7 +204,7 @@ func GetMyConversation(c *gin.Context) {
 
 }
 
-// POST, path /conversations/messages
+// POST, path /conversations/messages/?=ID
 func SendMessage(c *gin.Context) {
 
 	//autorizzo il current user
@@ -215,8 +215,9 @@ func SendMessage(c *gin.Context) {
 
 	// leggo il messaggio e il username a chi inviarlo (se c'è) dal body
 	type requestLol struct {
-		RecipientUsername string      `json:"recipientusername"`
-		Message           scs.Content `json:"message"`
+		RecipientUsername string       `json:"recipientusername"`
+		Message           scs.Content  `json:"message"`
+		ReplyingTo        *scs.Message `json:"replyingto,omitempty"`
 	}
 
 	var req requestLol
@@ -226,14 +227,30 @@ func SendMessage(c *gin.Context) {
 	}
 
 	var reactlist []scs.Reaction
+	var repMsg *scs.Message
+
+	if req.ReplyingTo != nil {
+
+		x, exists := scs.MsgDB[req.ReplyingTo.MsgID]
+
+		if !exists {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Non esiste messaggio a cui stai rispondendo"})
+			return
+		}
+
+		repMsg = x
+	} else {
+		repMsg = nil
+	}
 
 	// DEFINISCO NUOVO MESSAGGIO CON PARAMETRI GIUSTI
 	msgc := MsgCONSTR{
-		Timestamp: time.Now(),
-		Content:   req.Message,
-		Status:    "delivered",
-		Reactions: reactlist,
-		Author:    sender_struct,
+		Timestamp:  time.Now(),
+		Content:    req.Message,
+		Status:     "delivered",
+		Reactions:  reactlist,
+		Author:     sender_struct,
+		ReplyingTo: repMsg,
 	}
 
 	// USO COSTRUTTORE PER GENERARE ANCHE L'ID MESSAGGIO UNIVOCO
@@ -405,6 +422,9 @@ func CommentMSG(c *gin.Context) {
 
 	//estraggo l'ID messaggio dal path (se c'è)
 	MsgID := c.Param("ID")
+
+	fmt.Println("Mi hai passato l'ID: ", MsgID)
+	fmt.Println("Controllo se esiste: ", scs.MsgDB[MsgID])
 
 	if MsgID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID vuoto"})

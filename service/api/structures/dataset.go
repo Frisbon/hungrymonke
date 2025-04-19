@@ -202,12 +202,13 @@ func init() {
 		MsgID:     "msg10",
 	}
 	msg11 := Message{
-		Timestamp: time.Date(2023, 10, 10, 16, 5, 0, 0, time.UTC),
-		Content:   Content{Text: stringPtr("Vediamoci alle 18:00 in Via Obelisco 3, in questo punto qui:"), Photo: &photoData2, PhotoMimeType: "image/png"},
-		Author:    &betta,
-		Status:    Seen,
-		Reactions: []Reaction{},
-		MsgID:     "msg11",
+		Timestamp:   time.Date(2023, 10, 10, 16, 5, 0, 0, time.UTC),
+		Content:     Content{Text: stringPtr("Vediamoci alle 18:00 in Via Obelisco 3, in questo punto qui:"), Photo: &photoData2, PhotoMimeType: "image/png"},
+		Author:      &betta,
+		Status:      Seen,
+		Reactions:   []Reaction{},
+		MsgID:       "msg11",
+		IsForwarded: true,
 	}
 	msg12 := Message{
 		Timestamp: time.Date(2023, 10, 10, 16, 6, 0, 0, time.UTC),
@@ -217,7 +218,8 @@ func init() {
 		Reactions: []Reaction{
 			{Author: &betta, Emoticon: "✨", Timestamp: time.Date(2023, 10, 10, 16, 6, 0, 0, time.UTC)},
 		},
-		MsgID: "msg12",
+		ReplyingTo: &msg10,
+		MsgID:      "msg12",
 	}
 
 	// Initialize private conversation between Betta and Carlo
@@ -255,12 +257,13 @@ func init() {
 	}
 
 	msg14 := Message{
-		Timestamp: time.Date(2023, 10, 10, 13, 31, 0, 0, time.UTC),
-		Content:   Content{Photo: &photoData3, PhotoMimeType: "image/png"},
-		Author:    &arturo,
-		Status:    Seen,
-		Reactions: []Reaction{},
-		MsgID:     "msg14",
+		Timestamp:   time.Date(2023, 10, 10, 13, 31, 0, 0, time.UTC),
+		Content:     Content{Photo: &photoData3, PhotoMimeType: "image/png"},
+		Author:      &arturo,
+		Status:      Seen,
+		Reactions:   []Reaction{},
+		MsgID:       "msg14",
+		IsForwarded: true,
 	}
 	msg15 := Message{
 		Timestamp: time.Date(2023, 10, 10, 13, 32, 0, 0, time.UTC),

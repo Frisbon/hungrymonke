@@ -22,6 +22,7 @@ type MsgCONSTR struct {
 	Reactions   []scs.Reaction `json:"reactions"`
 	SeenBy      []scs.User     `json:"seenby"` // new record for group msgs.
 	IsForwarded bool           `json:"isforwarded,omitempty"`
+	ReplyingTo  *scs.Message   `json:"replyingto,omitempty"`
 }
 
 // Costruisce il messaggio, lo salva nel DB e ritorna il puntatore a come argomento.
@@ -29,12 +30,14 @@ func ConstrMessage(data MsgCONSTR) *scs.Message {
 
 	m := &scs.Message{
 
-		Timestamp: data.Timestamp,
-		Content:   data.Content,
-		Author:    data.Author,
-		Status:    data.Status,
-		Reactions: data.Reactions,
-		MsgID:     GenerateRandomString(5),
+		Timestamp:   data.Timestamp,
+		Content:     data.Content,
+		Author:      data.Author,
+		Status:      data.Status,
+		Reactions:   data.Reactions,
+		ReplyingTo:  data.ReplyingTo,
+		IsForwarded: data.IsForwarded,
+		MsgID:       GenerateRandomString(5),
 	}
 
 	scs.MsgDB[m.MsgID] = m
