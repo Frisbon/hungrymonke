@@ -33,20 +33,43 @@
         @changeUsername="changeUsername"
         @logout = "handleLogout"
         @resetNameError = "resetNameError"
+        @updateConvertedConvos = "updateConvertedConvos"
         
       />
 
-      <div class="chat-area">
+      <div class="chat-area" v-if="showMessageWindow">
 
         <ChatMessages 
           :selectedConvoID="selectedConvoID" 
           :username="username" 
           :isGroup="isGroup"
           :selectedConvoRender = "selectedConvoRender"
+          @forwarder = "forwarder"
         />
 
       </div>
+
+      <div class="convo-list-area" v-if="showConvoListWindow">
+
+        <ForwardingConvoList
+        :currentUser="username"
+        :convertedConvos="convertedConvos"
+        @forwardToConvo="forwardingConvoListHandler"
+        />
+
+      </div>
+
       
+      
+      <!-- <div class="user-list-area" v-if="showUserListWindow">
+
+        <UserList
+        :currentUser="username"
+        @selectedUserList="userListHandler"
+        />
+
+      </div>
+       -->
     </div>
   </div>
 </template>
@@ -55,12 +78,14 @@
 import ConversationList from './components/ConversationList.vue';
 import ChatMessages from './components/ChatMessages.vue';
 import api from './api';
+import ForwardingConvoList from './components/ForwardingConvoList.vue';
 
 export default {
   name: 'App',
   components: {
     ConversationList,
     ChatMessages,
+    ForwardingConvoList
   },
   data() {
     return {
@@ -73,7 +98,14 @@ export default {
 
       isGroup: null,
       selectedConvoRender: null,
+      convertedConvos: null,
       newUsernameTaken: false,
+
+      selectedMessage: null,
+      
+      showMessageWindow: true,
+      showConvoListWindow: false,
+      
     };
   },
   methods: {
@@ -131,6 +163,27 @@ export default {
     },
 
     resetNameError(){ this.newUsernameTaken = false},
+    updateConvertedConvos(x){this.convertedConvos = x},
+
+    async forwardingConvoListHandler(chosenConvoObject){ 
+      this.showConvoListWindow = false; 
+      this.showMessageWindow = true
+      console.log("Sono in App.vue dentro forwardingConvoListHandler(), mi connetto al back-end...")
+      console.log("prima dell'api.js, al momento mi hai passato l'oggetto: ", chosenConvoObject)
+      const response = await api.forwardMessage(chosenConvoObject.convoid, this.selectedMessage)
+      console.log("Response: ")
+      console.log(response.data)
+      this.selectedConvoID = chosenConvoObject.convoid
+      console.log(this.showConvoListWindow, this.showMessageWindow)
+    },
+    
+    forwarder(selectedMsg){
+      this.showConvoListWindow = true; 
+      this.showMessageWindow = false;
+      this.selectedMessage = selectedMsg
+      console.log(this.showConvoListWindow, this.showMessageWindow)
+
+    },
 
     async changeUsername(newName){
       console.log("Sono in App.vue dentro changeUsername(), mi connetto al back-end...")
@@ -179,6 +232,7 @@ export default {
 
     }
 
+  
   },
 
   /*Appena carico il DOM, questo sarà il primo ad essere eseguito*/ 
@@ -289,4 +343,14 @@ font-weight: normal;
   flex-direction: column;
   height: 100%;
 }
+
+.convo-list-area {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    align-content: center;
+    justify-content: center;
+    overflow-y: hidden;
+}
+
 </style>

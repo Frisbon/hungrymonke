@@ -290,6 +290,9 @@ export default {
         this.conversations = [];
       }
 
+      // ogni volta che ricalcolo i converted convos faccio un emit in modo che App.vue aggiorni la sua variabile.
+      this.$emit("updateConvertedConvos", this.convertedConvos)
+
     },
 
     startPolling() {

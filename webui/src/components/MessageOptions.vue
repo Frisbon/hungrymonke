@@ -34,7 +34,8 @@ import api from '@/api';
     methods: {
 
       forwardButton(){
-      console.log("You've clicked the forwardButton()!")
+      console.log("You've clicked the forwardButton()! EMIT TO CHATMESSAGES")
+      this.$emit('handleForward')
       },
       replyButton(){
         console.log("You've clicked the replyButton()!")

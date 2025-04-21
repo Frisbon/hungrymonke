@@ -10,27 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GET, path /admin/users
-func ListUsers(c *gin.Context) {
-
-	if len(scs.UserDB) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Non trovo Utenti..."})
-	} else {
-
-		var array []scs.User
-		for _, v := range scs.UserDB {
-			array = append(array, scs.User{Username: v.Username, Photo: v.Photo})
-		}
-		c.JSON(http.StatusOK, gin.H{"Users": array})
-
-		for _, elt := range array {
-			fmt.Printf("%+v\n", elt)
-
-		}
-	}
-
-}
-
 // POST, path /users/me/username
 func SetMyUsername(c *gin.Context) {
 
@@ -403,9 +382,117 @@ func ForwardMSG(c *gin.Context) {
 	})
 
 	convo.Messages = append(convo.Messages, newMsg)
-	c.JSON(http.StatusOK, gin.H{"success": "Messaggio inoltrato", "MSG": newMsg})
 
+	c.JSON(http.StatusOK, gin.H{"success": "Messaggio inoltrato", "MSG": newMsg})
+	UpdateConversationWLastMSG(convo)
 	//bwt non faccio controlli delle fonti del messaggio ecc ecc perchè non mi va, basta che funge :)
+}
+
+// GET, path /utils/createConvo (ADD TO MAIN)
+func CreateConvo(c *gin.Context) {
+
+	/*
+		ricevo dal frontend il ricevitore del messaggio, se tra il recivitore
+		e il logged user non esiste convo, la creo. (vedi send message)
+
+		return convoID
+		(usata da forward message)
+	*/
+	//autorizzo il current user
+	sender_username, _, er1 := QuickAuth(c)
+	if len(er1) != 0 {
+		return
+	}
+
+	// leggo l'ID messggio dal body
+	type requestLol struct {
+		RecieverUsername string `json:"recieverUsername"`
+	}
+
+	var req requestLol
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON non valido", "details": err.Error()})
+		return
+	}
+
+	// Recupera le struct User per i due usernames
+	user1, user1Exists := scs.UserDB[sender_username]
+	user2, user2Exists := scs.UserDB[req.RecieverUsername]
+
+	if !user1Exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": user1.Username + " not exists"})
+		return
+	}
+	if !user2Exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": user2.Username + " not exists"})
+		return
+	}
+
+	// Per trovare la conversazione esistente in modo efficiente,
+	// iteriamo sulle conversazioni di uno degli utenti e controlliamo se l'altra parte è l'altro utente.
+	// Assumiamo che UserConvosDB sia popolato correttamente.
+
+	user1Convos, user1HasConvos := scs.UserConvosDB[user1.Username]
+
+	if user1HasConvos {
+		for _, convoELT := range user1Convos {
+			// Recupera la struct Private associata a questa conversazione
+			privateConvo, exists := scs.PrivateDB[convoELT.ConvoID]
+			if exists {
+				// Controlla se questa conversazione privata include entrambi gli utenti
+				isBetweenUsers := (privateConvo.FirstUser.Username == user1.Username && privateConvo.SecondUser.Username == user2.Username) ||
+					(privateConvo.FirstUser.Username == user2.Username && privateConvo.SecondUser.Username == user1.Username)
+
+				if isBetweenUsers {
+					// Trovata conversazione esistente
+					c.JSON(http.StatusOK, gin.H{"convoID": convoELT.ConvoID})
+				}
+			}
+			// Nota: Se una ConvoID esiste in UserConvosDB ma non in PrivateDB,
+			// c'è un'inconsistenza nei dati. Qui assumiamo che i DB siano consistenti.
+		}
+	}
+
+	// Se non è stata trovata nessuna conversazione, creane una nuova
+	newConvoID := GenerateRandomString(6)
+
+	// Crea la nuova struct ConversationELT
+	newConvoELT := &scs.ConversationELT{
+		ConvoID:         newConvoID,
+		DateLastMessage: time.Now(), // O potresti inizializzarla a zero o quando arriva il primo messaggio
+		Preview:         "",         // Inizializza con stringa vuota o placeholder
+		Messages:        []*scs.Message{},
+	}
+
+	// Aggiungi la nuova conversazione al ConvoDB
+	scs.ConvoDB[newConvoID] = newConvoELT
+
+	// Crea la nuova struct Private
+	// Convenzione: ordina gli utenti per username per avere consistenza nella chiave (anche se usiamo ConvoID)
+	// e potenzialmente per futuri indici/ricerche. Qui li mettiamo semplicemente come recuperati.
+	newPrivate := &scs.Private{
+		Conversation: newConvoELT,
+		FirstUser:    user1,
+		SecondUser:   user2,
+	}
+
+	// Aggiungi la nuova conversazione privata al PrivateDB
+	scs.PrivateDB[newConvoID] = newPrivate
+
+	// Aggiungi la nuova conversazione alle liste di conversazioni degli utenti
+	// Inizializza la slice se l'utente non ha ancora conversazioni in UserConvosDB
+	if !user1HasConvos {
+		scs.UserConvosDB[user1.Username] = scs.Conversations{}
+	}
+	scs.UserConvosDB[user1.Username] = append(scs.UserConvosDB[user1.Username], newConvoELT)
+
+	// Controlla e aggiungi anche per il secondo utente
+	_, user2HasConvos := scs.UserConvosDB[user2.Username]
+	if !user2HasConvos {
+		scs.UserConvosDB[user2.Username] = scs.Conversations{}
+	}
+	scs.UserConvosDB[user2.Username] = append(scs.UserConvosDB[user2.Username], newConvoELT)
+	c.JSON(http.StatusOK, gin.H{"convoID": newConvoID})
 
 }
 
@@ -876,6 +963,23 @@ func GetConvoInfo(c *gin.Context) {
 	} else {
 		//todo check if its at least in ConvoDB and theres an alignment error.\
 		c.JSON(http.StatusNoContent, gin.H{"Error": "no convo bro"})
+	}
+
+}
+
+// GET, path /utils/listUsers
+func ListUsers(c *gin.Context) {
+
+	if len(scs.UserDB) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Non trovo Utenti..."})
+	} else {
+
+		var array []scs.User
+		for _, v := range scs.UserDB {
+			array = append(array, scs.User{Username: v.Username, Photo: v.Photo, PhotoMimeType: v.PhotoMimeType})
+		}
+		c.JSON(http.StatusOK, gin.H{"Users": array})
+
 	}
 
 }

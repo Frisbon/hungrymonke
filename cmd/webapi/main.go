@@ -31,7 +31,7 @@ func main() {
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/doc/api.yaml")))
 
-	r.GET("/admin/listUsers", func(c *gin.Context) {
+	r.GET("api/utils/listUsers", func(c *gin.Context) {
 		handlers.ListUsers(c)
 	})
 

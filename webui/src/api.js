@@ -166,6 +166,22 @@ const apiClient = axios.create({
       { headers: { Authorization: `Bearer ${token}` } }
     ); 
   },
+
+  listUsers(){
+    return apiClient.get('utils/listUsers')
+  },
+
+  async forwardMessage(convoID, selectedMessage) {
+    const token = localStorage.getItem('token');
+
+    console.log("ConvoID passato:", convoID)
+    return apiClient.post(
+      `/messages/${selectedMessage.msgid}/forward`,
+      { ConvoID: convoID }, // Invia il convoID nel corpo della richiesta JSON
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+  },
   
 
   /*

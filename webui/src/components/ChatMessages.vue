@@ -46,7 +46,8 @@
           @openReactions = 'switchReactions'
           @reloadMsgs = 'reloadMessages'
           @reply = 'replyProcedure'
-          
+          @handleForward = 'handleForward'
+
           />
           <EmojiButtons
             @emojiSelected = "reactionWindow"
@@ -82,7 +83,8 @@
               </div>
               <div class="message-reply" v-if="message.replyingto != null">
                   <i >↩ {{ message.author.username }}:</i> 
-                  <p class="noParagraph">{{ message.replyingto.content.text.slice(0,16)}}...</p>
+                  <p class="noParagraph" v-if="message.replyingto.content.text != null">{{ message.replyingto.content.text.slice(0,16)}}...</p>
+                  <p class="noParagraph" v-else>[📸 Photo]</p>
               </div>
 
 
@@ -126,6 +128,7 @@
           @openReactions = 'switchReactions'
           @reloadMsgs = 'reloadMessages'
           @reply = 'replyProcedure'
+          @handleForward = 'handleForward'
 
           
           />
@@ -154,7 +157,8 @@
       </form>
       <div class="reply-div" v-if="replyingMsg != ''">
           <!-- Replying shit + button-->
-           <strong>↪ Replying To: {{replyingMsg.content.text.substring(0,16)}}...</strong> 
+           <strong v-if="replyingMsg.content.text != null">↪ Replying To: {{replyingMsg.content.text.substring(0,16)}}...</strong> 
+           <strong v-else> ↪ Replying To: [📸 Photo] </strong>
            <button @click="resetReply">⨉</button>
       </div>
 
@@ -209,6 +213,8 @@ export default {
       }
     },
   },
+
+  mounted() { this.fetchMessages(this.selectedConvoID)},
 
 
   methods: {
@@ -342,8 +348,15 @@ export default {
       this.messageOptionsOpen = true
       this.reactionsOpen = false
 
-    }
+    },
 
+    handleForward(){
+      this.closeMessageOptions()
+      console.log("faccio l'emit con il messaggio selezionato")
+      this.$emit("forwarder", this.selectedMessage)
+      this.selectedMessage = null; // resetto
+
+    },
   },
 };
 </script>
