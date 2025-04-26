@@ -700,8 +700,9 @@ func AddToGroup(c *gin.Context) {
 func LeaveGroup(c *gin.Context) {
 
 	//autorizzo il current user
-	_, logged_struct, er1 := QuickAuth(c)
+	logged_username, _, er1 := QuickAuth(c)
 	if len(er1) != 0 {
+		// Assumi che QuickAuth gestisca già la risposta JSON di errore
 		return
 	}
 
@@ -710,28 +711,65 @@ func LeaveGroup(c *gin.Context) {
 
 	g, exists := scs.GroupDB[ConvoID]
 
-	if exists {
-		toDelete := -1
-		found := false
-		for i, user := range g.Users {
-			if user == logged_struct {
-				toDelete = i
-				found = true
-				break
-			}
-		}
-		if !found {
-			c.JSON(http.StatusForbidden, gin.H{"Error": " You are not in that group! >:O "})
-			return
-
-		}
-		g.Users = append(g.Users[:toDelete], g.Users[toDelete+1:]...)
-		delete(scs.UserConvosDB, ConvoID)
-		c.JSON(http.StatusNoContent, gin.H{"Success": "You left the group and the convo was removed from your list..."})
+	if !exists {
+		// Usiamo StatusNotFound (404) se il gruppo non esiste
+		c.JSON(http.StatusNotFound, gin.H{"Error": "Invalid Convo (group) ID!"})
 		return
 	}
 
-	c.JSON(http.StatusNotFound, gin.H{"Error": "Invalid Convo (group) ID!"})
+	// Gruppo trovato, ora verifichiamo se l'utente ne fa parte
+	toDelete := -1
+	found := false
+	for i, user := range g.Users {
+		// Confronta per Username, che è più affidabile dei puntatori
+		if user.Username == logged_username {
+			toDelete = i
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		// Usiamo StatusForbidden (403) se l'utente non è nel gruppo
+		c.JSON(http.StatusForbidden, gin.H{"Error": "You are not in that group! >:O"})
+		return
+	}
+
+	// Utente trovato nel gruppo (indice toDelete), ora rimuoviamolo dalla lista utenti del gruppo
+	g.Users = append(g.Users[:toDelete], g.Users[toDelete+1:]...)
+
+	//  Rimuovi la CONVERSAZIONE del gruppo dalla LISTA CONVERSAZIONI dell'UTENTE
+
+	userConvos, _ := scs.UserConvosDB[logged_username]
+
+	// Cerca la conversazione di gruppo nella lista conversazioni dell'utente
+	convoIndexToDelete := -1
+	for i, convo := range userConvos {
+		if convo.ConvoID == ConvoID { // Assumi che ConversationELT abbia un campo ConvoID
+			convoIndexToDelete = i
+			break
+		}
+	}
+
+	if convoIndexToDelete != -1 {
+		// Rimuovi la conversazione trovata dalla lista dell'utente usando lo slice trick
+		scs.UserConvosDB[logged_username] = append(userConvos[:convoIndexToDelete], userConvos[convoIndexToDelete+1:]...)
+		fmt.Printf("Conversation %s removed from user %s list.\n", ConvoID, logged_username)
+	} else {
+		// Altro caso anomalo: utente nel gruppo, lista conversazioni esiste, ma conversazione non trovata nella lista?
+		fmt.Printf("Warning: Conversation %s not found in user %s conversation list.\n", ConvoID, logged_username)
+	}
+
+	// Se il gruppo diventa vuoto dopo che l'utente se ne è andato, elimino
+	if len(g.Users) == 0 {
+		delete(scs.GroupDB, ConvoID) // Elimina il gruppo dalla mappa globale dei gruppi
+		delete(scs.ConvoDB, ConvoID) // Elimina l'elemento conversazione dalla mappa globale delle conversazioni
+		fmt.Printf("Group %s is now empty and has been deleted from global DBs.\n", ConvoID)
+	}
+
+	// Usiamo StatusOK (200) per una risposta con body, StatusNoContent (204) di solito non ha body.
+	c.JSON(http.StatusOK, gin.H{"Success": "You left the group and the convo was removed from your list."})
+	return
 
 }
 
@@ -758,6 +796,8 @@ func SetGroupName(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "nun riesc a legg u body"})
 		return
 	}
+
+	groupName = groupName[1 : len(groupName)-1]
 
 	found := false
 	for _, user := range group.Users {
@@ -843,9 +883,8 @@ func SetGroupPhoto(c *gin.Context) {
 /* HANDLER NON RICHIESTI */
 
 // PUT /utils/getconvoinfo/{ID}
-/* Serve al front-end per capire se una convo è privata o di gruppo, per renderizzare le info nella convo-list*/
 func GetConvoInfo(c *gin.Context) {
-
+	/* Serve al front-end per capire se una convo è privata o di gruppo, per renderizzare le info nella convo-list*/
 	//autorizzo il current user
 	_, logged_struct, er1 := QuickAuth(c)
 	if len(er1) != 0 {

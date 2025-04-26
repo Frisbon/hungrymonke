@@ -105,6 +105,7 @@ export default {
     userPfp: String,
     userPfpType: String,
     newUsernameTaken: Boolean,
+    reload: Boolean,
   },
 
 
@@ -322,6 +323,14 @@ export default {
         console.log("Polling stopped.");
       }
     },
+  },
+
+  watch: {
+
+    reload(){
+      this.pollingFetcher()
+      this.$emit("reloaded")
+    }
   },
  /* Appena carico la pagina recupera le conversazioni */
   mounted() {

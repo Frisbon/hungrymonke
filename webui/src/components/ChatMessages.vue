@@ -26,153 +26,155 @@
 
       </div>
 
-
-      <p 
-        v-if="messages.length == 0"
-        style="font-size: large; color: gray; font-weight: lighter;"
-      > Digita il tuo primo messaggio! 😄</p>
-
-
       <GroupChatOptions
-        v-if="!this.closeButtons"
-        :currentUser="this.username"
-        :convoID="this.selectedConvoID"
-        @closeButtons = "closeGroupChatOptions"
+            v-if="!this.closeButtons"
+            :currentUser="this.username"
+            :convoID="this.selectedConvoID"
+            @closeButtons = "closeGroupChatOptions"
+            @groupDataUpdated = "reloadConvo"
+            @groupLeft = "groupLeft"
       />
 
-      <div class="message-list"> 
+      <div v-if="this.closeButtons">
+          
 
-        <div class= "message-container" v-for="message in messages" :key="message.msgID"
-        
-        :class="{'other-message': message.author.username !== username,
-                    'my-message': message.author.username === username}"
-        >
-          
-          <!-- Fallo comparire  a sx di un messaggio guardando username-->
-          <MessageOptions 
-          :username = "this.username"
-          :selectedMessage = "this.selectedMessage"
-          v-if="!this.reactionsOpen && this.messageOptionsOpen && this.selectedMessage && this.selectedMessage.msgid == message.msgid && this.selectedMessage.author.username == this.username"
+          <p 
+            v-if="messages.length == 0"
+            style="font-size: large; color: gray; font-weight: lighter;"
+          > Digita il tuo primo messaggio! 😄</p>
 
-          @closeMessageOptions = 'closeMessageOptions'
-          @openReactions = 'switchReactions'
-          @reloadMsgs = 'reloadMessages'
-          @reply = 'replyProcedure'
-          @handleForward = 'handleForward'
+          <div class="message-list"> 
 
-          />
-          <EmojiButtons
-            @emojiSelected = "reactionWindow"
-            v-if="this.reactionsOpen && this.messageOptionsOpen && this.selectedMessage && this.selectedMessage.msgid == message.msgid && this.selectedMessage.author.username == this.username"
-            @closeReactions = 'switchReactions'
-          />
-        
-          
-          
-          
-          <div class="message-bubble"
-            @click="handleMessageClick(message)"
-            :class="{'other-message-bubble': message.author.username !== username,
-                    'my-message-bubble': message.author.username === username}"
+            <div class= "message-container" v-for="message in messages" :key="message.msgID"
+            
+            :class="{'other-message': message.author.username !== username,
+                        'my-message': message.author.username === username}"
             >
               
+              <!-- Fallo comparire  a sx di un messaggio guardando username-->
+              <MessageOptions 
+              :username = "this.username"
+              :selectedMessage = "this.selectedMessage"
+              v-if="!this.reactionsOpen && this.messageOptionsOpen && this.selectedMessage && this.selectedMessage.msgid == message.msgid && this.selectedMessage.author.username == this.username"
 
+              @closeMessageOptions = 'closeMessageOptions'
+              @openReactions = 'switchReactions'
+              @reloadMsgs = 'reloadMessages'
+              @reply = 'replyProcedure'
+              @handleForward = 'handleForward'
 
-
-
-              <div v-if="message.author.username !== this.username && this.isGroup">
-                <div style="display: flex;">
-                <strong >{{ message.author.username }}:</strong> 
-                <!-- ADD FORWARDED OR REPLIED CONTENT HERE-->
-                <i class="message-bubble-heading" v-if="message.isforwarded" style="color: gray;">↪ (Forwarded)</i>
-                </div>
-              </div>
-              <div v-else>
-                <div style="display: flex;">
-                <!-- ADD FORWARDED OR REPLIED CONTENT HERE-->
-                <i class="message-bubble-heading" v-if="message.isforwarded" style="color: gray;">↪ (Forwarded)</i>
-                </div>
-              </div>
-              <div class="message-reply" v-if="message.replyingto != null">
-                  <i >↩ {{ message.author.username }}:</i> 
-                  <p class="noParagraph" v-if="message.replyingto.content.text != null">{{ message.replyingto.content.text.slice(0,16)}}...</p>
-                  <p class="noParagraph" v-else>[📸 Photo]</p>
-              </div>
-
-
-
-
-              {{ message.content.text }}
-              <br v-if="message.content.photo && message.content.text">
-              
-              <img class="sent-img" v-if="message.content.photo" 
-              :src="'data:' + message.content.photoMimeType + ';base64,' 
-              + message.content.photo" alt="Immagine allegata">
+              />
+              <EmojiButtons
+                @emojiSelected = "reactionWindow"
+                v-if="this.reactionsOpen && this.messageOptionsOpen && this.selectedMessage && this.selectedMessage.msgid == message.msgid && this.selectedMessage.author.username == this.username"
+                @closeReactions = 'switchReactions'
+              />
             
-              <!-- ADD REACTIONS, TIME AND SEEN STATUS HERE-->
-              <div class='messageStats'>
-                <!-- la reaction bubble avrà foto in minuscolo e reaction accanto tutto accerchiato alla telegram-->
-                <div class="reactionBubble" v-for="reaction in message.reactions" v-bind:key="reaction.author.username">
-                  <img class="reactionImage" :src="'data:undefined;base64,'+ reaction.author.photo" >
-                  <div class="reactionEmoticon">{{ reaction.emoticon }}</div>
-                </div>
-
-                <div class ="timestampAndStatus">
+              
+              
+              
+              <div class="message-bubble"
+                @click="handleMessageClick(message)"
+                :class="{'other-message-bubble': message.author.username !== username,
+                        'my-message-bubble': message.author.username === username}"
+                >
                   
-                  <p class="noParagraph">{{ message.timestamp.substring(11, 16) }}</p>
 
-                  <p class="noParagraph" style="color: teal; margin: 0px 5px" v-if="message.status == `seen` && message.author.username == this.username">🗸🗸</p>
-                  <p class="noParagraph" style="color: gray; margin: 0px 5px" v-if="message.status == `delivered` && message.author.username == this.username">🗸</p>
+
+
+
+                  <div v-if="message.author.username !== this.username && this.isGroup">
+                    <div style="display: flex;">
+                    <strong >{{ message.author.username }}:</strong> 
+                    <!-- ADD FORWARDED OR REPLIED CONTENT HERE-->
+                    <i class="message-bubble-heading" v-if="message.isforwarded" style="color: gray;">↪ (Forwarded)</i>
+                    </div>
+                  </div>
+                  <div v-else>
+                    <div style="display: flex;">
+                    <!-- ADD FORWARDED OR REPLIED CONTENT HERE-->
+                    <i class="message-bubble-heading" v-if="message.isforwarded" style="color: gray;">↪ (Forwarded)</i>
+                    </div>
+                  </div>
+                  <div class="message-reply" v-if="message.replyingto != null">
+                      <i >↩ {{ message.author.username }}:</i> 
+                      <p class="noParagraph" v-if="message.replyingto.content.text != null">{{ message.replyingto.content.text.slice(0,16)}}...</p>
+                      <p class="noParagraph" v-else>[📸 Photo]</p>
+                  </div>
+
+
+
+
+                  {{ message.content.text }}
+                  <br v-if="message.content.photo && message.content.text">
                   
-                  
-              </div>
-              <!-- Se sono io, vedo status time e reactions, altrimenti solo time e reactions-->
-              </div>
-         </div>
+                  <img class="sent-img" v-if="message.content.photo" 
+                  :src="'data:' + message.content.photoMimeType + ';base64,' 
+                  + message.content.photo" alt="Immagine allegata">
+                
+                  <!-- ADD REACTIONS, TIME AND SEEN STATUS HERE-->
+                  <div class='messageStats'>
+                    <!-- la reaction bubble avrà foto in minuscolo e reaction accanto tutto accerchiato alla telegram-->
+                    <div class="reactionBubble" v-for="reaction in message.reactions" v-bind:key="reaction.author.username">
+                      <img class="reactionImage" :src="'data:undefined;base64,'+ reaction.author.photo" >
+                      <div class="reactionEmoticon">{{ reaction.emoticon }}</div>
+                    </div>
 
-          <!-- Fallo comparire a destra o a sx di un messaggio guardando username-->
-          <MessageOptions 
-          :username = "this.username"
-          :selectedMessage = "this.selectedMessage"
-          v-if="!this.reactionsOpen && this.messageOptionsOpen && this.selectedMessage && this.selectedMessage.msgid == message.msgid && this.selectedMessage.author.username != this.username"
+                    <div class ="timestampAndStatus">
+                      
+                      <p class="noParagraph">{{ message.timestamp.substring(11, 16) }}</p>
 
-          @closeMessageOptions = 'closeMessageOptions'
-          @openReactions = 'switchReactions'
-          @reloadMsgs = 'reloadMessages'
-          @reply = 'replyProcedure'
-          @handleForward = 'handleForward'
+                      <p class="noParagraph" style="color: teal; margin: 0px 5px" v-if="message.status == `seen` && message.author.username == this.username">🗸🗸</p>
+                      <p class="noParagraph" style="color: gray; margin: 0px 5px" v-if="message.status == `delivered` && message.author.username == this.username">🗸</p>
+                      
+                      
+                  </div>
+                  <!-- Se sono io, vedo status time e reactions, altrimenti solo time e reactions-->
+                  </div>
+            </div>
 
+              <!-- Fallo comparire a destra o a sx di un messaggio guardando username-->
+              <MessageOptions 
+              :username = "this.username"
+              :selectedMessage = "this.selectedMessage"
+              v-if="!this.reactionsOpen && this.messageOptionsOpen && this.selectedMessage && this.selectedMessage.msgid == message.msgid && this.selectedMessage.author.username != this.username"
+
+              @closeMessageOptions = 'closeMessageOptions'
+              @openReactions = 'switchReactions'
+              @reloadMsgs = 'reloadMessages'
+              @reply = 'replyProcedure'
+              @handleForward = 'handleForward'
+
+              
+              />
+              <EmojiButtons
+                @emojiSelected = "reactionWindow"
+                v-if="this.reactionsOpen && this.messageOptionsOpen && this.selectedMessage && this.selectedMessage.msgid == message.msgid && this.selectedMessage.author.username != this.username"
+                @closeReactions = 'switchReactions'
+              />
+
+            </div> 
+
+          </div>
+          <form @submit.prevent="sendMessage" class="message-input-form">
           
-          />
-          <EmojiButtons
-            @emojiSelected = "reactionWindow"
-            v-if="this.reactionsOpen && this.messageOptionsOpen && this.selectedMessage && this.selectedMessage.msgid == message.msgid && this.selectedMessage.author.username != this.username"
-            @closeReactions = 'switchReactions'
-          />
-
-        </div> 
+            <div style="display: flex">
+              <input type="file" @change="handleFileUpload" accept="image/*" />
+              <button type="submit" :disabled="isSubmitDisabled">
+                <strong>→</strong>
+              </button>
+            </div>  
+            <input class="textInput" v-model="newMessage" placeholder="Type a message..." />
+          </form>
+          <div class="reply-div" v-if="replyingMsg != ''">
+              <!-- Replying shit + button-->
+              <strong v-if="replyingMsg.content.text != null">↪ Replying To: {{replyingMsg.content.text.substring(0,16)}}...</strong> 
+              <strong v-else> ↪ Replying To: [📸 Photo] </strong>
+              <button @click="resetReply">⨉</button>
+          </div>
 
       </div>
 
-
-      
-
-      <form @submit.prevent="sendMessage" class="message-input-form">
-        
-        <div style="display: flex">
-          <input type="file" @change="handleFileUpload" accept="image/*" />
-          <button type="submit" :disabled="isSubmitDisabled">
-            <strong>→</strong>
-          </button>
-        </div>  
-        <input class="textInput" v-model="newMessage" placeholder="Type a message..." />
-      </form>
-      <div class="reply-div" v-if="replyingMsg != ''">
-          <!-- Replying shit + button-->
-           <strong v-if="replyingMsg.content.text != null">↪ Replying To: {{replyingMsg.content.text.substring(0,16)}}...</strong> 
-           <strong v-else> ↪ Replying To: [📸 Photo] </strong>
-           <button @click="resetReply">⨉</button>
-      </div>
 
     </div>
 
@@ -234,9 +236,15 @@ export default {
 
   methods: {
 
+    reloadConvo(){
+      this.$emit("reloadConvo")
+    },
+
+    groupLeft(){this.$emit("groupLeft")},
+
     closeGroupChatOptions(){this.closeButtons = true},
 
-    groupChatOptions(){  console.log('Metodo groupChatOptions chiamato!'); this.closeButtons = false},
+    groupChatOptions(){  console.log('Metodo groupChatOptions chiamato!'); this.closeButtons = !this.closeButtons},
     
 
     resetReply(){this.replyingMsg = ""},

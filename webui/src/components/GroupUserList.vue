@@ -1,38 +1,46 @@
 <template>
-  <h3>Seleziona utenti da aggiungere a {{ groupName }}:</h3>
+  
+  <div v-if="this.userArray.length != 0">
+    <h3>Seleziona utenti da aggiungere al gruppo</h3>
 
-  <div class="user-selection-manual">
-    <div
-      v-for="user in userArray"
-      :key="user.username"
-      class="userContainer"
-      @click="toggleUserSelection(user)"
-      :class="{ 'selected': selectedUsernames.includes(user.username) }"
-    >
+    <div class="user-selection-manual">
+      <div
+        v-for="user in userArray"
+        :key="user.username"
+        class="userContainer"
+        @click="toggleUserSelection(user)"
+        :class="{ 'selected': selectedUsernames.includes(user.username) }"
+      >
 
-      <img
-        class="pfp"
-        style="margin-top: 0px;"
-        v-if="user.photo != null && user.photo !== ''"
-        :src="'data:' + user.photoMimeType + ';base64,' + user.photo"
-        alt="Profile Picture" />
-      <img
-        class="pfp"
-        v-else
-        src="https://i.imgur.com/D95gXlb.png"
-        alt="Default PFP"
-      />
-      <h3>{{ user.username }}</h3>
+        <img
+          class="pfp"
+          style="margin-top: 0px;"
+          v-if="user.photo != null && user.photo !== ''"
+          :src="'data:' + user.photoMimeType + ';base64,' + user.photo"
+          alt="Profile Picture" />
+        <img
+          class="pfp"
+          v-else
+          src="https://i.imgur.com/D95gXlb.png"
+          alt="Default PFP"
+        />
+        <h3>{{ user.username }}</h3>
+      </div>
+
     </div>
-
+    <button
+      type="button"
+      @click="confirmSelection"
+      :disabled="selectedUsernames.length === 0"
+      style="display:flex; align-self: center;" >
+      Conferma Selezione
+    </button>
   </div>
-  <button
-    type="button"
-    @click="confirmSelection"
-    :disabled="selectedUsernames.length === 0"
-    style="display:flex; align-self: center;" >
-    Conferma Selezione
-  </button>
+  <div v-else>
+    <h3>Questo gruppo contiene tutti gli utenti possibili! 🤯</h3>
+    <button @click="close">Close</button>
+  </div>
+  
 </template>
 
 <script>
@@ -43,7 +51,6 @@ export default {
 
     props: {
       currentUser: String,
-      groupName: String,
       convoID: String
     },
 
@@ -59,6 +66,8 @@ export default {
     },
 
     methods: {
+
+        close(){this.$emit("close-buttons")},
 
         async fetchUsers(){
             this.userArray = []; // Resetta la lista utenti prima di caricare
@@ -124,6 +133,7 @@ export default {
                 console.warn('Nessun utente selezionato.');
             }
         },
+
     }
 }
 

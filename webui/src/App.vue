@@ -24,6 +24,8 @@
     <div v-else class="container">
       
       <ConversationList 
+        ref="convoList"
+
         :username="username" 
         :userPfp="userPfp" 
         :userPfpType="userPfpType"
@@ -35,7 +37,6 @@
         @resetNameError = "resetNameError"
         @updateConvertedConvos = "updateConvertedConvos"
         @newChat = "newChatSequence"
-        
       />
 
       <div class="chat-area" v-if="showMessageWindow">
@@ -46,6 +47,8 @@
           :isGroup="isGroup"
           :selectedConvoRender = "selectedConvoRender"
           @forwarder = "forwarder"
+          @reloadConvo = "reloadChatMessages"  
+          @groupLeft = "reloadButNoChoosing"
         />
 
       </div>
@@ -108,10 +111,34 @@ export default {
       showMessageWindow: true,
       showConvoListWindow: false,
       showNewChatWindow: false,
-      
+
+      reloadConvos: false,
     };
   },
   methods: {
+
+    resetReload(){ this.reloadConvos = false;},
+    reloadChatMessages(){
+      this.showMessageWindow = false;
+
+      const convoListComponent = this.$refs.convoList;
+
+      convoListComponent.pollingFetcher();
+  
+      //nel frattempo devo ri-fetchare nella convo list
+      setTimeout(() => {convoListComponent.selectConversation(this.selectedConvoID); this.showMessageWindow = true;}, 400);
+    },
+
+    reloadButNoChoosing(){
+      this.showMessageWindow = false;
+
+      const convoListComponent = this.$refs.convoList;
+
+      convoListComponent.pollingFetcher();
+
+      //nel frattempo devo ri-fetchare nella convo list
+      setTimeout(() => {this.selectedConvoID = null; this.selectedConvoRender = null; this.showMessageWindow = true;}, 400);
+    },
 
     newChatSequence(){
       this.showNewChatWindow = true
