@@ -388,114 +388,6 @@ func ForwardMSG(c *gin.Context) {
 	//bwt non faccio controlli delle fonti del messaggio ecc ecc perchè non mi va, basta che funge :)
 }
 
-// GET, path /utils/createConvo (ADD TO MAIN)
-func CreateConvo(c *gin.Context) {
-
-	/*
-		ricevo dal frontend il ricevitore del messaggio, se tra il recivitore
-		e il logged user non esiste convo, la creo. (vedi send message)
-
-		return convoID
-		(usata da forward message)
-	*/
-	//autorizzo il current user
-	sender_username, _, er1 := QuickAuth(c)
-	if len(er1) != 0 {
-		return
-	}
-
-	// leggo l'ID messggio dal body
-	type requestLol struct {
-		RecieverUsername string `json:"recieverUsername"`
-	}
-
-	var req requestLol
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON non valido", "details": err.Error()})
-		return
-	}
-
-	// Recupera le struct User per i due usernames
-	user1, user1Exists := scs.UserDB[sender_username]
-	user2, user2Exists := scs.UserDB[req.RecieverUsername]
-
-	if !user1Exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": user1.Username + " not exists"})
-		return
-	}
-	if !user2Exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": user2.Username + " not exists"})
-		return
-	}
-
-	// Per trovare la conversazione esistente in modo efficiente,
-	// iteriamo sulle conversazioni di uno degli utenti e controlliamo se l'altra parte è l'altro utente.
-	// Assumiamo che UserConvosDB sia popolato correttamente.
-
-	user1Convos, user1HasConvos := scs.UserConvosDB[user1.Username]
-
-	if user1HasConvos {
-		for _, convoELT := range user1Convos {
-			// Recupera la struct Private associata a questa conversazione
-			privateConvo, exists := scs.PrivateDB[convoELT.ConvoID]
-			if exists {
-				// Controlla se questa conversazione privata include entrambi gli utenti
-				isBetweenUsers := (privateConvo.FirstUser.Username == user1.Username && privateConvo.SecondUser.Username == user2.Username) ||
-					(privateConvo.FirstUser.Username == user2.Username && privateConvo.SecondUser.Username == user1.Username)
-
-				if isBetweenUsers {
-					// Trovata conversazione esistente
-					c.JSON(http.StatusOK, gin.H{"convoID": convoELT.ConvoID})
-				}
-			}
-			// Nota: Se una ConvoID esiste in UserConvosDB ma non in PrivateDB,
-			// c'è un'inconsistenza nei dati. Qui assumiamo che i DB siano consistenti.
-		}
-	}
-
-	// Se non è stata trovata nessuna conversazione, creane una nuova
-	newConvoID := GenerateRandomString(6)
-
-	// Crea la nuova struct ConversationELT
-	newConvoELT := &scs.ConversationELT{
-		ConvoID:         newConvoID,
-		DateLastMessage: time.Now(), // O potresti inizializzarla a zero o quando arriva il primo messaggio
-		Preview:         "",         // Inizializza con stringa vuota o placeholder
-		Messages:        []*scs.Message{},
-	}
-
-	// Aggiungi la nuova conversazione al ConvoDB
-	scs.ConvoDB[newConvoID] = newConvoELT
-
-	// Crea la nuova struct Private
-	// Convenzione: ordina gli utenti per username per avere consistenza nella chiave (anche se usiamo ConvoID)
-	// e potenzialmente per futuri indici/ricerche. Qui li mettiamo semplicemente come recuperati.
-	newPrivate := &scs.Private{
-		Conversation: newConvoELT,
-		FirstUser:    user1,
-		SecondUser:   user2,
-	}
-
-	// Aggiungi la nuova conversazione privata al PrivateDB
-	scs.PrivateDB[newConvoID] = newPrivate
-
-	// Aggiungi la nuova conversazione alle liste di conversazioni degli utenti
-	// Inizializza la slice se l'utente non ha ancora conversazioni in UserConvosDB
-	if !user1HasConvos {
-		scs.UserConvosDB[user1.Username] = scs.Conversations{}
-	}
-	scs.UserConvosDB[user1.Username] = append(scs.UserConvosDB[user1.Username], newConvoELT)
-
-	// Controlla e aggiungi anche per il secondo utente
-	_, user2HasConvos := scs.UserConvosDB[user2.Username]
-	if !user2HasConvos {
-		scs.UserConvosDB[user2.Username] = scs.Conversations{}
-	}
-	scs.UserConvosDB[user2.Username] = append(scs.UserConvosDB[user2.Username], newConvoELT)
-	c.JSON(http.StatusOK, gin.H{"convoID": newConvoID})
-
-}
-
 // POST, path /messages/{ID}/comments
 func CommentMSG(c *gin.Context) {
 
@@ -692,6 +584,7 @@ func DeleteMSG(c *gin.Context) {
 }
 
 // PUT, path /groups/members
+// PUT, path /groups/members
 func AddToGroup(c *gin.Context) {
 
 	//autorizzo il current user
@@ -703,76 +596,127 @@ func AddToGroup(c *gin.Context) {
 	//estraggo l'ID conversazione_gruppo dalla query (se c'è)
 	ConvoID := c.DefaultQuery("ID", "")
 
-	// mi passa l'utente nel request body (text/plain)
+	// Definisci una struct per il body della richiesta JSON (array di usernames)
+	type AddUsersRequest struct {
+		Usernames []string `json:"usernames"`
+	}
 
-	userToAdd, err := c.GetRawData()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "nun riesc a legg u body"})
+	var req AddUsersRequest
+	// Binda il body JSON alla struct
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Errore nel leggere o parsare il body JSON", "details": err.Error()})
 		return
 	}
 
-	if string(userToAdd) == logged_username {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "stai ad aggiunge te stesso ao"})
-		return
+	// Raccogli gli utenti da aggiungere/includere (converti nomi utente in struct User)
+	usersToAddStructs := []*scs.User{}
+	addedUsernames := []string{} // Per la risposta
+
+	for _, username := range req.Usernames {
+		if username == "" {
+			continue // Salta username vuoti
+		}
+		if username == logged_username {
+			continue // Ignora il creatore se è nella lista
+		}
+		userStruct, exists := scs.UserDB[username]
+		if !exists {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Utente '" + username + "' non trovato nel DB"})
+			return // Interrompi se un utente non esiste
+		}
+		usersToAddStructs = append(usersToAddStructs, userStruct)
+		addedUsernames = append(addedUsernames, username) // Aggiungi solo se l'utente esiste
 	}
 
-	structToAdd, exists := scs.UserDB[string(userToAdd)]
-	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{"error": "sto utente non è nel db..."})
+	// Se non ci sono utenti validi nella richiesta (oltre il creatore)
+	if len(usersToAddStructs) == 0 && ConvoID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Nessun utente valido specificato per creare un nuovo gruppo"})
 		return
 	}
 
 	if ConvoID == "" {
+		// Creo Gruppo e aggiungo i due user alla lista utenti... (creatore + utenti richiesti)
+		initialMembers := []*scs.User{logged_struct}
+		initialMembers = append(initialMembers, usersToAddStructs...)
 
-		// Creo Gruppo e aggiungo i due user alla lista utenti...
-		userList := []*scs.User{logged_struct, structToAdd}
-		g := ConstrGroup(userList)
-		scs.UserConvosDB[logged_username] = append(scs.UserConvosDB[logged_username], g.Conversation)
-		scs.UserConvosDB[structToAdd.Username] = append(scs.UserConvosDB[structToAdd.Username], g.Conversation)
+		if len(initialMembers) < 2 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Un nuovo gruppo richiede almeno due membri (tu + almeno uno)"})
+			return
+		}
 
-		c.JSON(http.StatusOK, gin.H{"success": "creato gruppo + aggiunto utenti", "group": g})
+		g := ConstrGroup(initialMembers)
+
+		c.JSON(http.StatusOK, gin.H{
+			"success":     "Nuovo gruppo creato con successo",
+			"convoID":     g.Conversation.ConvoID,
+			"added_users": addedUsernames,
+		})
 		return
 
 	} else {
+		// Trovo Gruppo dal GroupDB e aggiungo l'utente (o gli utenti)
 
-		if _, exists := scs.GroupDB[ConvoID]; !exists {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Cant find convo (group) w that ID"})
+		group, exists := scs.GroupDB[ConvoID]
+		if !exists {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Conversazione (gruppo) non trovata con quell'ID"})
 			return
 		}
 
 		// controllo se appartengo al gruppo...
-		found := false
-		for _, user := range scs.GroupDB[ConvoID].Users {
-			if user == logged_struct {
-				found = true
+		isMember := false
+		for _, user := range group.Users {
+			if user.Username == logged_username {
+				isMember = true
 				break
 			}
 		}
-		if !found {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "bro ur not in that group... wyd?"})
+		if !isMember {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Non fai parte di questo gruppo"})
 			return
 		}
 
-		// controllo se l'utente da aggiungere sta già nel gruppo...
-		found2 := false
-		for _, user := range scs.GroupDB[ConvoID].Users {
-			if user == logged_struct {
-				found2 = true
-				break
+		// Aggiungi gli utenti validi al gruppo esistente
+		usersActuallyAdded := []string{}
+		for _, userStructToAdd := range usersToAddStructs {
+
+			// controllo se l'utente da aggiungere sta già nel gruppo...
+			alreadyInGroup := false
+			for _, existingUser := range group.Users {
+				if existingUser.Username == userStructToAdd.Username {
+					alreadyInGroup = true
+					break
+				}
+			}
+
+			if !alreadyInGroup {
+				// Aggiungi l'utente al gruppo
+				group.Users = append(group.Users, userStructToAdd)
+				// Aggiorna UserConvosDB per il nuovo membro
+				if _, exists := scs.UserConvosDB[userStructToAdd.Username]; !exists {
+					scs.UserConvosDB[userStructToAdd.Username] = scs.Conversations{}
+				}
+				scs.UserConvosDB[userStructToAdd.Username] = append(scs.UserConvosDB[userStructToAdd.Username], group.Conversation)
+				usersActuallyAdded = append(usersActuallyAdded, userStructToAdd.Username) // Aggiunto con successo
 			}
 		}
-		if found2 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "user already in the group"})
-			return
-		}
-		// Trovo Gruppo dal GroupDB e aggiungo l'utente
 
-		scs.GroupDB[ConvoID].Users = append(scs.GroupDB[ConvoID].Users, structToAdd)
-		c.JSON(http.StatusOK, gin.H{"success": "aggiunto utente al gruppo indicato"})
+		// Se nessun utente è stato effettivamente aggiunto (es. erano già tutti dentro)
+		if len(usersActuallyAdded) == 0 && len(usersToAddStructs) > 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"success":     "Tutti gli utenti specificati erano già membri del gruppo",
+				"convoID":     ConvoID,
+				"added_users": []string{}, // Lista vuota perché nessuno è stato aggiunto ORA
+			})
+			return // Esci qui se non è stato aggiunto nessuno di nuovo
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success":     "Utenti aggiunti al gruppo esistente",
+			"convoID":     ConvoID,
+			"added_users": usersActuallyAdded,
+		})
 		return
-
 	}
-
 }
 
 // DELETE, path /groups/members
@@ -981,5 +925,191 @@ func ListUsers(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"Users": array})
 
 	}
+
+}
+
+// POST, path /utils/createConvo
+func CreatePrivateConvo(c *gin.Context) {
+
+	//autorizzo il current user
+	Current_Username, _, er1 := QuickAuth(c)
+	if len(er1) != 0 {
+		return
+	}
+
+	// leggo l'ID messggio dal body
+	type requestLol struct {
+		SecondUsername string `json:"SecondUsername"`
+	}
+
+	var req requestLol
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON non valido", "details": err.Error()})
+		return
+	}
+
+	fmt.Println("Current:" + Current_Username + " req.SecondUsername=" + req.SecondUsername)
+	// Recupera le struct User per i due usernames
+	user1, user1Exists := scs.UserDB[Current_Username]
+	user2, user2Exists := scs.UserDB[req.SecondUsername]
+
+	if !user1Exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": user1.Username + " not exists"})
+		return
+	}
+	if !user2Exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": user2.Username + " not exists"})
+		return
+	}
+
+	// Per trovare la conversazione esistente in modo efficiente,
+	// iteriamo sulle conversazioni di uno degli utenti e controlliamo se l'altra parte è l'altro utente.
+	// Assumiamo che UserConvosDB sia popolato correttamente.
+
+	user1Convos, user1HasConvos := scs.UserConvosDB[user1.Username]
+	if user1HasConvos {
+		for _, convoELT := range user1Convos {
+			// Recupera la struct Private associata a questa conversazione
+			privateConvo, exists := scs.PrivateDB[convoELT.ConvoID]
+			if exists {
+				// Controlla se questa conversazione privata include entrambi gli utenti
+				isBetweenUsers := (privateConvo.FirstUser.Username == user1.Username && privateConvo.SecondUser.Username == user2.Username) ||
+					(privateConvo.FirstUser.Username == user2.Username && privateConvo.SecondUser.Username == user1.Username)
+				fmt.Println("isBetweenUsers=", isBetweenUsers)
+				if isBetweenUsers {
+					// Trovata conversazione esistente
+					c.JSON(http.StatusOK, gin.H{"convoID": convoELT.ConvoID})
+					return
+				}
+			}
+			// Nota: Se una ConvoID esiste in UserConvosDB ma non in PrivateDB,
+			// c'è un'inconsistenza nei dati. Qui assumiamo che i DB siano consistenti.
+		}
+	}
+	fmt.Println("Non ho trovato convo, creo...")
+	// Se non è stata trovata nessuna conversazione, creane una nuova
+	newConvoID := GenerateRandomString(6)
+
+	// Crea la nuova struct ConversationELT
+	newConvoELT := &scs.ConversationELT{
+		ConvoID:         newConvoID,
+		DateLastMessage: time.Now(), // O potresti inizializzarla a zero o quando arriva il primo messaggio
+		Preview:         "",         // Inizializza con stringa vuota o placeholder
+		Messages:        []*scs.Message{},
+	}
+
+	// Aggiungi la nuova conversazione al ConvoDB
+	scs.ConvoDB[newConvoID] = newConvoELT
+
+	// Crea la nuova struct Private
+	// Convenzione: ordina gli utenti per username per avere consistenza nella chiave (anche se usiamo ConvoID)
+	// e potenzialmente per futuri indici/ricerche. Qui li mettiamo semplicemente come recuperati.
+	newPrivate := &scs.Private{
+		Conversation: newConvoELT,
+		FirstUser:    user1,
+		SecondUser:   user2,
+	}
+
+	// Aggiungi la nuova conversazione privata al PrivateDB
+	scs.PrivateDB[newConvoID] = newPrivate
+
+	// Aggiungi la nuova conversazione alle liste di conversazioni degli utenti
+	// Inizializza la slice se l'utente non ha ancora conversazioni in UserConvosDB
+	if !user1HasConvos {
+		scs.UserConvosDB[user1.Username] = scs.Conversations{}
+	}
+	scs.UserConvosDB[user1.Username] = append(scs.UserConvosDB[user1.Username], newConvoELT)
+
+	// Controlla e aggiungi anche per il secondo utente
+	_, user2HasConvos := scs.UserConvosDB[user2.Username]
+	if !user2HasConvos {
+		scs.UserConvosDB[user2.Username] = scs.Conversations{}
+	}
+	scs.UserConvosDB[user2.Username] = append(scs.UserConvosDB[user2.Username], newConvoELT)
+	c.JSON(http.StatusOK, gin.H{"convoID": newConvoID})
+
+}
+
+// POST, path /utils/createGroup
+func CreateGroupConvo(c *gin.Context) {
+
+	_, Current_UserStruct, er1 := QuickAuth(c)
+	if len(er1) != 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	type requestLol struct {
+		Users              []string `json:"Users"` // Assumi che l'utente invii un array con almeno l'Username, SENZA il creatore
+		GroupName          string   `json:"GroupName"`
+		GroupPicture       []byte   `json:"GroupPicture,omitempty"` // Base64 decodificata in []byte
+		GroupPhotoMimeType string   `json:"GroupPhotoMimeType,omitempty"`
+	}
+
+	var req requestLol
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON non valido", "details": err.Error()})
+		return
+	}
+
+	if req.GroupName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Group name cannot be empty"})
+		return
+	}
+
+	groupMembersSlice := []*scs.User{Current_UserStruct}
+
+	// Itera sugli utenti forniti dal frontend (gli altri membri)
+	for _, userReq := range req.Users {
+		// Verifica se l'utente fornito esiste nel UserDB
+		user, exists := scs.UserDB[userReq]
+		if !exists {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "User '" + userReq + "' not found"})
+			return
+		}
+		// Aggiungi l'utente verificato direttamente alla slice
+		groupMembersSlice = append(groupMembersSlice, user)
+	}
+
+	// Un gruppo deve avere almeno 2 membri (il creatore + almeno un altro utente dalla richiesta)
+	if len(groupMembersSlice) < 2 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Group must have at least two members"})
+		return
+	}
+
+	// Genera un ID univoco
+	newConvoID := GenerateRandomString(6)
+
+	// Crea la ConversationELT
+	newConvoELT := &scs.ConversationELT{
+		ConvoID:         newConvoID,
+		DateLastMessage: time.Now(),
+		Preview:         "[New Group Created! 🥳]",
+		Messages:        []*scs.Message{},
+	}
+
+	// Crea la struct Group
+	newGroup := &scs.Group{
+		Conversation:  newConvoELT,
+		Name:          req.GroupName,
+		GroupPhoto:    req.GroupPicture,
+		PhotoMimeType: req.GroupPhotoMimeType,
+		Users:         groupMembersSlice, // Slice di membri verificati (creatore + altri)
+	}
+
+	// Aggiungi ai DB globali
+	scs.ConvoDB[newConvoID] = newConvoELT
+	scs.GroupDB[newConvoID] = newGroup
+
+	// Aggiorna UserConvosDB per ogni membro
+	for _, member := range groupMembersSlice {
+		if _, exists := scs.UserConvosDB[member.Username]; !exists {
+			scs.UserConvosDB[member.Username] = scs.Conversations{}
+		}
+		scs.UserConvosDB[member.Username] = append(scs.UserConvosDB[member.Username], newConvoELT)
+	}
+
+	// Risposta di successo
+	c.JSON(http.StatusOK, gin.H{"convoID": newConvoID, "message": "Group created successfully"})
 
 }

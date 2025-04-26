@@ -97,6 +97,14 @@ func main() {
 		handlers.GetConvoInfo(c)
 	})
 
+	r.POST("/api/utils/createConvo", func(c *gin.Context) {
+		handlers.CreatePrivateConvo(c)
+	})
+
+	r.POST("/api/utils/createGroup", func(c *gin.Context) {
+		handlers.CreateGroupConvo(c)
+	})
+
 	r.Run(":8082")
 
 }

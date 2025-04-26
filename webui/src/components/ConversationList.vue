@@ -51,8 +51,8 @@
     <ul>
       <p v-if="noMessages" style="text-align: center; color: #999999;">You have no conversations!</p>
       <li class="convoBubble"
-        v-for="(c, index) in this.convertedConvos"
-        :key="c.convoid || index"
+        v-for="c in this.convertedConvos"
+        :key="c.convoid"
         @click="selectConversation(c.convoid)"
         >
 
@@ -90,7 +90,7 @@
           </div>
 
       </li>
-    </ul>
+    </ul>  
   </div>
 </template>
 
@@ -135,7 +135,6 @@ export default {
         console.log("Profile picture selected:", this.selectedFile);
       }
     },
-
 
     cancelChangeName(){ this.showUsernameInput = false; this.$emit("resetNameError")},
 
@@ -204,9 +203,6 @@ export default {
     newChat(){
       console.log("Trying to start a new chat..")
       this.$emit('newChat');
-
-
-      this.pollingFetcher();
     },
 
     // helper function for fetching
@@ -229,7 +225,22 @@ export default {
 
         // Se esistono dati ricevuti e ricevo effettivamente un array di conversazioni...
         if (responseData && Array.isArray(responseData['User Conversations'])) {
-          this.conversations = responseData['User Conversations'];
+
+          const uniqueConversations = [];
+          const seenConvoIds = new Set(); // Uso un Set per tenere traccia degli ID già visti
+
+          if (responseData['User Conversations']) { // Aggiungi un controllo null/undefined
+            for (const convo of responseData['User Conversations']) {
+              if (convo && convo.convoid && !seenConvoIds.has(convo.convoid)) {
+                uniqueConversations.push(convo);
+                seenConvoIds.add(convo.convoid);
+              }
+            }
+          }
+
+          this.conversations = uniqueConversations; // Usa l'array filtrato
+
+  
 
           this.updatedConvertedConvos = []; // Reset the array before populating it
 
@@ -259,6 +270,7 @@ export default {
             }
             else if(response2?.data?.PrivateConvo){
               var x = response2.data.PrivateConvo;
+
               var otherDude = x.firstuser ? (this.username != x.firstuser.username ? x.firstuser : x.seconduser) : x.seconduser;
               toRender.chatPic   = otherDude?.photo;
               toRender.chatPicType = otherDude?.photoMimeType;
@@ -276,12 +288,12 @@ export default {
           {
             this.convertedConvos = this.updatedConvertedConvos
           }
-
+          this.noMessages = false
 
         } else {
           console.error('Unexpected response format:', responseData);
           this.conversations = [];
-          this.noMessages = false
+          this.noMessages = true
         }
 
       } catch (error) {

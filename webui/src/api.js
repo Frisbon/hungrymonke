@@ -37,6 +37,16 @@ const apiClient = axios.create({
   
   export default {
 
+    addUsersToGroup(users, convoID) {
+      const token = localStorage.getItem('token');
+      return apiClient.post('/utils/getconvoinfo', 
+        // body
+        { Users: users }, 
+        // headers
+        { headers: { Authorization: `Bearer ${token}` },
+         params: {ID: convoID}});
+    
+    }, 
 
   getConvoInfo(convoID){
     const token = localStorage.getItem('token');
@@ -139,7 +149,7 @@ const apiClient = axios.create({
     })
 
 
-  
+
     
   
     
@@ -149,6 +159,23 @@ const apiClient = axios.create({
     const token = localStorage.getItem('token');
     return apiClient.post(`/messages/${messageID}/comments`, 
       { 'Emoticon': Emoticon }, 
+      { headers: { Authorization: `Bearer ${token}` } }
+    ); 
+  },
+
+  startPrivateConvo(secondUser){
+    const token = localStorage.getItem('token');
+    return apiClient.post(`/utils/createConvo`, 
+      { SecondUsername: secondUser},
+      { headers: { Authorization: `Bearer ${token}` } }
+    ); 
+  },
+
+  startGroupChat(users, name, picture, mime){
+    const token = localStorage.getItem('token');
+    console.log({ Users: users, GroupName: name, GroupPicture: picture, GroupPhotoMimeType: mime})
+    return apiClient.post(`/utils/createGroup`, 
+      { Users: users, GroupName: name, GroupPicture: picture, GroupPhotoMimeType: mime},
       { headers: { Authorization: `Bearer ${token}` } }
     ); 
   },

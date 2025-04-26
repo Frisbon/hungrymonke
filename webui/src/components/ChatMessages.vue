@@ -20,13 +20,25 @@
         <h1>{{ this.selectedConvoRender.chatName }}</h1>
 
         
-        <button :disabled="!this.isGroup" @click="groupchatOptions">
+        <button :disabled="!this.isGroup" @click="groupChatOptions">
           ...
         </button>
 
       </div>
 
 
+      <p 
+        v-if="messages.length() == 0"
+        style="font-size: large; color: gray; font-weight: lighter;"
+      > Digita il tuo primo messaggio! 😄</p>
+
+
+      <GroupChatOptions
+        v-if="!closeButtons"
+        :currentUser="this.username"
+        :convoID="this.selectedConvoID"
+        @closeButtons = "closeGroupChatOptions"
+      />
 
       <div class="message-list"> 
 
@@ -197,6 +209,8 @@ export default {
       messageOptionsOpen: false,
 
       replyingMsg: "",
+
+      closeButtons: true,
     };
   },
 
@@ -218,6 +232,11 @@ export default {
 
 
   methods: {
+
+    closeGroupChatOptions(){this.closeButtons = true},
+
+    groupChatOptions(){this.closeButtons = false},
+    
 
     resetReply(){this.replyingMsg = ""},
 

@@ -34,6 +34,7 @@
         @logout = "handleLogout"
         @resetNameError = "resetNameError"
         @updateConvertedConvos = "updateConvertedConvos"
+        @newChat = "newChatSequence"
         
       />
 
@@ -59,17 +60,16 @@
 
       </div>
 
-      
-      
-      <!-- <div class="user-list-area" v-if="showUserListWindow">
-
-        <UserList
-        :currentUser="username"
-        @selectedUserList="userListHandler"
+      <div class="new-chat-area" v-if="showNewChatWindow">
+        
+        <NewChat
+          :currentUser="username"
+          @selected-user="startPrivateConvo"
+          @selected-users="startGroupChat"
         />
 
       </div>
-       -->
+
     </div>
   </div>
 </template>
@@ -79,13 +79,15 @@ import ConversationList from './components/ConversationList.vue';
 import ChatMessages from './components/ChatMessages.vue';
 import api from './api';
 import ForwardingConvoList from './components/ForwardingConvoList.vue';
+import NewChat from './components/NewChat.vue';
 
 export default {
   name: 'App',
   components: {
     ConversationList,
     ChatMessages,
-    ForwardingConvoList
+    ForwardingConvoList,
+    NewChat
   },
   data() {
     return {
@@ -105,10 +107,36 @@ export default {
       
       showMessageWindow: true,
       showConvoListWindow: false,
+      showNewChatWindow: false,
       
     };
   },
   methods: {
+
+    newChatSequence(){
+      this.showNewChatWindow = true
+      this.showMessageWindow = false
+    },
+
+    async startPrivateConvo(user){
+      console.log("Sono in App.vue dentro startPrivateConvo(), mi connetto al back-end...")
+      const response = await api.startPrivateConvo(user)
+      this.selectedConvoID = null
+      this.showMessageWindow = false
+      this.showNewChatWindow = false
+      console.log("response: ", response.data)
+    },
+
+    async startGroupChat(users, name, picture, mime){
+      console.log("Sono in App.vue dentro startGroupChat(), mi connetto al back-end...")
+      const response = await api.startGroupChat(users, name, picture, mime)
+      this.selectedConvoID = null
+      this.showMessageWindow = false
+      this.showNewChatWindow = false
+      console.log("response: ", response.data)
+    },
+
+
     async handleLogin() {
       try {
         const credentials = this.username;
@@ -151,6 +179,9 @@ export default {
     async selectConversation(convoID, convoRender) {
       this.selectedConvoID = convoID;
       this.selectedConvoRender = convoRender;
+      this.showMessageWindow = true
+      this.showNewChatWindow = false
+      this.showConvoListWindow = false
       console.log("Hai selezionato la chat, ecco il render:");
       console.log(convoRender)
 
@@ -351,6 +382,15 @@ font-weight: normal;
     align-content: center;
     justify-content: center;
     overflow-y: hidden;
+}
+
+.new-chat-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
 }
 
 </style>
