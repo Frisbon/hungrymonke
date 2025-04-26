@@ -39,7 +39,7 @@ const apiClient = axios.create({
 
     addUsersToGroup(users, convoID) {
       const token = localStorage.getItem('token');
-      return apiClient.post('/utils/getconvoinfo', 
+      return apiClient.put('/groups/members', 
         // body
         { Users: users }, 
         // headers

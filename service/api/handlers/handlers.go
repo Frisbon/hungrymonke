@@ -584,11 +584,10 @@ func DeleteMSG(c *gin.Context) {
 }
 
 // PUT, path /groups/members
-// PUT, path /groups/members
 func AddToGroup(c *gin.Context) {
 
 	//autorizzo il current user
-	logged_username, logged_struct, er1 := QuickAuth(c)
+	logged_username, _, er1 := QuickAuth(c)
 	if len(er1) != 0 {
 		return
 	}
@@ -598,7 +597,7 @@ func AddToGroup(c *gin.Context) {
 
 	// Definisci una struct per il body della richiesta JSON (array di usernames)
 	type AddUsersRequest struct {
-		Usernames []string `json:"usernames"`
+		Usernames []string `json:"Users"`
 	}
 
 	var req AddUsersRequest
@@ -634,89 +633,67 @@ func AddToGroup(c *gin.Context) {
 		return
 	}
 
-	if ConvoID == "" {
-		// Creo Gruppo e aggiungo i due user alla lista utenti... (creatore + utenti richiesti)
-		initialMembers := []*scs.User{logged_struct}
-		initialMembers = append(initialMembers, usersToAddStructs...)
+	fmt.Println("\n\n" + ConvoID + "\n\n")
 
-		if len(initialMembers) < 2 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Un nuovo gruppo richiede almeno due membri (tu + almeno uno)"})
-			return
-		}
-
-		g := ConstrGroup(initialMembers)
-
-		c.JSON(http.StatusOK, gin.H{
-			"success":     "Nuovo gruppo creato con successo",
-			"convoID":     g.Conversation.ConvoID,
-			"added_users": addedUsernames,
-		})
+	group, exists := scs.GroupDB[ConvoID]
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Conversazione (gruppo) non trovata con quell'ID"})
 		return
+	}
 
-	} else {
-		// Trovo Gruppo dal GroupDB e aggiungo l'utente (o gli utenti)
-
-		group, exists := scs.GroupDB[ConvoID]
-		if !exists {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Conversazione (gruppo) non trovata con quell'ID"})
-			return
+	// controllo se appartengo al gruppo...
+	isMember := false
+	for _, user := range group.Users {
+		if user.Username == logged_username {
+			isMember = true
+			break
 		}
+	}
+	if !isMember {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Non fai parte di questo gruppo"})
+		return
+	}
 
-		// controllo se appartengo al gruppo...
-		isMember := false
-		for _, user := range group.Users {
-			if user.Username == logged_username {
-				isMember = true
+	// Aggiungi gli utenti validi al gruppo esistente
+	usersActuallyAdded := []string{}
+	for _, userStructToAdd := range usersToAddStructs {
+
+		// controllo se l'utente da aggiungere sta già nel gruppo...
+		alreadyInGroup := false
+		for _, existingUser := range group.Users {
+			if existingUser.Username == userStructToAdd.Username {
+				alreadyInGroup = true
 				break
 			}
 		}
-		if !isMember {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Non fai parte di questo gruppo"})
-			return
-		}
 
-		// Aggiungi gli utenti validi al gruppo esistente
-		usersActuallyAdded := []string{}
-		for _, userStructToAdd := range usersToAddStructs {
-
-			// controllo se l'utente da aggiungere sta già nel gruppo...
-			alreadyInGroup := false
-			for _, existingUser := range group.Users {
-				if existingUser.Username == userStructToAdd.Username {
-					alreadyInGroup = true
-					break
-				}
+		if !alreadyInGroup {
+			// Aggiungi l'utente al gruppo
+			group.Users = append(group.Users, userStructToAdd)
+			// Aggiorna UserConvosDB per il nuovo membro
+			if _, exists := scs.UserConvosDB[userStructToAdd.Username]; !exists {
+				scs.UserConvosDB[userStructToAdd.Username] = scs.Conversations{}
 			}
-
-			if !alreadyInGroup {
-				// Aggiungi l'utente al gruppo
-				group.Users = append(group.Users, userStructToAdd)
-				// Aggiorna UserConvosDB per il nuovo membro
-				if _, exists := scs.UserConvosDB[userStructToAdd.Username]; !exists {
-					scs.UserConvosDB[userStructToAdd.Username] = scs.Conversations{}
-				}
-				scs.UserConvosDB[userStructToAdd.Username] = append(scs.UserConvosDB[userStructToAdd.Username], group.Conversation)
-				usersActuallyAdded = append(usersActuallyAdded, userStructToAdd.Username) // Aggiunto con successo
-			}
+			scs.UserConvosDB[userStructToAdd.Username] = append(scs.UserConvosDB[userStructToAdd.Username], group.Conversation)
+			usersActuallyAdded = append(usersActuallyAdded, userStructToAdd.Username) // Aggiunto con successo
 		}
-
-		// Se nessun utente è stato effettivamente aggiunto (es. erano già tutti dentro)
-		if len(usersActuallyAdded) == 0 && len(usersToAddStructs) > 0 {
-			c.JSON(http.StatusOK, gin.H{
-				"success":     "Tutti gli utenti specificati erano già membri del gruppo",
-				"convoID":     ConvoID,
-				"added_users": []string{}, // Lista vuota perché nessuno è stato aggiunto ORA
-			})
-			return // Esci qui se non è stato aggiunto nessuno di nuovo
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"success":     "Utenti aggiunti al gruppo esistente",
-			"convoID":     ConvoID,
-			"added_users": usersActuallyAdded,
-		})
-		return
 	}
+
+	// Se nessun utente è stato effettivamente aggiunto (es. erano già tutti dentro)
+	if len(usersActuallyAdded) == 0 && len(usersToAddStructs) > 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"success":     "Tutti gli utenti specificati erano già membri del gruppo",
+			"convoID":     ConvoID,
+			"added_users": []string{}, // Lista vuota perché nessuno è stato aggiunto ORA
+		})
+		return // Esci qui se non è stato aggiunto nessuno di nuovo
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":     "Utenti aggiunti al gruppo esistente",
+		"convoID":     ConvoID,
+		"added_users": usersActuallyAdded,
+	})
 }
 
 // DELETE, path /groups/members

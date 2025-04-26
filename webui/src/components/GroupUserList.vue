@@ -39,11 +39,12 @@
 import api from '@/api';
 
 export default {
-    name: 'PrivateUserList', // Manteniamo il nome del componente
+    name: 'GroupUserList', 
 
     props: {
       currentUser: String,
       groupName: String,
+      convoID: String
     },
 
     data() {
@@ -60,15 +61,37 @@ export default {
     methods: {
 
         async fetchUsers(){
+            this.userArray = []; // Resetta la lista utenti prima di caricare
+            this.selectedUsernames = []; // Resetta la selezione
+
             try {
-                const response = await api.listUsers();
-                // Filtra l'utente corrente dalla lista
-                this.userArray = response.data.Users.filter(user => user.username !== this.currentUser);
-                console.log("Lista utenti ricevuta (escluso te): ", this.userArray);
+                const allUsersResponse = await api.listUsers();
+                const allUsers = allUsersResponse.data.Users || [];
+                console.log("Lista utenti (raw) ricevuta:", allUsers);
+
+                let existingGroupMembersUsernames = [];
+              
+                try {
+                     const groupInfoResponse = await api.getConvoInfo(this.convoID); 
+                     console.log(groupInfoResponse)
+                     const groupUsers = groupInfoResponse.data.Group.users || []; 
+                     existingGroupMembersUsernames = groupUsers.map(user => user.username);
+                     console.log("Membri del gruppo esistente:", existingGroupMembersUsernames);
+                } catch (error) {
+                    console.error(`Errore nel fetch dei membri del gruppo ${this.convoID}:`, error);
+                }
+
+                this.userArray = allUsers.filter(user =>
+                    user.username !== this.currentUser && // Filtro 1: utente corrente
+                    !existingGroupMembersUsernames.includes(user.username) // Filtro 2: membri esistenti
+                );
+
+                console.log("Lista utenti filtrata (disponibili per aggiunta): ", this.userArray);
+
             } catch (error) {
-                console.error("Errore nel fetch degli utenti:", error);
-                this.userArray = []; // Assicurati che userArray sia un array anche in caso di errore
-            }
+                console.error("Errore nel fetch o nel filtro degli utenti:", error);
+                 this.userArray = []; // Assicurati che sia un array vuoto in caso di errore
+            } 
         },
 
         // Metodo chiamato quando si clicca su un userContainer

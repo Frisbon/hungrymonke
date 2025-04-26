@@ -28,13 +28,13 @@
 
 
       <p 
-        v-if="messages.length() == 0"
+        v-if="messages.length == 0"
         style="font-size: large; color: gray; font-weight: lighter;"
       > Digita il tuo primo messaggio! 😄</p>
 
 
       <GroupChatOptions
-        v-if="!closeButtons"
+        v-if="!this.closeButtons"
         :currentUser="this.username"
         :convoID="this.selectedConvoID"
         @closeButtons = "closeGroupChatOptions"
@@ -184,11 +184,12 @@
 import api from '../api';
 import EmojiButtons from './EmojiButtons.vue';
 import MessageOptions from './MessageOptions.vue';
+import GroupChatOptions from './GroupChatOptions.vue';
 
 export default {
   name: 'ChatMessages',
 
-  components:{MessageOptions, EmojiButtons},
+  components:{MessageOptions, EmojiButtons, GroupChatOptions},
 
   props: {
     selectedConvoID: String,
@@ -235,7 +236,7 @@ export default {
 
     closeGroupChatOptions(){this.closeButtons = true},
 
-    groupChatOptions(){this.closeButtons = false},
+    groupChatOptions(){  console.log('Metodo groupChatOptions chiamato!'); this.closeButtons = false},
     
 
     resetReply(){this.replyingMsg = ""},

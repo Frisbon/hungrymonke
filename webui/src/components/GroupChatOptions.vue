@@ -8,7 +8,8 @@
     <div>
         <GroupUserList v-if="showUserList"
             :currentUser="this.current-user"
-            :groupName="this.selectedName"
+            :groupName="this.groupName"
+            :convoID="this.convoID"
             @users-selected="usersSelected"
         />
     </div>
@@ -21,6 +22,10 @@ import GroupUserList from './GroupUserList.vue';
 
 export default {
     name: 'GroupChatOptions',
+
+    components: { 
+        GroupUserList 
+    },
 
     props: {
       currentUser: String,
@@ -37,10 +42,10 @@ export default {
      
         async usersSelected(users){
             this.addUsers(users)
-            const response = await api.addUsersToGroup(users) // invia post (AddToGroup)
+            const response = await api.addUsersToGroup(users, this.convoID) // invia post (AddToGroup)
             console.log("response: ", response.data)
             this.showUserList = false;
-            this.$emit("closeButtons");
+            this.$emit("closeButtons")
         },
 
         addUsers(){
@@ -71,7 +76,7 @@ export default {
 
     mounted(){
         console.log("Montato i group chat options, recupero il nome del gruppo...")
-        fetchGroupName()
+        this.fetchGroupName()
         console.log(this.groupName)
 
     }
