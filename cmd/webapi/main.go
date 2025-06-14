@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/Frisbon/hungrymonke/service/api/handlers"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -17,14 +19,14 @@ import (
 
 func main() {
 
-	r := gin.Default() // creo un router Gin per gestire l'HTTP
+	r := gin.Default() //  creo un router Gin per gestire l'HTTP
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8081", "http://localhost:8082"}, // Permetti richieste dal frontend e swagger
+		AllowOrigins:     []string{"http:// localhost:8081", "http:// localhost:8082"}, //  Permetti richieste dal frontend e swagger
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Authorization"},
-		AllowCredentials: true, // Se usi i cookie/token di autenticazione
+		AllowCredentials: true, //  Se usi i cookie/token di autenticazione
 	}))
 
 	r.Static("/doc", "./doc")
@@ -105,6 +107,17 @@ func main() {
 		handlers.CreateGroupConvo(c)
 	})
 
-	r.Run(":8082")
+	if err := r.Run(":8082"); err != nil {
+		log.Fatalf("Failed to run server: %v", err)
+	}
 
 }
+
+/*
+
+LINTER COMMANDS:
+	go (in root) -> golangci-lint run
+	js (webui) -> npm run lint
+	api (in root) -> spectral lint ./doc/api.yaml
+
+*/

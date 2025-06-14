@@ -53,8 +53,8 @@ export default {
         showUserList: false,
         newName: '',
 
-        showNameInput: false, // Aggiungi questa data property per mostrare/nascondere il form rinomina
-        selectedFile: null, // Aggiungi data property per il file selezionato
+        showNameInput: false, //  Aggiungi questa data property per mostrare/nascondere il form rinomina
+        selectedFile: null, //  Aggiungi data property per il file selezionato
       };
     },
     methods: {
@@ -63,14 +63,14 @@ export default {
 
         async usersSelected(users){
             this.addUsers(users)
-            const response = await api.addUsersToGroup(users, this.convoID) // invia post (AddToGroup)
+            const response = await api.addUsersToGroup(users, this.convoID) //  invia post (AddToGroup)
             console.log("response: ", response.data)
             this.showUserList = false;
             this.$emit("closeButtons")
         },
 
         addUsers(){
-            //apri finestra utenti e carica array
+            // apri finestra utenti e carica array
             this.showUserList = !this.showUserList;
         },
 
@@ -95,9 +95,9 @@ export default {
 
         setGroupPic() {
             console.log("Tasto Set Photo cliccato, apro selezione file");
-            // Trova l'input file usando il suo ref
+            //  Trova l'input file usando il suo ref
             const fileInput = this.$refs.fileInput;
-            // Simula un click sull'input file
+            //  Simula un click sull'input file
             if (fileInput) {
                 fileInput.click();
             }
@@ -126,7 +126,7 @@ export default {
 
 
 
-// passa parametro che differenzia tra private e group se serve
+//  passa parametro che differenzia tra private e group se serve
 </script>
 
 

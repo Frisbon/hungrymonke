@@ -15,7 +15,7 @@
         v-if="this.selectedConvoRender.chatPic != null" 
         :src="'data:' + this.selectedConvoRender.chatPicType + ';base64,' + this.selectedConvoRender.chatPic">
 
-        <img @click="changePfp" class="chatpfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
+        <img @click="changePfp" class="chatpfp" v-else :src="'https:// i.imgur.com/D95gXlb.png'">
         
         <h1>{{ this.selectedConvoRender.chatName }}</h1>
 
@@ -205,7 +205,7 @@ export default {
       messages: [],
       newMessage: '',
       selectedFile: null,
-      base64Image: '', // Per memorizzare la foto
+      base64Image: '', //  Per memorizzare la foto
       selectedMessage: null,
       selectedEmoji: '',
       reactionsOpen: false,
@@ -256,7 +256,7 @@ export default {
     },
 
     reloadMessages(){
-      // per 2 secondi faccio polling molto veloce,.
+      //  per 2 secondi faccio polling molto veloce,.
       let seconds = 2;
         const timer = setInterval(() => {
           console.log("fetcher messaggi spammato!");
@@ -283,7 +283,7 @@ export default {
       console.log("bruh log")
       this.replyingMsg = this.selectedMessage;
     },
-    //NB: permette di inviare una foto per volta, e non in bulk (TODO)
+    // NB: permette di inviare una foto per volta, e non in bulk (TODO)
     handleFileUpload(event) {
       this.selectedFile = event.target.files[0];
       if (this.selectedFile) {
@@ -293,12 +293,12 @@ export default {
       }
     },
 
-    //usato per convertire immagine in formato leggibile dal back-end (base64)
+    // usato per convertire immagine in formato leggibile dal back-end (base64)
     convertToBase64() {
       const reader = new FileReader();
       reader.onload = (e) => {
         this.base64Image = e.target.result;
-        // Questo conterrà il prefisso "data:image/jpeg;base64," ecc.
+        //  Questo conterrà il prefisso "data:image/jpeg;base64," ecc.
       };
       reader.readAsDataURL(this.selectedFile);
     },
@@ -314,10 +314,10 @@ export default {
       }
     },
 
-    // TODO, Ridichiara sendMessage in App.Vue per chat nuova
-    // questo send message da per scontato che la convo esiste
+    //  TODO, Ridichiara sendMessage in App.Vue per chat nuova
+    //  questo send message da per scontato che la convo esiste
     async sendMessage() {
-      if (!this.selectedConvoID) return; // se non seleziono convo...
+      if (!this.selectedConvoID) return; //  se non seleziono convo...
 
       try {
         const content = {};
@@ -325,9 +325,9 @@ export default {
           content.text = this.newMessage;
         }
         if (this.base64Image) {
-          // Estrai il tipo MIME dalla stringa data URL
+          //  Estrai il tipo MIME dalla stringa data URL
           const mimeType = this.base64Image.substring(this.base64Image.indexOf(":") + 1, this.base64Image.indexOf(";"));
-          // Rimuovi il prefisso data URL per ottenere solo la stringa Base64
+          //  Rimuovi il prefisso data URL per ottenere solo la stringa Base64
           const base64Data = this.base64Image.substring(this.base64Image.indexOf(",") + 1);
           content.photo = base64Data;
           content.photoMimeType = mimeType;
@@ -338,8 +338,8 @@ export default {
 
         if (this.replyingMsg != ''){
             messageToSend = {
-              message: content, // Il backend si aspetta un campo "message" che contiene l'oggetto Content
-              recipientUsername: "", // do per scontato che ho l'ID
+              message: content, //  Il backend si aspetta un campo "message" che contiene l'oggetto Content
+              recipientUsername: "", //  do per scontato che ho l'ID
               replyingto: this.replyingMsg,
           };
         }else{
@@ -351,7 +351,7 @@ export default {
 
         await api.sendMessage(this.selectedConvoID, messageToSend);
 
-        // resetto le variabili e ricarico i messaggi
+        //  resetto le variabili e ricarico i messaggi
         this.newMessage = '';
         this.selectedFile = null;
         this.base64Image = '';
@@ -382,7 +382,7 @@ export default {
       this.closeMessageOptions()
       console.log("faccio l'emit con il messaggio selezionato")
       this.$emit("forwarder", this.selectedMessage)
-      this.selectedMessage = null; // resetto
+      this.selectedMessage = null; //  resetto
 
     },
   },

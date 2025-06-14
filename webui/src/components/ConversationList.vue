@@ -7,10 +7,10 @@
 
         <img
           @click="changePfp" class="mainpfp" style="margin-top: 0px; "
-          v-if="this.userPfp != 'https://i.imgur.com/D95gXlb.png' && this.userPfp != ''&& this.userPfp != null"
+          v-if="this.userPfp != 'https:// i.imgur.com/D95gXlb.png' && this.userPfp != ''&& this.userPfp != null"
           :src="'data:' + this.userPfpType + ';base64,' + this.userPfp">
 
-        <img @click="changePfp" class="mainpfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
+        <img @click="changePfp" class="mainpfp" v-else :src="'https:// i.imgur.com/D95gXlb.png'">
         <input type="file" @change="handleFileUpload" accept="image/*" style="display: none;" ref="fileInput">
 
         <div style="display: flex; align-items: center; justify-items: flex-start;">
@@ -60,11 +60,11 @@
 
             <div style="display: flex; align-items: center; justify-items: flex-start;">
 
-              <img class="pfp" v-if="c.chatPic != null && c.chatPic != 'https://i.imgur.com/D95gXlb.png' && c.chatPic != ''"
+              <img class="pfp" v-if="c.chatPic != null && c.chatPic != 'https:// i.imgur.com/D95gXlb.png' && c.chatPic != ''"
               :src="'data:' + c.chatPicType + ';base64,' + c.chatPic">
 
 
-              <img class="pfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
+              <img class="pfp" v-else :src="'https:// i.imgur.com/D95gXlb.png'">
               <h3 class='chatName'>{{ c.chatName }}</h3>
 
             </div>
@@ -111,9 +111,9 @@ export default {
 
   data() {
     return {
-      conversations: [], // usato per ricevere dati dall'api
-      convertedConvos: [], // usato dal ciclo for per renderizzare le chat
-      updatedConvertedConvos: [], // usata per auto-fetchare e confontare in live
+      conversations: [], //  usato per ricevere dati dall'api
+      convertedConvos: [], //  usato dal ciclo for per renderizzare le chat
+      updatedConvertedConvos: [], //  usata per auto-fetchare e confontare in live
 
       showUsernameInput: false,
       newUsername:'',
@@ -121,14 +121,14 @@ export default {
       noMessages: false,
       selectedFile: null,
 
-      fileInput: null, // Add a ref to the file input
+      fileInput: null, //  Add a ref to the file input
     };
   },
 
   methods: {
 
 
-    //NB: permette di inviare una foto per volta, e non in bulk (TODO)
+    // NB: permette di inviare una foto per volta, e non in bulk (TODO)
     handleFileUpload(event) {
       this.selectedFile = event.target.files[0];
       if (this.selectedFile) {
@@ -145,10 +145,10 @@ export default {
 
     selectConversation(convoID) {
       if (convoID) {
-        // Trova l'oggetto toRender corrispondente al convoID
+        //  Trova l'oggetto toRender corrispondente al convoID
         const selectedConvo = this.convertedConvos.find(c => c.convoid === convoID);
         if (selectedConvo) {
-          // Emetti l'evento con convoID e selectedConvo (toRender)
+          //  Emetti l'evento con convoID e selectedConvo (toRender)
           this.$emit('select-conversation', convoID, selectedConvo);
           console.log("Ho fatto l'emit, ecco le info:");
           console.log(selectedConvo);
@@ -158,7 +158,7 @@ export default {
       }
     },
 
-    //todo, oddio potrebbe essere easy...
+    // todo, oddio potrebbe essere easy...
     changeUsernameInputField(){
       console.log("Opening Username Field");
       this.showUsernameInput = true;
@@ -168,7 +168,7 @@ export default {
         console.log("Trying to change username to "+this.newUsername+"...");
         this.$emit("changeUsername", this.newUsername)
         
-        // chiudi interfaccia solo se non ho errore
+        //  chiudi interfaccia solo se non ho errore
         if(this.newUsernameTaken == true){
 
           console.log("Hai cambiato nome, chiudo interfaccia e ricarico chat...")
@@ -176,7 +176,7 @@ export default {
           this.convertedConvos = []
 
 
-        // per 2 secondi faccio polling molto veloce,.
+        //  per 2 secondi faccio polling molto veloce,.
         let seconds = 2;
         const timer = setInterval(() => {
           console.log("Eseguito!");
@@ -197,7 +197,7 @@ export default {
 
     changePfp(){
       console.log("Trying to change the profile picture...")
-      // Programmatically click the file input
+      //  Programmatically click the file input
       this.$refs.fileInput.click();
     },
 
@@ -206,9 +206,9 @@ export default {
       this.$emit('newChat');
     },
 
-    // helper function for fetching
+    //  helper function for fetching
     arrayEquals(a, b) {
-          if (a === b) return true; // Se sono lo stesso oggetto, sono identici
+          if (a === b) return true; //  Se sono lo stesso oggetto, sono identici
           if (a == null || b == null) return false;
           if (a.length !== b.length) return false;
 
@@ -224,13 +224,13 @@ export default {
         const response = await api.getConversations();
         const responseData = typeof response === 'string' ? JSON.parse(response) : response;
 
-        // Se esistono dati ricevuti e ricevo effettivamente un array di conversazioni...
+        //  Se esistono dati ricevuti e ricevo effettivamente un array di conversazioni...
         if (responseData && Array.isArray(responseData['User Conversations'])) {
 
           const uniqueConversations = [];
-          const seenConvoIds = new Set(); // Uso un Set per tenere traccia degli ID già visti
+          const seenConvoIds = new Set(); //  Uso un Set per tenere traccia degli ID già visti
 
-          if (responseData['User Conversations']) { // Aggiungi un controllo null/undefined
+          if (responseData['User Conversations']) { //  Aggiungi un controllo null/undefined
             for (const convo of responseData['User Conversations']) {
               if (convo && convo.convoid && !seenConvoIds.has(convo.convoid)) {
                 uniqueConversations.push(convo);
@@ -239,16 +239,16 @@ export default {
             }
           }
 
-          this.conversations = uniqueConversations; // Usa l'array filtrato
+          this.conversations = uniqueConversations; //  Usa l'array filtrato
 
   
 
-          this.updatedConvertedConvos = []; // Reset the array before populating it
+          this.updatedConvertedConvos = []; //  Reset the array before populating it
 
           for (let i = 0; i < this.conversations.length; i++) {
             var c = this.conversations[i];
 
-            // prima imposto i parametri che posso ricavare da convo
+            //  prima imposto i parametri che posso ricavare da convo
             var toRender = {
               convoid: c.convoid,
               chatPreview: c.preview,
@@ -261,7 +261,7 @@ export default {
               chatPicType: null
             };
 
-            // poi vedo se è di gruppo o privata per il render corretto...
+            //  poi vedo se è di gruppo o privata per il render corretto...
             var response2 = await api.getConvoInfo(c.convoid);
 
             if (response2?.data?.Group){
@@ -282,10 +282,10 @@ export default {
 
           }
 
-          // Ordina l'array 'this.updatedConvertedConvos' in base a 'chatTime' (dal più recente al più vecchio)
+          //  Ordina l'array 'this.updatedConvertedConvos' in base a 'chatTime' (dal più recente al più vecchio)
           this.updatedConvertedConvos.sort((a, b) => new Date(b.chatTime).getTime() - new Date(a.chatTime).getTime());
 
-          if (!this.arrayEquals(this.updatedConvertedConvos, this.convertedConvos)) //se ho trovato qualcosa di nuovo...
+          if (!this.arrayEquals(this.updatedConvertedConvos, this.convertedConvos)) // se ho trovato qualcosa di nuovo...
           {
             this.convertedConvos = this.updatedConvertedConvos
           }
@@ -303,17 +303,17 @@ export default {
         this.conversations = [];
       }
 
-      // ogni volta che ricalcolo i converted convos faccio un emit in modo che App.vue aggiorni la sua variabile.
+      //  ogni volta che ricalcolo i converted convos faccio un emit in modo che App.vue aggiorni la sua variabile.
       this.$emit("updateConvertedConvos", this.convertedConvos)
 
     },
 
     startPolling() {
-      // Fetch conversations every 3 seconds (adjust the interval as needed)
+      //  Fetch conversations every 3 seconds (adjust the interval as needed)
       this.pollingInterval = setInterval(() => {
         console.log("Polling for new conversations...");
         this.pollingFetcher();
-      }, 30000); // 3000ms = 3 second
+      }, 30000); //  3000ms = 3 second
     },
 
     stopPolling() {
@@ -339,7 +339,7 @@ export default {
     this.startPolling();
   },
   beforeUnmount() {
-    this.stopPolling(); // Stop polling when the component is destroyed
+    this.stopPolling(); //  Stop polling when the component is destroyed
   },
 
 };

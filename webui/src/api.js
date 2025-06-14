@@ -6,30 +6,30 @@ Così posso accedere alle funzioni qui, nelle altre schermate vue
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8082/api',
+  baseURL: 'http:// localhost:8082/api',
   headers: {
-    'Content-Type': 'application/json', // implica che riceverà solo JSON dal back-end
+    'Content-Type': 'application/json', //  implica che riceverà solo JSON dal back-end
   },
 });
 
   
-// TODO, fai in modo che anche lo username si salvi per app.vue e convolist
+//  TODO, fai in modo che anche lo username si salvi per app.vue e convolist
 
-  // Funzione per impostare/rimuovere il token negli header di Axios per login e logout
+  //  Funzione per impostare/rimuovere il token negli header di Axios per login e logout
   function setAuthToken(token) {
 
-    if (token) { // se passo il token, aggiungilo
+    if (token) { //  se passo il token, aggiungilo
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      localStorage.setItem('token', token); // salvo il token nella localStorage (cache)
+      localStorage.setItem('token', token); //  salvo il token nella localStorage (cache)
 
-    } else { // altrimenti assumo che già ci sia, lo rimuovo
+    } else { //  altrimenti assumo che già ci sia, lo rimuovo
       delete apiClient.defaults.headers.common['Authorization'];
       localStorage.removeItem('token');
     }
 
   }
   
-  // Recupera il token salvato (nella cache? boh) all'avvio
+  //  Recupera il token salvato (nella cache? boh) all'avvio
   const savedToken = localStorage.getItem('token');
   if (savedToken) {
     setAuthToken(savedToken);
@@ -40,9 +40,9 @@ const apiClient = axios.create({
   addUsersToGroup(users, convoID) {
     const token = localStorage.getItem('token');
     return apiClient.put('/groups/members', 
-      // body
+      //  body
       { Users: users }, 
-      // headers
+      //  headers
       { headers: { Authorization: `Bearer ${token}` },
         params: {ID: convoID}});
   
@@ -68,7 +68,7 @@ const apiClient = axios.create({
         return apiClient.get('/conversations', {
                                   headers: {
                                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                                    // recupero il token salvato nella localStorage
+                                    //  recupero il token salvato nella localStorage
                                   },
         })
         .then(response => {
@@ -102,7 +102,7 @@ const apiClient = axios.create({
     ).then(response => 
         {
          if (response.data && response.data.message && response.data.user && response.data.new_token) {
-          // Scenario 2: Ricevuto JSON con { message, user, new_token }
+          //  Scenario 2: Ricevuto JSON con { message, user, new_token }
           console.log("Username cambiato con successo:");
           setAuthToken(response.data.new_token)
           console.log(response.data)
@@ -133,11 +133,11 @@ const apiClient = axios.create({
     ).then(response => 
         {
           if (response.data && response.data.error) {
-          // Scenario 1: Ricevuto JSON con solo il campo 'error'
+          //  Scenario 1: Ricevuto JSON con solo il campo 'error'
           console.error("Errore durante il cambio foto:", response.data.error);
           return response.data
         } else if (response.data && response.data.message && response.data.user) {
-          // Scenario 2: Ricevuto JSON con { message, user, new_token }
+          //  Scenario 2: Ricevuto JSON con { message, user, new_token }
           console.log("Foto cambiata con successo:");
           console.log(response.data)
 
@@ -204,7 +204,7 @@ const apiClient = axios.create({
     console.log("ConvoID passato:", convoID)
     return apiClient.post(
       `/messages/${selectedMessage.msgid}/forward`,
-      { ConvoID: convoID }, // Invia il convoID nel corpo della richiesta JSON
+      { ConvoID: convoID }, //  Invia il convoID nel corpo della richiesta JSON
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -224,7 +224,7 @@ const apiClient = axios.create({
     ).then(response => 
         {
          if (response.data && response.data.message && response.data.user && response.data.new_token) {
-          // Scenario 2: Ricevuto JSON con { message, user, new_token }
+          //  Scenario 2: Ricevuto JSON con { message, user, new_token }
           console.log("Username cambiato con successo:");
           setAuthToken(response.data.new_token)
           console.log(response.data)
@@ -254,11 +254,11 @@ const apiClient = axios.create({
     ).then(response => 
         {
           if (response.data && response.data.error) {
-          // Scenario 1: Ricevuto JSON con solo il campo 'error'
+          //  Scenario 1: Ricevuto JSON con solo il campo 'error'
           console.error("Errore durante il cambio foto:", response.data.error);
           return response.data
         } else if (response.data && response.data.message && response.data.user) {
-          // Scenario 2: Ricevuto JSON con { message, user, new_token }
+          //  Scenario 2: Ricevuto JSON con { message, user, new_token }
           console.log("Foto cambiata con successo:");
           console.log(response.data)
 
@@ -276,7 +276,7 @@ const apiClient = axios.create({
   ritornando un JSON. Quindi response.data = {token: String, user: UserStruct}
   */
   async login(credentials) { 
-    const response = await apiClient.post('/login', credentials); //invio post al back-end per fare il login
+    const response = await apiClient.post('/login', credentials); // invio post al back-end per fare il login
     const token = response.data.token;
 
     console.log("Ho appena loggato l'utente ("+response.data.user.username+")")

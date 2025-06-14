@@ -19,7 +19,7 @@
             <img
               class="pfp"
               v-else
-              src="https://i.imgur.com/D95gXlb.png"
+              src="https:// i.imgur.com/D95gXlb.png"
               alt="Default PFP"
             />
               <h3>{{ user.username }}</h3>  
@@ -62,15 +62,15 @@ export default {
         },
 
         selectUser(user) {
-          this.selectedUsername = user.username; // Aggiorna la variabile con l'utente cliccato
+          this.selectedUsername = user.username; //  Aggiorna la variabile con l'utente cliccato
           console.log("Utente cliccato:", this.selectedUsername)
         },
 
         confirmSelection() {
-          // Questo metodo viene chiamato quando il form viene sottomesso (o il bottone cliccato se @click)
+          //  Questo metodo viene chiamato quando il form viene sottomesso (o il bottone cliccato se @click)
           if (this.selectedUsername) {
             console.log("Utente selezionato:", this.selectedUsername);
-            // Emetti un evento al componente genitore con lo username selezionato
+            //  Emetti un evento al componente genitore con lo username selezionato
             this.$emit('user-selected', this.selectedUsername);
 
           }

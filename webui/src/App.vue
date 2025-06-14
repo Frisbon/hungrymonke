@@ -96,7 +96,7 @@ export default {
     return {
       isLoggedIn: false,
       username: '',
-      userPfp: 'https://i.imgur.com/D95gXlb.png', //setto pfp di default
+      userPfp: 'https:// i.imgur.com/D95gXlb.png', // setto pfp di default
       userPfpType: null,
       loginError: '',
       selectedConvoID: null,
@@ -125,7 +125,7 @@ export default {
 
       convoListComponent.pollingFetcher();
   
-      //nel frattempo devo ri-fetchare nella convo list
+      // nel frattempo devo ri-fetchare nella convo list
       setTimeout(() => {convoListComponent.selectConversation(this.selectedConvoID); this.showMessageWindow = true;}, 400);
     },
 
@@ -136,7 +136,7 @@ export default {
 
       convoListComponent.pollingFetcher();
 
-      //nel frattempo devo ri-fetchare nella convo list
+      // nel frattempo devo ri-fetchare nella convo list
       setTimeout(() => {this.selectedConvoID = null; this.selectedConvoRender = null; this.showMessageWindow = true;}, 400);
     },
 
@@ -174,7 +174,7 @@ export default {
         this.loginError = '';
         if (response.data.user.photo != null){this.userPfp = response.data.user.photo; this.userPfpType = response.data.user.photoMimeType;}
 
-        // salva anche lo username e foto profilo
+        //  salva anche lo username e foto profilo
         localStorage.setItem('username', this.username);
         localStorage.setItem('userPfp', this.userPfp);
         localStorage.setItem('userPfpType', this.userPfpType);
@@ -192,7 +192,7 @@ export default {
       this.username = '';
       this.selectedConvoID = '';
       this.recipientUsername = '';
-      this.userPfp = 'https://i.imgur.com/D95gXlb.png';
+      this.userPfp = 'https:// i.imgur.com/D95gXlb.png';
       this.userPfpType = null;
       localStorage.removeItem('username');
       localStorage.removeItem('userPfp');
@@ -253,7 +253,7 @@ export default {
         this.userPfp = response.user.photo
         this.userPfpType = response.user.photoMimeType
 
-        //resetto tutto!
+        // resetto tutto!
         localStorage.removeItem('username');
         localStorage.removeItem('userPfp');
         localStorage.removeItem('userPfpType');
@@ -278,7 +278,7 @@ export default {
         this.userPfp = response.user.photo
         this.userPfpType = response.user.photoMimeType
 
-        //resetto tutto!
+        // resetto tutto!
         localStorage.removeItem('userPfp');
         localStorage.removeItem('userPfpType');
         this.selectedConvoID = '';
@@ -295,11 +295,11 @@ export default {
 
   /*Appena carico il DOM, questo sarà il primo ad essere eseguito*/ 
   mounted() {
-    // Controlla se l'utente è già loggato (token e username salvato)
+    //  Controlla se l'utente è già loggato (token e username salvato)
     if (localStorage.getItem('token')) {
       this.isLoggedIn = true;
       this.username = localStorage.getItem('username') || '';
-      this.userPfp = localStorage.getItem('userPfp') || 'https://i.imgur.com/D95gXlb.png';
+      this.userPfp = localStorage.getItem('userPfp') || 'https:// i.imgur.com/D95gXlb.png';
       this.userPfpType = localStorage.getItem('userPfpType') || null;
     }
   },

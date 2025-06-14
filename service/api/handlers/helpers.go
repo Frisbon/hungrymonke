@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -14,13 +16,13 @@ import (
 )
 
 // helper che ritorna (nome utente, struct utente, errore). Utile per funzioni dove sono il current_user.
-func QuickAuth(c *gin.Context) (string, *scs.User, string) {
+func QuickAuth(c *gin.Context) (string, *scs.User, error) {
 
-	//siccome lavoro con il current user, estraggo il token e leggo il nome dal claim
+	// siccome lavoro con il current user, estraggo il token e leggo il nome dal claim
 	tokenString := c.GetHeader("Authorization")
 	if tokenString == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token non trovato, te sei loggato ve?"})
-		return "", nil, "err"
+		return "", nil, errors.New("authorization token not found")
 	}
 
 	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
@@ -36,20 +38,20 @@ func QuickAuth(c *gin.Context) (string, *scs.User, string) {
 
 	if err != nil || !token.Valid {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token non valido"})
-		return "", nil, "err"
+		return "", nil, errors.New("authorization token not valid")
 	}
 
-	// ora posso usare claims
-	// Rimuove eventuali virgolette extra dal claim Subject
-	username := strings.Trim(claims.Subject, "\"") // username è il nome del current user
+	//  ora posso usare claims
+	//  Rimuove eventuali virgolette extra dal claim Subject
+	username := strings.Trim(claims.Subject, "\"") //  username è il nome del current user
 
 	user, exists := scs.UserDB[username]
-	if !exists { // se non esiste utente dai claims
+	if !exists { //  se non esiste utente dai claims
 		c.JSON(http.StatusNotFound, gin.H{"error": "Utente non trovato"})
-		return "", nil, "err"
+		return "", nil, errors.New("user not found")
 	}
 
-	return username, user, ""
+	return username, user, nil
 
 }
 
@@ -59,10 +61,10 @@ func GenerateRandomString(length int) string {
 
 		letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-		randGen := rand.New(rand.NewSource(time.Now().UnixNano())) // Nuovo generatore di numeri casuali
+		randGen := rand.New(rand.NewSource(time.Now().UnixNano())) //  Nuovo generatore di numeri casuali
 		var sb strings.Builder
 		for i := 0; i < length; i++ {
-			sb.WriteByte(letters[randGen.Intn(len(letters))]) // Sceglie un carattere casuale dal set
+			sb.WriteByte(letters[randGen.Intn(len(letters))]) //  Sceglie un carattere casuale dal set
 		}
 
 		if isUniversalIdUnique(sb.String()) {
@@ -74,9 +76,9 @@ func GenerateRandomString(length int) string {
 }
 
 // gli passo tutti i DB che usano generic ID e controllo se si ha uno li dentro
-func isUniversalIdUnique(ID string) bool {
+func isUniversalIdUnique(id string) bool {
 
-	if _, exists := scs.GenericDB[ID]; exists {
+	if _, exists := scs.GenericDB[id]; exists {
 		return false
 	}
 	return true
@@ -84,29 +86,27 @@ func isUniversalIdUnique(ID string) bool {
 }
 
 // costruisce la stringa di preview in base al contenuto passatogli come parametro
-func PreviewMaker(Content scs.Content) string {
+func PreviewMaker(content scs.Content) string {
 
-	if Content.Text != nil && Content.Photo != nil {
-
-		if len(*Content.Text) > 16 {
-			return "📷 " + (*Content.Text)[:16] + "..."
+	switch {
+	case content.Text != nil && content.Photo != nil:
+		if len(*content.Text) > 16 {
+			return "📷 " + (*content.Text)[:16] + "..."
 		}
-		// uso tutta la stringa se è più corta di 16 caratteri
-		return "📷 " + *Content.Text
+		return "📷 " + *content.Text
 
-	} else if Content.Text != nil {
-		if len(*Content.Text) > 16 {
-			return (*Content.Text)[:16] + "..."
+	case content.Text != nil:
+		if len(*content.Text) > 16 {
+			return (*content.Text)[:16] + "..."
 		}
-		return *Content.Text
+		return *content.Text
 
-	} else if Content.Photo != nil {
-		return "📷 Photo..." // Ritorna una stringa indicante la presenza di un'immagine
+	case content.Photo != nil:
+		return "📷 Photo..."
 
-	} else {
-		return "ERROR - INVALID CONTENT" // Nel caso in cui non ci sia né testo né foto
+	default:
+		return "ERROR - INVALID CONTENT"
 	}
-
 }
 
 /*
@@ -114,7 +114,7 @@ Aggiorna la convo con le info dell'ultimo messaggio, ossia la preview e la last 
 */
 func UpdateConversationWLastMSG(convo *scs.ConversationELT) {
 
-	// recupero ultimo messaggio
+	//  recupero ultimo messaggio
 	msglist := convo.Messages
 	lst_msg := msglist[len(msglist)-1]
 
@@ -131,8 +131,8 @@ func PrivateMsgStatusUpdater(convo *scs.ConversationELT, logged_user *scs.User) 
 
 	for _, msg := range convo.Messages {
 
-		if msg.Author != logged_user && msg.Status != "seen" {
-			msg.Status = "seen"
+		if msg.Author != logged_user && msg.Status != scs.Seen {
+			msg.Status = scs.Seen
 		}
 
 	}
@@ -158,32 +158,32 @@ func GroupMsgStatusUpdater(group_convo *scs.ConversationELT, logged_user *scs.Us
 
 	for _, msg := range group_convo.Messages {
 
-		// prendo un messaggio
+		//  prendo un messaggio
 
-		// aggiungo il mio "seen"
+		//  aggiungo il mio "seen"
 
-		// se il seen array ha tutti gli utenti allora status = seen
+		//  se il seen array ha tutti gli utenti allora status = seen
 		if !ContainsUser(msg.SeenBy, logged_user) {
 			msg.SeenBy = append(msg.SeenBy, logged_user)
 		}
 
-		// se non è seen comincio a controllare se è stato visto da tutti gli utenti
+		//  se non è seen comincio a controllare se è stato visto da tutti gli utenti
 		seen := true
-		if msg.Status != "seen" { // Compare with the Seen constant, not the string "seen"
-			for _, convoUser := range scs.GroupDB[group_convo.ConvoID].Users { // Added 'range' keyword
+		if msg.Status != scs.Seen { //  Compare with the Seen constant, not the string "seen"
+			for _, convoUser := range scs.GroupDB[group_convo.ConvoID].Users { //  Added 'range' keyword
 				if !ContainsUser(msg.SeenBy, convoUser) {
 					seen = false
-					break // Optional: break early since we already know it's not seen by all
+					break //  Optional: break early since we already know it's not seen by all
 				}
 			}
 		}
 
 		if msg.Author != logged_user && seen {
-			msg.Status = "seen"
+			msg.Status = scs.Seen
 		}
 
 	}
-	// TODO, clearup inconsistency between private "seen" and group one.
+	//  TODO, clearup inconsistency between private "seen" and group one.
 }
 
 /*returns true if error!!!!*/
@@ -205,19 +205,19 @@ func statusUpdater(convo *scs.ConversationELT, current_user *scs.User) bool {
 }
 
 func DebugPrintDatabases() {
-	// Funzione helper per stampare le mappe in formato JSON leggibile
+	//  Funzione helper per stampare le mappe in formato JSON leggibile
 	printMap := func(name string, data interface{}) {
 		if len(fmt.Sprintf("%v", data)) == 0 {
-			fmt.Printf("%s è vuoto.\n", name)
+			log.Printf("%s è vuoto.\n", name)
 			return
 		}
-		fmt.Printf("Contenuto di %s:\n", name)
+		log.Printf("Contenuto di %s:\n", name)
 		jsonData, err := json.MarshalIndent(data, "", "  ")
 		if err != nil {
-			fmt.Printf("Errore durante la conversione in JSON di %s: %v\n", name, err)
+			log.Printf("Errore durante la conversione in JSON di %s: %v\n", name, err)
 			return
 		}
-		fmt.Println(string(jsonData))
+		log.Println(string(jsonData))
 	}
 
 	printMap("GenericDB", scs.GenericDB)

@@ -21,7 +21,7 @@
         <img
           class="pfp"
           v-else
-          src="https://i.imgur.com/D95gXlb.png"
+          src="https:// i.imgur.com/D95gXlb.png"
           alt="Default PFP"
         />
         <h3>{{ user.username }}</h3>
@@ -56,8 +56,8 @@ export default {
 
     data() {
       return {
-        userArray: [], // Inizializziamo come array vuoto
-        selectedUsernames: [], // Ora un array per gli username selezionati
+        userArray: [], //  Inizializziamo come array vuoto
+        selectedUsernames: [], //  Ora un array per gli username selezionati
       };
     },
 
@@ -70,8 +70,8 @@ export default {
         close(){this.$emit("close-buttons")},
 
         async fetchUsers(){
-            this.userArray = []; // Resetta la lista utenti prima di caricare
-            this.selectedUsernames = []; // Resetta la selezione
+            this.userArray = []; //  Resetta la lista utenti prima di caricare
+            this.selectedUsernames = []; //  Resetta la selezione
 
             try {
                 const allUsersResponse = await api.listUsers();
@@ -91,29 +91,29 @@ export default {
                 }
 
                 this.userArray = allUsers.filter(user =>
-                    user.username !== this.currentUser && // Filtro 1: utente corrente
-                    !existingGroupMembersUsernames.includes(user.username) // Filtro 2: membri esistenti
+                    user.username !== this.currentUser && //  Filtro 1: utente corrente
+                    !existingGroupMembersUsernames.includes(user.username) //  Filtro 2: membri esistenti
                 );
 
                 console.log("Lista utenti filtrata (disponibili per aggiunta): ", this.userArray);
 
             } catch (error) {
                 console.error("Errore nel fetch o nel filtro degli utenti:", error);
-                 this.userArray = []; // Assicurati che sia un array vuoto in caso di errore
+                 this.userArray = []; //  Assicurati che sia un array vuoto in caso di errore
             } 
         },
 
-        // Metodo chiamato quando si clicca su un userContainer
+        //  Metodo chiamato quando si clicca su un userContainer
         toggleUserSelection(user) {
             const username = user.username;
             const index = this.selectedUsernames.indexOf(username);
 
             if (index > -1) {
-                // Se l'utente è già selezionato, rimuovilo dall'array
+                //  Se l'utente è già selezionato, rimuovilo dall'array
                 this.selectedUsernames.splice(index, 1);
                 console.log("Deselezionato:", username);
             } else {
-                // Se l'utente non è selezionato, aggiungilo all'array
+                //  Se l'utente non è selezionato, aggiungilo all'array
                 this.selectedUsernames.push(username);
                 console.log("Selezionato:", username);
             }
@@ -121,10 +121,10 @@ export default {
         },
 
         confirmSelection() {
-            // Questo metodo viene chiamato quando si clicca il bottone "Conferma Selezione"
+            //  Questo metodo viene chiamato quando si clicca il bottone "Conferma Selezione"
             if (this.selectedUsernames.length > 0) {
                 console.log("Utenti confermati:", this.selectedUsernames);
-                // Emetti un evento al componente genitore con l'array degli username selezionati
+                //  Emetti un evento al componente genitore con l'array degli username selezionati
                 this.$emit('users-selected', this.selectedUsernames);
 
                 this.selectedUsernames = [];

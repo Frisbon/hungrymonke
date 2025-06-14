@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -13,13 +13,13 @@ import (
 // POST, path /users/me/username
 func SetMyUsername(c *gin.Context) {
 
-	// AUTENTICAZIONE UTENTE
-	username, user, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	//  AUTENTICAZIONE UTENTE
+	username, user, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
-	// aggiurnamento username con quello che si trova nel body "text/plain" (c)
+	//  aggiurnamento username con quello che si trova nel body "text/plain" (c)
 	newUsername, err := c.GetRawData()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "nun riesc a legg u body"})
@@ -39,18 +39,18 @@ func SetMyUsername(c *gin.Context) {
 		return
 	}
 
-	//trasferisco le convo sull'altro nickname
+	// trasferisco le convo sull'altro nickname
 	var convos = scs.UserConvosDB[username]
 	delete(scs.UserConvosDB, username)
 	scs.UserConvosDB[usernameString] = convos
 
-	delete(scs.UserDB, username) // elimino il current user dal db
+	delete(scs.UserDB, username) //  elimino il current user dal db
 	user.Username = usernameString
-	scs.UserDB[usernameString] = user // lo riaggiungo con il nome diverso.
+	scs.UserDB[usernameString] = user //  lo riaggiungo con il nome diverso.
 
-	//azzo devo anche aggiornarlo con il token altrimenti si ricorda ancora il nome precedente
-	// rigeneriamo il token con il nuovo username
-	tokenString, err := GeneraToken(usernameString) // Supponiamo che la funzione generaToken prenda il nuovo username
+	// azzo devo anche aggiornarlo con il token altrimenti si ricorda ancora il nome precedente
+	//  rigeneriamo il token con il nuovo username
+	tokenString, err := GeneraToken(usernameString) //  Supponiamo che la funzione generaToken prenda il nuovo username
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Non riesco a creare il token"})
 		return
@@ -63,21 +63,21 @@ func SetMyUsername(c *gin.Context) {
 // PUT, path /users/me/photo
 func SetMyPhoto(c *gin.Context) {
 
-	// AUTENTICAZIONE UTENTE
-	username, user, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	//  AUTENTICAZIONE UTENTE
+	username, user, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
-	// aggiornamento foto con quella che si trova nel body (c)
-	// estraggo il file dalla richiesta multipart/form-data
+	//  aggiornamento foto con quella che si trova nel body (c)
+	//  estraggo il file dalla richiesta multipart/form-data
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File invalido :P"})
 		return
 	}
 
-	// apro il file appena estratto
+	//  apro il file appena estratto
 	openedFile, err := file.Open()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "non riesco ad apri, ao me apri"})
@@ -85,7 +85,7 @@ func SetMyPhoto(c *gin.Context) {
 	}
 	defer openedFile.Close()
 
-	// Leggo il file in modo da salvarlo come []byte dentro al content. Lo faccio perchè PhotoFile è di tipo []byte
+	//  Leggo il file in modo da salvarlo come []byte dentro al content. Lo faccio perchè PhotoFile è di tipo []byte
 	content, err := io.ReadAll(openedFile)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "che hai scritto nel file?? non leggo..."})
@@ -94,9 +94,9 @@ func SetMyPhoto(c *gin.Context) {
 
 	contentType := http.DetectContentType(content)
 
-	// Aggiorna l'utente con il percorso del file salvato
+	//  Aggiorna l'utente con il percorso del file salvato
 	user.Photo = content
-	user.PhotoMimeType = contentType // tipo MIME
+	user.PhotoMimeType = contentType //  tipo MIME
 	scs.UserDB[username] = user
 
 	c.JSON(http.StatusOK, gin.H{
@@ -108,9 +108,9 @@ func SetMyPhoto(c *gin.Context) {
 // GET, path /conversations
 func GetMyConversations(c *gin.Context) {
 
-	// AUTENTICAZIONE UTENTE
-	username, _, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	//  AUTENTICAZIONE UTENTE
+	username, _, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
@@ -125,27 +125,27 @@ func GetMyConversations(c *gin.Context) {
 // GET, path /conversations/:ID
 func GetMyConversation(c *gin.Context) {
 
-	// AUTENTICAZIONE UTENTE
-	username, logged_struct, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	//  AUTENTICAZIONE UTENTE
+	username, logged_struct, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
-	//recupero le conversazioni di quell'utente visto che devo cercare l'id SOLO PER LE CONVERSAZIONI DI QUELL'UTENTE!
+	// recupero le conversazioni di quell'utente visto che devo cercare l'id SOLO PER LE CONVERSAZIONI DI QUELL'UTENTE!
 	user_conversations, exists := scs.UserConvosDB[username]
 	if !exists {
 		c.JSON(http.StatusNoContent, gin.H{"error": "Non ho conversazioni per questo utente."})
 		return
 	}
 
-	//estraggo l'ID dal body
+	// estraggo l'ID dal body
 	conversationID := c.Param("ID")
 	if conversationID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID della conversazione mancante"})
 		return
 	}
 
-	//ricerco la conversazione nel UserConvosDB tramite l'id estratto.
+	// ricerco la conversazione nel UserConvosDB tramite l'id estratto.
 	var found_conversation *scs.ConversationELT
 
 	for _, conversation := range user_conversations {
@@ -172,10 +172,10 @@ func GetMyConversation(c *gin.Context) {
 
 	statusErr := statusUpdater(found_conversation, logged_struct)
 	if statusErr {
-		c.JSON(http.StatusInternalServerError, gin.H{"Status": "oh sh*t"}) // todo add to open api (below too)
+		c.JSON(http.StatusInternalServerError, gin.H{"Status": "oh sh*t"}) //  todo add to open api (below too)
 	}
 
-	// Risposta con la conversazione trovata
+	//  Risposta con la conversazione trovata
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "Conversazione trovata",
 		"conversation": found_conversation,
@@ -186,13 +186,13 @@ func GetMyConversation(c *gin.Context) {
 // POST, path /conversations/messages/?=ID
 func SendMessage(c *gin.Context) {
 
-	//autorizzo il current user
-	SenderUsername, sender_struct, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	// autorizzo il current user
+	SenderUsername, sender_struct, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
-	// leggo il messaggio e il username a chi inviarlo (se c'è) dal body
+	//  leggo il messaggio e il username a chi inviarlo (se c'è) dal body
 	type requestLol struct {
 		RecipientUsername string       `json:"recipientusername"`
 		Message           scs.Content  `json:"message"`
@@ -222,7 +222,7 @@ func SendMessage(c *gin.Context) {
 		repMsg = nil
 	}
 
-	// DEFINISCO NUOVO MESSAGGIO CON PARAMETRI GIUSTI
+	//  DEFINISCO NUOVO MESSAGGIO CON PARAMETRI GIUSTI
 	msgc := MsgCONSTR{
 		Timestamp:  time.Now(),
 		Content:    req.Message,
@@ -232,74 +232,69 @@ func SendMessage(c *gin.Context) {
 		ReplyingTo: repMsg,
 	}
 
-	// USO COSTRUTTORE PER GENERARE ANCHE L'ID MESSAGGIO UNIVOCO
+	//  USO COSTRUTTORE PER GENERARE ANCHE L'ID MESSAGGIO UNIVOCO
 	newMessage := ConstrMessage(msgc)
 
-	//estraggo l'ID dalla query (se c'è)
+	// estraggo l'ID dalla query (se c'è)
 	conversationID := c.DefaultQuery("ID", "")
 
-	// se mando sia ID che Username, do errore
+	//  se mando sia ID che Username, do errore
 	if conversationID != "" && req.RecipientUsername != "" {
 
 		c.JSON(http.StatusBadRequest, gin.H{"Status": "Non puoi inviare entrambi ID e Nickname nel json! :O"})
 		return
 	}
 
-	// se tra parametri ho solo ID
+	//  se tra parametri ho solo ID
 	if conversationID != "" && req.RecipientUsername == "" {
 
-		// prendo conversazione con l'ID che mi è stato fornito.
+		//  prendo conversazione con l'ID che mi è stato fornito.
 		convo := scs.ConvoDB[conversationID]
-		//aggiungo il messaggio alla lista dei messaggi su quella convo
+		// aggiungo il messaggio alla lista dei messaggi su quella convo
 		convo.Messages = append(convo.Messages, newMessage)
 		UpdateConversationWLastMSG(convo)
 
-		// se mando un msg => leggo i messaggi dell'altro utente => aggiorno i loro status.
-		//devo distinguere se la convo è privata o di gruppo
+		//  se mando un msg => leggo i messaggi dell'altro utente => aggiorno i loro status.
+		// devo distinguere se la convo è privata o di gruppo
 		statusErr := statusUpdater(convo, sender_struct)
 		if statusErr {
-			c.JSON(http.StatusInternalServerError, gin.H{"Status": "oh sh*t"}) // todo add to open api (below too)
+			c.JSON(http.StatusInternalServerError, gin.H{"Status": "oh sh*t"}) //  todo add to open api (below too)
 		}
 
 		c.JSON(http.StatusOK, gin.H{"Status": "Inviato sulla convo indicata dall'ID!", "Conversation": &convo})
 
-		// se context NON ha ID ma ha username
+		//  se context NON ha ID ma ha username
 	} else if conversationID == "" && req.RecipientUsername != "" {
 
-		// cerco convo privata tra i due username
+		//  cerco convo privata tra i due username
 		var found_private *scs.Private
 		for _, private := range scs.PrivateDB {
+			// controllo se c'è un match tra mitt e dest
+			isMatch := (private.FirstUser.Username == SenderUsername && private.SecondUser.Username == req.RecipientUsername) ||
+				(private.FirstUser.Username == req.RecipientUsername && private.SecondUser.Username == SenderUsername)
 
-			// se (Utente1 = Sender AND Utente2 = Reciever) OR Viceversa OR Sender == Reciever
-			if private.FirstUser.Username == SenderUsername && private.SecondUser.Username == req.RecipientUsername {
-				found_private = private
-				break
-			} else if private.FirstUser.Username == req.RecipientUsername && private.SecondUser.Username == SenderUsername {
-				found_private = private
-				break
-			} else if private.FirstUser.Username == req.RecipientUsername && req.RecipientUsername == private.SecondUser.Username {
+			if isMatch {
 				found_private = private
 				break
 			}
-
 		}
 
-		// se non esiste
+		//  se non esiste
 		if found_private == nil {
 
-			//recupero puntatore al secondo utente
+			// recupero puntatore al secondo utente
 
-			//creo convo
+			// creo convo
 			x := ConvoCONSTR{
 				DateLastMessage: newMessage.Timestamp,
 				Preview:         "",
-				Messages:        []*scs.Message{newMessage}, // array con solo il messaggio mandato al momento.
+				Messages:        []*scs.Message{newMessage}, //  array con solo il messaggio mandato al momento.
 			}
 
 			newConversation := ConstrConvo(x)
 			UpdateConversationWLastMSG(newConversation)
 
-			// aggiorno le liste personali di entrambi gli utenti...
+			//  aggiorno le liste personali di entrambi gli utenti...
 			scs.UserConvosDB[SenderUsername] = append(scs.UserConvosDB[SenderUsername], newConversation)
 			scs.UserConvosDB[req.RecipientUsername] = append(scs.UserConvosDB[req.RecipientUsername], newConversation)
 
@@ -314,11 +309,11 @@ func SendMessage(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"Status": "Non ho trovato una convo con questo utente... Perciò l'ho creata!", "Private_Conversation": &p})
 			return
 
-		} else { // se esiste
+		} else { //  se esiste
 
 			found_private.Conversation.Messages = append(found_private.Conversation.Messages, newMessage)
 
-			// se mando un msg => leggo i messaggi dell'altro utente => aggiorno i loro status.
+			//  se mando un msg => leggo i messaggi dell'altro utente => aggiorno i loro status.
 			PrivateMsgStatusUpdater(found_private.Conversation, sender_struct)
 			UpdateConversationWLastMSG(found_private.Conversation)
 			c.JSON(http.StatusOK, gin.H{"Status": "Ho trovato una convo esistente con questo utente... Messaggio inviato!", "Conversation": found_private.Conversation})
@@ -332,15 +327,15 @@ func SendMessage(c *gin.Context) {
 
 // POST, path /messages/{ID}/forward
 func ForwardMSG(c *gin.Context) {
-	// Note: Se inoltro non implica che leggo per forza il messaggio dell'altro.
+	//  Note: Se inoltro non implica che leggo per forza il messaggio dell'altro.
 
-	//autorizzo il current user
-	_, sender_struct, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	// autorizzo il current user
+	_, sender_struct, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
-	// leggo l'ID messggio dal body
+	//  leggo l'ID messggio dal body
 	type requestLol struct {
 		ConvoID string `json:"ConvoID"`
 	}
@@ -351,7 +346,7 @@ func ForwardMSG(c *gin.Context) {
 		return
 	}
 
-	//estraggo l'ID messaggio dal path (se c'è)
+	// estraggo l'ID messaggio dal path (se c'è)
 	MsgID := c.Param("ID")
 
 	msg, exists := scs.MsgDB[MsgID]
@@ -368,15 +363,15 @@ func ForwardMSG(c *gin.Context) {
 		return
 	}
 
-	// Devo "clonare" il messaggio e aggiungerlo alla conversazione.
+	//  Devo "clonare" il messaggio e aggiungerlo alla conversazione.
 	var react_list []scs.Reaction
 	var seenby_list []scs.User
 	newMsg := ConstrMessage(MsgCONSTR{
 		Timestamp:   time.Now(),
 		Content:     msg.Content,
-		Author:      sender_struct, //maschero da chi inoltro
+		Author:      sender_struct, // maschero da chi inoltro
 		Status:      "delivered",
-		Reactions:   react_list, //resetto lista reazioni
+		Reactions:   react_list, // resetto lista reazioni
 		SeenBy:      seenby_list,
 		IsForwarded: true,
 	})
@@ -385,32 +380,32 @@ func ForwardMSG(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"success": "Messaggio inoltrato", "MSG": newMsg})
 	UpdateConversationWLastMSG(convo)
-	//bwt non faccio controlli delle fonti del messaggio ecc ecc perchè non mi va, basta che funge :)
+	// bwt non faccio controlli delle fonti del messaggio ecc ecc perchè non mi va, basta che funge :)
 }
 
 // POST, path /messages/{ID}/comments
 func CommentMSG(c *gin.Context) {
 
-	//nota: se commento => visualizzo il messaggio
+	// nota: se commento => visualizzo il messaggio
 
-	//autorizzo il current user
-	_, sender_struct, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	// autorizzo il current user
+	_, sender_struct, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
-	//estraggo l'ID messaggio dal path (se c'è)
+	// estraggo l'ID messaggio dal path (se c'è)
 	MsgID := c.Param("ID")
 
-	fmt.Println("Mi hai passato l'ID: ", MsgID)
-	fmt.Println("Controllo se esiste: ", scs.MsgDB[MsgID])
+	log.Println("Mi hai passato l'ID: ", MsgID)
+	log.Println("Controllo se esiste: ", scs.MsgDB[MsgID])
 
 	if MsgID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID vuoto"})
 		return
 	}
 
-	// leggo la reaction dal body
+	//  leggo la reaction dal body
 	type requestLol struct {
 		Emoticon string `json:"Emoticon"`
 	}
@@ -428,7 +423,7 @@ func CommentMSG(c *gin.Context) {
 		return
 	}
 
-	//NB posso commentare max 1 volta....
+	// NB posso commentare max 1 volta....
 
 	for _, R := range MsgStruct.Reactions {
 
@@ -445,14 +440,14 @@ func CommentMSG(c *gin.Context) {
 		Emoticon:  req.Emoticon,
 	})
 
-	//recupero la convo in cui si trova il messaggio
+	// recupero la convo in cui si trova il messaggio
 	for _, convo := range scs.ConvoDB {
 		for _, imsg := range convo.Messages {
 			if MsgStruct.MsgID == imsg.MsgID {
 
 				statusErr := statusUpdater(convo, sender_struct)
 				if statusErr {
-					c.JSON(http.StatusInternalServerError, gin.H{"Status": "oh sh*t"}) // todo add to open api (below too)
+					c.JSON(http.StatusInternalServerError, gin.H{"Status": "oh sh*t"}) //  todo add to open api (below too)
 				}
 				break
 			}
@@ -466,13 +461,13 @@ func CommentMSG(c *gin.Context) {
 // DELETE, path /messages/{ID}/comments
 func UncommentMSG(c *gin.Context) {
 
-	//autorizzo il current user
-	_, sender_struct, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	// autorizzo il current user
+	_, sender_struct, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
-	//estraggo l'ID messaggio dal path (se c'è)
+	// estraggo l'ID messaggio dal path (se c'è)
 	MsgID := c.Param("ID")
 
 	if MsgID == "" {
@@ -487,7 +482,7 @@ func UncommentMSG(c *gin.Context) {
 		return
 	}
 
-	//NB posso commentare max 1 volta....
+	// NB posso commentare max 1 volta....
 
 	found := false
 	toDelete := 0
@@ -514,13 +509,13 @@ func UncommentMSG(c *gin.Context) {
 // DELETE, path /message/{ID}
 func DeleteMSG(c *gin.Context) {
 
-	//autorizzo il current user
-	_, sender_struct, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	// autorizzo il current user
+	_, sender_struct, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
-	//estraggo l'ID messaggio dal path (se c'è)
+	// estraggo l'ID messaggio dal path (se c'è)
 	MsgID := c.Param("ID")
 
 	if MsgID == "" {
@@ -528,7 +523,7 @@ func DeleteMSG(c *gin.Context) {
 		return
 	}
 
-	// devo trovare il messaggio nella conversazione, eliminarlo da lì e successivamente dal DB dei Messaggi + libero l'ID
+	//  devo trovare il messaggio nella conversazione, eliminarlo da lì e successivamente dal DB dei Messaggi + libero l'ID
 	MsgStruct, exists := scs.MsgDB[MsgID]
 
 	if !exists {
@@ -546,7 +541,7 @@ func DeleteMSG(c *gin.Context) {
 		return
 	}
 
-	//cerco il messaggio nella convo.
+	// cerco il messaggio nella convo.
 	found := false
 	var foundConvo *scs.ConversationELT
 	toDelete := 0
@@ -566,13 +561,13 @@ func DeleteMSG(c *gin.Context) {
 		return
 	}
 
-	// elimino il messaggio dall'array...
+	//  elimino il messaggio dall'array...
 	foundConvo.Messages = append(foundConvo.Messages[:toDelete], foundConvo.Messages[toDelete+1:]...)
-	// elimino dai DBs...
+	//  elimino dai DBs...
 	delete(scs.MsgDB, MsgID)
 	delete(scs.GenericDB, MsgID)
 
-	// devo fixare il preview della convo ora...
+	//  devo fixare il preview della convo ora...
 	if len(foundConvo.Messages) != 0 {
 		UpdateConversationWLastMSG(foundConvo)
 	} else {
@@ -586,54 +581,53 @@ func DeleteMSG(c *gin.Context) {
 // PUT, path /groups/members
 func AddToGroup(c *gin.Context) {
 
-	//autorizzo il current user
-	logged_username, _, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	// autorizzo il current user
+	logged_username, _, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
-	//estraggo l'ID conversazione_gruppo dalla query (se c'è)
+	// estraggo l'ID conversazione_gruppo dalla query (se c'è)
 	ConvoID := c.DefaultQuery("ID", "")
 
-	// Definisci una struct per il body della richiesta JSON (array di usernames)
+	//  Definisci una struct per il body della richiesta JSON (array di usernames)
 	type AddUsersRequest struct {
 		Usernames []string `json:"Users"`
 	}
 
 	var req AddUsersRequest
-	// Binda il body JSON alla struct
+	//  Binda il body JSON alla struct
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Errore nel leggere o parsare il body JSON", "details": err.Error()})
 		return
 	}
 
-	// Raccogli gli utenti da aggiungere/includere (converti nomi utente in struct User)
+	//  Raccogli gli utenti da aggiungere/includere (converti nomi utente in struct User)
 	usersToAddStructs := []*scs.User{}
-	addedUsernames := []string{} // Per la risposta
 
 	for _, username := range req.Usernames {
 		if username == "" {
-			continue // Salta username vuoti
+			continue //  Salta username vuoti
 		}
 		if username == logged_username {
-			continue // Ignora il creatore se è nella lista
+			continue //  Ignora il creatore se è nella lista
 		}
 		userStruct, exists := scs.UserDB[username]
 		if !exists {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Utente '" + username + "' non trovato nel DB"})
-			return // Interrompi se un utente non esiste
+			return //  Interrompi se un utente non esiste
 		}
 		usersToAddStructs = append(usersToAddStructs, userStruct)
-		addedUsernames = append(addedUsernames, username) // Aggiungi solo se l'utente esiste
+
 	}
 
-	// Se non ci sono utenti validi nella richiesta (oltre il creatore)
+	//  Se non ci sono utenti validi nella richiesta (oltre il creatore)
 	if len(usersToAddStructs) == 0 && ConvoID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Nessun utente valido specificato per creare un nuovo gruppo"})
 		return
 	}
 
-	fmt.Println("\n\n" + ConvoID + "\n\n")
+	log.Println("\n\n" + ConvoID + "\n\n")
 
 	group, exists := scs.GroupDB[ConvoID]
 	if !exists {
@@ -641,7 +635,7 @@ func AddToGroup(c *gin.Context) {
 		return
 	}
 
-	// controllo se appartengo al gruppo...
+	//  controllo se appartengo al gruppo...
 	isMember := false
 	for _, user := range group.Users {
 		if user.Username == logged_username {
@@ -654,11 +648,11 @@ func AddToGroup(c *gin.Context) {
 		return
 	}
 
-	// Aggiungi gli utenti validi al gruppo esistente
+	//  Aggiungi gli utenti validi al gruppo esistente
 	usersActuallyAdded := []string{}
 	for _, userStructToAdd := range usersToAddStructs {
 
-		// controllo se l'utente da aggiungere sta già nel gruppo...
+		//  controllo se l'utente da aggiungere sta già nel gruppo...
 		alreadyInGroup := false
 		for _, existingUser := range group.Users {
 			if existingUser.Username == userStructToAdd.Username {
@@ -668,25 +662,25 @@ func AddToGroup(c *gin.Context) {
 		}
 
 		if !alreadyInGroup {
-			// Aggiungi l'utente al gruppo
+			//  Aggiungi l'utente al gruppo
 			group.Users = append(group.Users, userStructToAdd)
-			// Aggiorna UserConvosDB per il nuovo membro
+			//  Aggiorna UserConvosDB per il nuovo membro
 			if _, exists := scs.UserConvosDB[userStructToAdd.Username]; !exists {
 				scs.UserConvosDB[userStructToAdd.Username] = scs.Conversations{}
 			}
 			scs.UserConvosDB[userStructToAdd.Username] = append(scs.UserConvosDB[userStructToAdd.Username], group.Conversation)
-			usersActuallyAdded = append(usersActuallyAdded, userStructToAdd.Username) // Aggiunto con successo
+			usersActuallyAdded = append(usersActuallyAdded, userStructToAdd.Username) //  Aggiunto con successo
 		}
 	}
 
-	// Se nessun utente è stato effettivamente aggiunto (es. erano già tutti dentro)
+	//  Se nessun utente è stato effettivamente aggiunto (es. erano già tutti dentro)
 	if len(usersActuallyAdded) == 0 && len(usersToAddStructs) > 0 {
 		c.JSON(http.StatusOK, gin.H{
 			"success":     "Tutti gli utenti specificati erano già membri del gruppo",
 			"convoID":     ConvoID,
-			"added_users": []string{}, // Lista vuota perché nessuno è stato aggiunto ORA
+			"added_users": []string{}, //  Lista vuota perché nessuno è stato aggiunto ORA
 		})
-		return // Esci qui se non è stato aggiunto nessuno di nuovo
+		return //  Esci qui se non è stato aggiunto nessuno di nuovo
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -699,29 +693,29 @@ func AddToGroup(c *gin.Context) {
 // DELETE, path /groups/members
 func LeaveGroup(c *gin.Context) {
 
-	//autorizzo il current user
-	logged_username, _, er1 := QuickAuth(c)
-	if len(er1) != 0 {
-		// Assumi che QuickAuth gestisca già la risposta JSON di errore
+	// autorizzo il current user
+	logged_username, _, err := QuickAuth(c)
+	if err != nil {
+		//  Assumi che QuickAuth gestisca già la risposta JSON di errore
 		return
 	}
 
-	//estraggo l'ID conversazione_gruppo dalla query (se c'è)
+	// estraggo l'ID conversazione_gruppo dalla query (se c'è)
 	ConvoID := c.DefaultQuery("ID", "")
 
 	g, exists := scs.GroupDB[ConvoID]
 
 	if !exists {
-		// Usiamo StatusNotFound (404) se il gruppo non esiste
+		//  Usiamo StatusNotFound (404) se il gruppo non esiste
 		c.JSON(http.StatusNotFound, gin.H{"Error": "Invalid Convo (group) ID!"})
 		return
 	}
 
-	// Gruppo trovato, ora verifichiamo se l'utente ne fa parte
+	//  Gruppo trovato, ora verifichiamo se l'utente ne fa parte
 	toDelete := -1
 	found := false
 	for i, user := range g.Users {
-		// Confronta per Username, che è più affidabile dei puntatori
+		//  Confronta per Username, che è più affidabile dei puntatori
 		if user.Username == logged_username {
 			toDelete = i
 			found = true
@@ -730,55 +724,58 @@ func LeaveGroup(c *gin.Context) {
 	}
 
 	if !found {
-		// Usiamo StatusForbidden (403) se l'utente non è nel gruppo
+		//  Usiamo StatusForbidden (403) se l'utente non è nel gruppo
 		c.JSON(http.StatusForbidden, gin.H{"Error": "You are not in that group! >:O"})
 		return
 	}
 
-	// Utente trovato nel gruppo (indice toDelete), ora rimuoviamolo dalla lista utenti del gruppo
+	//  Utente trovato nel gruppo (indice toDelete), ora rimuoviamolo dalla lista utenti del gruppo
 	g.Users = append(g.Users[:toDelete], g.Users[toDelete+1:]...)
 
-	//  Rimuovi la CONVERSAZIONE del gruppo dalla LISTA CONVERSAZIONI dell'UTENTE
+	//   Rimuovi la CONVERSAZIONE del gruppo dalla LISTA CONVERSAZIONI dell'UTENTE
 
-	userConvos, _ := scs.UserConvosDB[logged_username]
+	userConvos, ok := scs.UserConvosDB[logged_username]
+	if !ok {
 
-	// Cerca la conversazione di gruppo nella lista conversazioni dell'utente
+		c.JSON(http.StatusNotFound, gin.H{"Error": "No conversation list found for user " + logged_username})
+		return
+	}
+	//  Cerca la conversazione di gruppo nella lista conversazioni dell'utente
 	convoIndexToDelete := -1
 	for i, convo := range userConvos {
-		if convo.ConvoID == ConvoID { // Assumi che ConversationELT abbia un campo ConvoID
+		if convo.ConvoID == ConvoID { //  Assumi che ConversationELT abbia un campo ConvoID
 			convoIndexToDelete = i
 			break
 		}
 	}
 
 	if convoIndexToDelete != -1 {
-		// Rimuovi la conversazione trovata dalla lista dell'utente usando lo slice trick
+		//  Rimuovi la conversazione trovata dalla lista dell'utente usando lo slice trick
 		scs.UserConvosDB[logged_username] = append(userConvos[:convoIndexToDelete], userConvos[convoIndexToDelete+1:]...)
-		fmt.Printf("Conversation %s removed from user %s list.\n", ConvoID, logged_username)
+		log.Printf("Conversation %s removed from user %s list.\n", ConvoID, logged_username)
 	} else {
-		// Altro caso anomalo: utente nel gruppo, lista conversazioni esiste, ma conversazione non trovata nella lista?
-		fmt.Printf("Warning: Conversation %s not found in user %s conversation list.\n", ConvoID, logged_username)
+		//  Altro caso anomalo: utente nel gruppo, lista conversazioni esiste, ma conversazione non trovata nella lista?
+		log.Printf("Warning: Conversation %s not found in user %s conversation list.\n", ConvoID, logged_username)
 	}
 
-	// Se il gruppo diventa vuoto dopo che l'utente se ne è andato, elimino
+	//  Se il gruppo diventa vuoto dopo che l'utente se ne è andato, elimino
 	if len(g.Users) == 0 {
-		delete(scs.GroupDB, ConvoID) // Elimina il gruppo dalla mappa globale dei gruppi
-		delete(scs.ConvoDB, ConvoID) // Elimina l'elemento conversazione dalla mappa globale delle conversazioni
-		fmt.Printf("Group %s is now empty and has been deleted from global DBs.\n", ConvoID)
+		delete(scs.GroupDB, ConvoID) //  Elimina il gruppo dalla mappa globale dei gruppi
+		delete(scs.ConvoDB, ConvoID) //  Elimina l'elemento conversazione dalla mappa globale delle conversazioni
+		log.Printf("Group %s is now empty and has been deleted from global DBs.\n", ConvoID)
 	}
 
-	// Usiamo StatusOK (200) per una risposta con body, StatusNoContent (204) di solito non ha body.
+	//  Usiamo StatusOK (200) per una risposta con body, StatusNoContent (204) di solito non ha body.
 	c.JSON(http.StatusOK, gin.H{"Success": "You left the group and the convo was removed from your list."})
-	return
 
 }
 
 // PUT, path /groups/{ID}/name
 func SetGroupName(c *gin.Context) {
 
-	//autorizzo il current user
-	_, logged_struct, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	// autorizzo il current user
+	_, logged_struct, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
@@ -820,9 +817,9 @@ func SetGroupName(c *gin.Context) {
 // PUT, path /groups/{ID}/photo
 func SetGroupPhoto(c *gin.Context) {
 
-	//autorizzo il current user
-	_, logged_struct, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	// autorizzo il current user
+	_, logged_struct, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
@@ -848,15 +845,15 @@ func SetGroupPhoto(c *gin.Context) {
 
 	}
 
-	// aggiornamento foto con quella che si trova nel body (c)
-	// estraggo il file dalla richiesta multipart/form-data
+	//  aggiornamento foto con quella che si trova nel body (c)
+	//  estraggo il file dalla richiesta multipart/form-data
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File invalido :P"})
 		return
 	}
 
-	// apro il file appena estratto
+	//  apro il file appena estratto
 	openedFile, err := file.Open()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "non riesco ad apri, ao me apri"})
@@ -864,7 +861,7 @@ func SetGroupPhoto(c *gin.Context) {
 	}
 	defer openedFile.Close()
 
-	// Leggo il file in modo da salvarlo come []byte dentro al content. Lo faccio perchè PhotoFile è di tipo []byte
+	//  Leggo il file in modo da salvarlo come []byte dentro al content. Lo faccio perchè PhotoFile è di tipo []byte
 	nudePic, err := io.ReadAll(openedFile)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "che hai scritto nel file?? non leggo..."})
@@ -885,9 +882,9 @@ func SetGroupPhoto(c *gin.Context) {
 // PUT /utils/getconvoinfo/{ID}
 func GetConvoInfo(c *gin.Context) {
 	/* Serve al front-end per capire se una convo è privata o di gruppo, per renderizzare le info nella convo-list*/
-	//autorizzo il current user
-	_, logged_struct, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	// autorizzo il current user
+	_, logged_struct, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
@@ -896,8 +893,9 @@ func GetConvoInfo(c *gin.Context) {
 	group, exists := scs.GroupDB[ConvoID]
 	private, exists2 := scs.PrivateDB[ConvoID]
 
-	// se è una convo di gruppo
-	if exists {
+	//  se è una convo di gruppo
+	switch {
+	case exists:
 		found := false
 		for _, user := range group.Users {
 			if user == logged_struct {
@@ -912,16 +910,15 @@ func GetConvoInfo(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"Group": group})
-	} else if exists2 {
+	case exists2:
 		if logged_struct != private.FirstUser && logged_struct != private.SecondUser {
 			c.JSON(http.StatusForbidden, gin.H{"Error": " You are not in that convo! >:O "})
 			return
 		}
 
 		c.JSON(http.StatusOK, gin.H{"PrivateConvo": private})
-
-	} else {
-		//todo check if its at least in ConvoDB and theres an alignment error.\
+	default:
+		// todo check if its at least in ConvoDB and theres an alignment error.\
 		c.JSON(http.StatusNoContent, gin.H{"Error": "no convo bro"})
 	}
 
@@ -947,13 +944,13 @@ func ListUsers(c *gin.Context) {
 // POST, path /utils/createConvo
 func CreatePrivateConvo(c *gin.Context) {
 
-	//autorizzo il current user
-	Current_Username, _, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	// autorizzo il current user
+	Current_Username, _, err := QuickAuth(c)
+	if err != nil {
 		return
 	}
 
-	// leggo l'ID messggio dal body
+	//  leggo l'ID messggio dal body
 	type requestLol struct {
 		SecondUsername string `json:"SecondUsername"`
 	}
@@ -964,8 +961,8 @@ func CreatePrivateConvo(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("Current:" + Current_Username + " req.SecondUsername=" + req.SecondUsername)
-	// Recupera le struct User per i due usernames
+	log.Println("Current:" + Current_Username + " req.SecondUsername=" + req.SecondUsername)
+	//  Recupera le struct User per i due usernames
 	user1, user1Exists := scs.UserDB[Current_Username]
 	user2, user2Exists := scs.UserDB[req.SecondUsername]
 
@@ -978,65 +975,65 @@ func CreatePrivateConvo(c *gin.Context) {
 		return
 	}
 
-	// Per trovare la conversazione esistente in modo efficiente,
-	// iteriamo sulle conversazioni di uno degli utenti e controlliamo se l'altra parte è l'altro utente.
-	// Assumiamo che UserConvosDB sia popolato correttamente.
+	//  Per trovare la conversazione esistente in modo efficiente,
+	//  iteriamo sulle conversazioni di uno degli utenti e controlliamo se l'altra parte è l'altro utente.
+	//  Assumiamo che UserConvosDB sia popolato correttamente.
 
 	user1Convos, user1HasConvos := scs.UserConvosDB[user1.Username]
 	if user1HasConvos {
 		for _, convoELT := range user1Convos {
-			// Recupera la struct Private associata a questa conversazione
+			//  Recupera la struct Private associata a questa conversazione
 			privateConvo, exists := scs.PrivateDB[convoELT.ConvoID]
 			if exists {
-				// Controlla se questa conversazione privata include entrambi gli utenti
+				//  Controlla se questa conversazione privata include entrambi gli utenti
 				isBetweenUsers := (privateConvo.FirstUser.Username == user1.Username && privateConvo.SecondUser.Username == user2.Username) ||
 					(privateConvo.FirstUser.Username == user2.Username && privateConvo.SecondUser.Username == user1.Username)
-				fmt.Println("isBetweenUsers=", isBetweenUsers)
+				log.Println("isBetweenUsers=", isBetweenUsers)
 				if isBetweenUsers {
-					// Trovata conversazione esistente
+					//  Trovata conversazione esistente
 					c.JSON(http.StatusOK, gin.H{"convoID": convoELT.ConvoID})
 					return
 				}
 			}
-			// Nota: Se una ConvoID esiste in UserConvosDB ma non in PrivateDB,
-			// c'è un'inconsistenza nei dati. Qui assumiamo che i DB siano consistenti.
+			//  Nota: Se una ConvoID esiste in UserConvosDB ma non in PrivateDB,
+			//  c'è un'inconsistenza nei dati. Qui assumiamo che i DB siano consistenti.
 		}
 	}
-	fmt.Println("Non ho trovato convo, creo...")
-	// Se non è stata trovata nessuna conversazione, creane una nuova
+	log.Println("Non ho trovato convo, creo...")
+	//  Se non è stata trovata nessuna conversazione, creane una nuova
 	newConvoID := GenerateRandomString(6)
 
-	// Crea la nuova struct ConversationELT
+	//  Crea la nuova struct ConversationELT
 	newConvoELT := &scs.ConversationELT{
 		ConvoID:         newConvoID,
-		DateLastMessage: time.Now(), // O potresti inizializzarla a zero o quando arriva il primo messaggio
-		Preview:         "",         // Inizializza con stringa vuota o placeholder
+		DateLastMessage: time.Now(), //  O potresti inizializzarla a zero o quando arriva il primo messaggio
+		Preview:         "",         //  Inizializza con stringa vuota o placeholder
 		Messages:        []*scs.Message{},
 	}
 
-	// Aggiungi la nuova conversazione al ConvoDB
+	//  Aggiungi la nuova conversazione al ConvoDB
 	scs.ConvoDB[newConvoID] = newConvoELT
 
-	// Crea la nuova struct Private
-	// Convenzione: ordina gli utenti per username per avere consistenza nella chiave (anche se usiamo ConvoID)
-	// e potenzialmente per futuri indici/ricerche. Qui li mettiamo semplicemente come recuperati.
+	//  Crea la nuova struct Private
+	//  Convenzione: ordina gli utenti per username per avere consistenza nella chiave (anche se usiamo ConvoID)
+	//  e potenzialmente per futuri indici/ricerche. Qui li mettiamo semplicemente come recuperati.
 	newPrivate := &scs.Private{
 		Conversation: newConvoELT,
 		FirstUser:    user1,
 		SecondUser:   user2,
 	}
 
-	// Aggiungi la nuova conversazione privata al PrivateDB
+	//  Aggiungi la nuova conversazione privata al PrivateDB
 	scs.PrivateDB[newConvoID] = newPrivate
 
-	// Aggiungi la nuova conversazione alle liste di conversazioni degli utenti
-	// Inizializza la slice se l'utente non ha ancora conversazioni in UserConvosDB
+	//  Aggiungi la nuova conversazione alle liste di conversazioni degli utenti
+	//  Inizializza la slice se l'utente non ha ancora conversazioni in UserConvosDB
 	if !user1HasConvos {
 		scs.UserConvosDB[user1.Username] = scs.Conversations{}
 	}
 	scs.UserConvosDB[user1.Username] = append(scs.UserConvosDB[user1.Username], newConvoELT)
 
-	// Controlla e aggiungi anche per il secondo utente
+	//  Controlla e aggiungi anche per il secondo utente
 	_, user2HasConvos := scs.UserConvosDB[user2.Username]
 	if !user2HasConvos {
 		scs.UserConvosDB[user2.Username] = scs.Conversations{}
@@ -1049,16 +1046,16 @@ func CreatePrivateConvo(c *gin.Context) {
 // POST, path /utils/createGroup
 func CreateGroupConvo(c *gin.Context) {
 
-	_, Current_UserStruct, er1 := QuickAuth(c)
-	if len(er1) != 0 {
+	_, Current_UserStruct, err := QuickAuth(c)
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
 	type requestLol struct {
-		Users              []string `json:"Users"` // Assumi che l'utente invii un array con almeno l'Username, SENZA il creatore
+		Users              []string `json:"Users"` //  Assumi che l'utente invii un array con almeno l'Username, SENZA il creatore
 		GroupName          string   `json:"GroupName"`
-		GroupPicture       []byte   `json:"GroupPicture,omitempty"` // Base64 decodificata in []byte
+		GroupPicture       []byte   `json:"GroupPicture,omitempty"` //  Base64 decodificata in []byte
 		GroupPhotoMimeType string   `json:"GroupPhotoMimeType,omitempty"`
 	}
 
@@ -1075,28 +1072,28 @@ func CreateGroupConvo(c *gin.Context) {
 
 	groupMembersSlice := []*scs.User{Current_UserStruct}
 
-	// Itera sugli utenti forniti dal frontend (gli altri membri)
+	//  Itera sugli utenti forniti dal frontend (gli altri membri)
 	for _, userReq := range req.Users {
-		// Verifica se l'utente fornito esiste nel UserDB
+		//  Verifica se l'utente fornito esiste nel UserDB
 		user, exists := scs.UserDB[userReq]
 		if !exists {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "User '" + userReq + "' not found"})
 			return
 		}
-		// Aggiungi l'utente verificato direttamente alla slice
+		//  Aggiungi l'utente verificato direttamente alla slice
 		groupMembersSlice = append(groupMembersSlice, user)
 	}
 
-	// Un gruppo deve avere almeno 2 membri (il creatore + almeno un altro utente dalla richiesta)
+	//  Un gruppo deve avere almeno 2 membri (il creatore + almeno un altro utente dalla richiesta)
 	if len(groupMembersSlice) < 2 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Group must have at least two members"})
 		return
 	}
 
-	// Genera un ID univoco
+	//  Genera un ID univoco
 	newConvoID := GenerateRandomString(6)
 
-	// Crea la ConversationELT
+	//  Crea la ConversationELT
 	newConvoELT := &scs.ConversationELT{
 		ConvoID:         newConvoID,
 		DateLastMessage: time.Now(),
@@ -1104,20 +1101,20 @@ func CreateGroupConvo(c *gin.Context) {
 		Messages:        []*scs.Message{},
 	}
 
-	// Crea la struct Group
+	//  Crea la struct Group
 	newGroup := &scs.Group{
 		Conversation:  newConvoELT,
 		Name:          req.GroupName,
 		GroupPhoto:    req.GroupPicture,
 		PhotoMimeType: req.GroupPhotoMimeType,
-		Users:         groupMembersSlice, // Slice di membri verificati (creatore + altri)
+		Users:         groupMembersSlice, //  Slice di membri verificati (creatore + altri)
 	}
 
-	// Aggiungi ai DB globali
+	//  Aggiungi ai DB globali
 	scs.ConvoDB[newConvoID] = newConvoELT
 	scs.GroupDB[newConvoID] = newGroup
 
-	// Aggiorna UserConvosDB per ogni membro
+	//  Aggiorna UserConvosDB per ogni membro
 	for _, member := range groupMembersSlice {
 		if _, exists := scs.UserConvosDB[member.Username]; !exists {
 			scs.UserConvosDB[member.Username] = scs.Conversations{}
@@ -1125,7 +1122,7 @@ func CreateGroupConvo(c *gin.Context) {
 		scs.UserConvosDB[member.Username] = append(scs.UserConvosDB[member.Username], newConvoELT)
 	}
 
-	// Risposta di successo
+	//  Risposta di successo
 	c.JSON(http.StatusOK, gin.H{"convoID": newConvoID, "message": "Group created successfully"})
 
 }

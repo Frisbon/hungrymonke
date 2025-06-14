@@ -7,10 +7,10 @@
         :key="c.convoid || index"
         @click="chooseConvo(c)">
 
-              <img class="pfp" v-if="c.chatPic != null && c.chatPic != 'https://i.imgur.com/D95gXlb.png' && c.chatPic != ''"
+              <img class="pfp" v-if="c.chatPic != null && c.chatPic != 'https:// i.imgur.com/D95gXlb.png' && c.chatPic != ''"
               :src="'data:' + c.chatPicType + ';base64,' + c.chatPic">
 
-              <img class="pfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
+              <img class="pfp" v-else :src="'https:// i.imgur.com/D95gXlb.png'">
               <h3 class='chatName'>{{ c.chatName }}</h3>
 
     </div>
@@ -20,7 +20,7 @@
 <script>
 
  export default {
-   name: 'ForwardingConvoList', // Meglio usare lo stesso nome usato nel genitore per chiarezza
+   name: 'ForwardingConvoList', //  Meglio usare lo stesso nome usato nel genitore per chiarezza
 
    props: {
      currentUser: String,
@@ -33,14 +33,14 @@
    },
 
    methods: {
-       chooseConvo(convo) { // Ricevi l'oggetto conversazione intero
+       chooseConvo(convo) { //  Ricevi l'oggetto conversazione intero
            console.log("You've chosen the convo: ", convo);
            this.$emit('forwardToConvo', convo);
        },
 
    },
 
-   // mounted DEVE essere una funzione
+   //  mounted DEVE essere una funzione
    mounted() {
       console.log('ForwardingConvoList mounted.');
 
