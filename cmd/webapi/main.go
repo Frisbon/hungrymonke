@@ -10,23 +10,18 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-/*
-
-	TODO:
-		- a quanto pare posso mandare un messaggio in un gruppo anche se non ne faccio parte ma se so l'ID...
-
-*/
-
 func main() {
 
 	r := gin.Default() //  creo un router Gin per gestire l'HTTP
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http:// localhost:8081", "http:// localhost:8082"}, //  Permetti richieste dal frontend e swagger
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Authorization"},
-		AllowCredentials: true, //  Se usi i cookie/token di autenticazione
+		AllowOrigins: []string{"http://localhost:8081", "http://localhost:8082"},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		// This is the most important line for this fix.
+		// It explicitly allows the browser to send these headers.
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
 	}))
 
 	r.Static("/doc", "./doc")
@@ -117,7 +112,7 @@ func main() {
 
 LINTER COMMANDS:
 	go (in root) -> golangci-lint run
-	js (webui) -> npm run lint
+	js (webui) -> yarn lint
 	api (in root) -> spectral lint ./doc/api.yaml
 
 */

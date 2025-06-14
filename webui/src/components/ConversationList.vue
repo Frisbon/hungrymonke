@@ -308,12 +308,28 @@ export default {
 
     },
 
+
+    /*
+    
+      IMPORTANTE
+      PERCHÈ
+      AIUTA
+      A
+      SETTARE
+      IL
+      TEMPO
+      DI
+      RISPOSTA
+      DEL
+      SITO
+    
+    */
     startPolling() {
       //  Fetch conversations every 3 seconds (adjust the interval as needed)
       this.pollingInterval = setInterval(() => {
         console.log("Polling for new conversations...");
         this.pollingFetcher();
-      }, 30000); //  3000ms = 3 second
+      }, 3000); //  3000ms = 3 second
     },
 
     stopPolling() {

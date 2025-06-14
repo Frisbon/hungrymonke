@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # the go backend
+  api:
+    container_name: wasa-text-backend
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    ports:
+      # host:container
+      - "8082:8082"
+    networks:
+      - wasa-net
+    restart: unless-stopped
+
+  # the vue frontend
+  webui:
+    container_name: wasa-text-frontend
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    ports:
+      # host:container
+      - "8081:80"
+    networks:
+      - wasa-net
+    # make sure the backend starts first
+    depends_on:
+      - api
+    restart: unless-stopped
+
+# network so they can talk to each other
+networks:
+  wasa-net:
+    driver: bridge

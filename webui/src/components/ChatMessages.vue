@@ -97,7 +97,7 @@
                     </div>
                   </div>
                   <div class="message-reply" v-if="message.replyingto != null">
-                      <i >↩ {{ message.author.username }}:</i> 
+                      <i >↩ {{ message.replyingto.author.username }}:</i> 
                       <p class="noParagraph" v-if="message.replyingto.content.text != null">{{ message.replyingto.content.text.slice(0,16)}}...</p>
                       <p class="noParagraph" v-else>[📸 Photo]</p>
                   </div>

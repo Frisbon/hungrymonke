@@ -1,13 +1,11 @@
 openapi: 3.0.0
-
 info:
   title: WASAText
-  version: 1.0.5
-  description: Project made by 2087354. In questa versione ho adattato l'API a seconda del codice Go.
-
+  version: '1.1'
+  description: Project made by 2087354. Risistemazioni finali per saziare il linter e le correzioni della vm del prof.
   contact:
     name: Sasha
-    url: https:// www.youtube.com/watch?v=dQw4w9WgXcQ
+    url: www.youtube.com/watch?v=dQw4w9WgXcQ
     email: bazhura.2087354@studenti.uniroma1.it
 
 tags:
@@ -17,19 +15,22 @@ tags:
   - name: "Group Conversation"
   - name: "DebugStuff"
 
+servers:
+  - url: http://localhost:8082/api
+    description: Local dev server
 
 components:
-  
   securitySchemes:
-      bearerAuth:
-        type: http
-        scheme: bearer
-  
+    bearerAuth:
+      type: http
+      scheme: bearer
   schemas:
-
-    # TODO: METTI TUTTE LE RESPONSE CODES CORRETTAMENTE 
-
-
+    Error: # Added a generic error schema for response definitions
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Resource not found"
 
     SendMessageRequest:
       type: object
@@ -40,43 +41,39 @@ components:
           example: Ciccione
         message:
           $ref: "#/components/schemas/SendMessageContent"
-          
       required:
-        - message  # `message` deve esistere, non invio roba vuota lol
+        - message
 
     SendMessageContent:
       description: Struct inviata in post da SendMessage. Prende i stessi campi di Message ma senza status, author, ID, timestamp e reactions, siccome vengono gestiti dal sistema.
       type: object
-      oneOf: # faccio un bordello per fare TEXT OR PHOTO OR TEXT+PHOTO come opzioni.
-            - properties:
-                Photo:
-                  $ref: "#/components/schemas/Photo"
-                Text: 
-                  type: string
-                  example: Ciao! Ti volevo chiedere se mi presti 10$
-              required: 
-                - Photo
-            - properties:
-                Photo:
-                  $ref: "#/components/schemas/Photo"
-                Text:
-                  type: string
-                  example: Ciao! Ti volevo chiedere se mi presti 10$
-              required: 
-                - Text
-            - properties:
-                Photo:
-                  $ref: "#/components/schemas/Photo"
-                Text:
-                  type: string
-                  example: Ciao! Ti volevo chiedere se mi presti 10$
-              required:
-                - Photo
-                - Text
-        
-        
+      oneOf:
+        - properties:
+            photo:
+              $ref: "#/components/schemas/Photo"
+            text: 
+              type: string
+              example: Ciao! Ti volevo chiedere se mi presti 10$
+          required: 
+            - photo
+        - properties:
+            photo:
+              $ref: "#/components/schemas/Photo"
+            text:
+              type: string
+              example: Ciao! Ti volevo chiedere se mi presti 10$
+          required: 
+            - text
+        - properties:
+            photo:
+              $ref: "#/components/schemas/Photo"
+            text:
+              type: string
+              example: Ciao! Ti volevo chiedere se mi presti 10$
+          required:
+            - photo
+            - text
 
-  
     Photo:
       description: A binary file that represent the image.
       type: string
@@ -109,9 +106,8 @@ components:
         Timestamp:
           description: Timestamp of the message
           type: string
-          format: time-stamp
+          format: date-time
           example: 2025-01-06T12:00:00Z
-
         Content:
           description: The content of the message, could contain plain text, photo, or both, or none...
           type: object
@@ -119,56 +115,50 @@ components:
             Photo:
               $ref: "#/components/schemas/Photo"
             Text:
-              description: Textual content of the message
               type: string
               example: Ciao! Ti volevo chiedere se mi presti 10$
         MsgID:
           $ref: "#/components/schemas/GenericID"
-
         Author:
-          $ref: "#/components/schemas/UserID"
-
+          $ref: "#/components/schemas/User" # Changed to User schema for consistency
         Status:
           description: An ENUM representing the checkmarks/status of the message.
           type: string 
           enum:  ['seen','delivered']
           example: 'delivered'
-          # TODO setStatus i guess?
         Reactions:
           description: A collection of Reaction(s)
           type: array
           items:
             $ref: "#/components/schemas/Reaction"
             
-              
     SendReactionRequest:
       type: object
       properties:
         Emoticon:
           description: An emoticon symbol representing the reaction.
           type: string
-          maxLength: 1
+          maxLength: 2
           example: 🍆
 
     Reaction:
       type: object
       properties:
         Author: 
-          $ref: "#/components/schemas/UserID" 
+          $ref: '#/components/schemas/User' # Changed to User schema
         Timestamp:
           description: Timestamp of the reaction
           type: string
-          format: time-stamp
+          format: date-time
           example: 2025-01-06T12:00:00Z
         Emoticon:
           description: An emoticon symbol representing the reaction.
           type: string
-          maxLength: 1
+          maxLength: 2
           example: 🍆
-
           
     ConversationELT:
-      description: This is a resource representing a conversation (collection of messages) that will apear in the conversations list. 
+      description: This is a resource representing a conversation that will apear in the conversations list. 
       type: object
       properties:
         ConvoID:
@@ -176,22 +166,20 @@ components:
         DateLastMessage:
           description: Timestamp of the last message
           type: string
-          format: time-stamp
+          format: date-time
           example: 2025-01-06T12:00:00Z
         Preview:
-            description: Preview dell'ultimo messaggio. ["📷 Photo" se foto, "📷 TestoPreview..." se foto e testo, "TestoPreview..." se solo testo]
+            description: Preview dell'ultimo messaggio.
             type: string
             example: "Ciao, ti volevo chiedere se..."
         Messages:
           description: A collection of messages
-          #Sorted in reverse chrono order? TODO (i dont know how to implement it and i will think about it later.)
           type: array
           items:
             $ref: '#/components/schemas/Message'
         
-
     Group:
-      description: Resource representing a Group (A Conversation element and a collection of users.)
+      description: Resource representing a Group.
       type: object
       properties:
         GroupPhoto:
@@ -201,65 +189,65 @@ components:
         Name:
           description: Group name
           type: string
-          readOnly: false
         Users:
           description: A collection of users participating in the conversation.
           type: array
-          minLength: 2
-          # for a group to exist, minimum is 2
           items:
            $ref: '#/components/schemas/User'
             
     Private:
-      description: Private 1v1 conversation. The "Chat Photo" should be that of the user im talking with.
+      description: Private 1v1 conversation.
       type: object
       properties:
         Conversation:
           $ref: "#/components/schemas/ConversationELT"
         FirstUser:
           $ref: '#/components/schemas/User'
-        SecondUser: #can be the same as FirstUser, whatsapp allows to text yourself.
+        SecondUser:
           $ref: '#/components/schemas/User'
     
-    
-    #it does not differentiate between group and private conversations.
     Conversations:
-      description: Resource representing the list of the user's conversations..
-      type: array
-      items:
-        $ref: '#/components/schemas/ConversationELT'
-
+      description: Resource representing the list of the user's conversations.
+      type: object
+      properties:
+        Username:
+          $ref: "#/components/schemas/UserID"
+        UserConversations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversationELT'
 
 paths:
-
-  /admin/listUsers:
+  /admin/listUsers: # Changed from list_users back to your original
     description: List All Existing Users.
-
     get:
-      tags: 
-        - "Users"
+      tags: ["Users"]
+      summary: List all users
+      operationId: listAllUsers
       responses:
         "200":
           description: Existing Usernames list
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/User"
+                type: object
+                properties:
+                  Users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
         "404":
-          description: Users not found 
+          description: Users not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   
   /api/login:
-    description: Login/Authentication path
-    
     post:
-      tags: 
-        - "Users"
+      tags: ["Users"]
       summary: Logs in the user
-      description: |-
-        If the user does not exist, it will be created, and an identifier is returned.
-        If the user exists, the user identifier is returned.
+      description: If the user does not exist, it will be created.
       operationId: doLogin
       requestBody:
         description: User details
@@ -277,62 +265,56 @@ paths:
                 type: object
                 properties:
                   token:
-                    description: Il token creato dal login
                     type: string
                   user:
                     $ref: "#/components/schemas/User"
         '500':
-          description: er token nun se crea ao
+          description: Could not create token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     
-
-    
-    
-  # "me" rappresenta il current user loggato (suppongo? scrivo senza capire na minchia lol, ma prima si fa e dopo si capisce, questa è la filosofia della sapienza), mentre uso /{id} quando non deve essere per forza l'utente corrente (sono un admin ecc.)
-  
   /api/users/me/username:
-    description: Path utilizzato per l'operazione di setMyUserName
-  
-    put:  #setMyUserName
-      tags: 
-        - "Users"
+    put:
+      tags: ["Users"]
       operationId: setMyUserName
       summary: Aggiorna il nome utente di un utente loggato
-      description: Utilizza la stringa passata come parametro per impostare il nuovo nome utente all'utente loggato in questo momento.
-      
-      security:
-        - bearerAuth: []
-        
+      description: Utilizza la stringa passata come parametro per impostare il nuovo nome utente.
+      security: [bearerAuth: []]
       requestBody:
         required: true
         content:
-          text/plain:  
+          text/plain:
             schema:
               $ref: '#/components/schemas/UserID'
-              
       responses:
         "200":
          description: Aggiornato il nome utente con successo.
-         content: #ritorna lo user
+         content:
             application/json:
               schema: 
                 $ref: "#/components/schemas/User"
         "404": 
-            description: Utente non trovato :( 
+            description: Utente non trovato.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
         "400":
-            description: Input non valido...  
+            description: Input non valido.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
 
-  /api/conversations: 
-    description: Conversations implica le conversazioni del CURRENT USER. Utilizzato per l'operazione di getMyConversations.
-
-    get: #getMyConversations
-      tags: 
-        - "Private Conversation"
-        - "Group Conversation"
-      description: Recupera le conversazioni dell'utente loggato in questo momento 
-      summary: Recupera lista messaggi.
-      security:
-        - bearerAuth: []
+  /api/conversations:
+    get:
+      tags: ["Private Conversation", "Group Conversation"]
+      summary: Recupera lista messaggi
       operationId: getMyConversations
+      description: Recupera le conversazioni dell'utente loggato.
+      security: [bearerAuth: []]
       responses:
         "200":
           description: Hea' ya' go m8, yo' lefty convasations
@@ -342,27 +324,19 @@ paths:
                 $ref: '#/components/schemas/Conversations'
     
   /api/conversations/{ID}:
-    description: Path utilizzato per l'operazione di getConversation
-  
-    get:  #getConversation
-      tags: 
-        - "Private Conversation"
-        - "Group Conversation"
-      description: Recupera la conversazione dell'utente loggato in questo momento tramite l'ID fornito come parametro 
+    get:
+      tags: ["Private Conversation", "Group Conversation"]
       summary: Recupera una conversazione tramite il suo ID
-      
-      security:
-        - bearerAuth: []
       operationId: getConversation 
-      
+      description: Recupera la conversazione dell'utente loggato tramite l'ID.
+      security: [bearerAuth: []]
       parameters:
-      - name: ID
-        in: path
-        description: L'id della convo da prende
-        required: true
-        schema:
-          $ref: "#/components/schemas/GenericID" 
-    
+        - name: ID
+          in: path
+          description: L'id della convo da prende
+          required: true
+          schema:
+            $ref: "#/components/schemas/GenericID"
       responses:
         "200":
           description: All good bro
@@ -370,29 +344,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConversationELT'
-        "400":
+        "404":
           description: Convo not found man :C
-    
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/conversations/messages:
-    description: Path utilizzato per l'operazione di sendMessage  
-  
-    post: #sendMessage 
-      tags: 
-        - "Message" 
-      description: Invia il messaggio contenuto nel body sulla conversazione identificata dal parametro.
-      summary: Invia un messaggio in una convo data dall'id oppure direttamente ad un utente (se non esiste convo la crea).
-      security:
-        - bearerAuth: []
+    post:
+      tags: ["Message"]
+      summary: Invia un messaggio
       operationId: sendMessage
-      
+      description: Invia il messaggio contenuto nel body.
+      security: [bearerAuth: []]
       parameters:
         - name: ID
           in: query
           description: L'id della convo in cui mandare il messaggio
-          required: false
           schema:
             $ref: '#/components/schemas/GenericID'
-      
       requestBody:
         description: Risorsa del Messaggio da inviare.
         required: true
@@ -400,7 +371,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SendMessageRequest'
-      
       responses:
         "200":
           description: All good, message sent bro
@@ -410,24 +380,18 @@ paths:
                 $ref: "#/components/schemas/Message"
         "404":
           description: Convo or user not found error.
-        "400":
-          description: Parametri de schifo mhai dato
-      
-  #per il forwarding non mi serve la conversazione originaria, solo l'id del messaggio e la convo di destinazione come parametro perciò uso /messages come path, siccome ci sono più operazioni le separo in path (forward/comment ecc.)
-  
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/messages/{ID}/forward:
-    description: Path utilizzato per l'operazione di forwardMessage
-  
-    post: #forwardMessage
-      tags: 
-          - "Message" 
-      description: Inoltra il messaggio, aggiungengo il suo id (passato come parametro) alla conversazione (contenuta nel body).
-      summary: Inoltra un messaggio usando il suo id e convo elt.
-      
-      security:
-        - bearerAuth: []
+    post:
+      tags: ["Message"]
+      summary: Inoltra un messaggio
       operationId: forwardMessage
-      
+      description: Inoltra il messaggio.
+      security: [bearerAuth: []]
       parameters:
         - name: ID
           in: path
@@ -435,7 +399,6 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/GenericID"
-      
       requestBody:
         required: true
         description: ID conversazione alla quale inoltrare la roba.
@@ -446,7 +409,6 @@ paths:
               properties:
                 ConvoID:
                   $ref: "#/components/schemas/GenericID"
-      
       responses:
         "200":
           description: All good, message forwarded bro
@@ -456,19 +418,18 @@ paths:
                 $ref: "#/components/schemas/Message"
         "400":
           description: Message not found error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/messages/{ID}/comments:
-    
-    description: Path utilizzato per l'operazione di commentMessage e uncommentMessage
-  
-    post: #commentMessage (Reaction)
-      tags: 
-        - "Message" 
-      description: Lascia una reazione, contenuta nel body, sul messaggio identificato dal parametro
-      
-      security:
-        - bearerAuth: []
+    post:
+      tags: ["Message"]
+      summary: Commenta un messaggio
       operationId: commentMessage
-      
+      description: Lascia una reazione sul messaggio.
+      security: [bearerAuth: []]
       parameters:
         - name: ID
           in: path
@@ -476,15 +437,13 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/GenericID"
-      
       requestBody:
         required: true
-        description: Passo l'oggetto "Reazione" necessario
+        description: L'oggetto "Reazione".
         content:
           application/json:
             schema: 
               $ref: "#/components/schemas/SendReactionRequest"
-      
       responses:
         "200":
           description: All good, message commented bro
@@ -494,26 +453,29 @@ paths:
                 $ref: "#/components/schemas/Message"
         "404":
           description: Message not found error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "400":
           description: Comment already exists.
-  
-    delete: #uncommentMessage (Delete Reaction)
-      tags: 
-        - "Message" 
-      description: Rimuove il commento (unico) del logged user dal messaggio identificato dal parametro 
-      
-      security:
-        - bearerAuth: []
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags: ["Message"]
+      summary: Rimuovi commento
       operationId: uncommentMessage
-      
+      description: Rimuove il commento del user.
+      security: [bearerAuth: []]
       parameters:
         - name: ID
           in: path
-          description: L'id del messaggio dove si trova il commento
+          description: L'id del messaggio
           required: true
           schema:
-            $ref: "#/components/schemas/GenericID" 
-            
+            $ref: "#/components/schemas/GenericID"
       responses:
         "200":
           description: All good, comment deleted bro
@@ -523,31 +485,31 @@ paths:
                 $ref: "#/components/schemas/Message"
         "404":
           description: Message or Comment not found error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "401":
           description: Non sei l'autore del messaggio!
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
-    
   /api/messages/{ID}:
-    description: Path usato per operazione deleteMessage
-  
-    delete: #deleteMessage
-      tags: 
-        - "Message" 
-      description: Elimina il messaggio identificato dal parametro
-    
-    
-      security:
-        - bearerAuth: []
+    delete:
+      tags: ["Message"]
+      summary: Elimina messaggio
       operationId: deleteMessage
-      
+      description: Elimina il messaggio.
+      security: [bearerAuth: []]
       parameters:
         - name: ID
           in: path
-          description: L'id del messaggio dove si trova il commento
+          description: L'id del messaggio
           required: true
           schema:
             $ref: "#/components/schemas/GenericID"
-
       responses:
         '200':
           description: All good, message deleted bro
@@ -557,34 +519,30 @@ paths:
                 $ref: "#/components/schemas/Message" 
         '400':
           description: Message not found error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   
   /api/groups/members:
-    description: Path usato per operazione addToGroup e leaveGroup
-  
-    put: #addToGroup
-      tags: 
-        - "Group Conversation" 
-      description: Aggiunge l'utente passato nel body al gruppo identificato dal parametro.
-    
-      security:
-        - bearerAuth: []
+    put:
+      tags: ["Group Conversation"]
+      summary: Aggiungi utente a gruppo
       operationId: addToGroup
-        
+      description: Aggiunge l'utente passato nel body al gruppo.
+      security: [bearerAuth: []]
       parameters:
         - name: ID
           in: query
-          description: L'id della convo-gruppo a cui aggiungere un utente, se vuota => crea nuovo gruppo.
-          required: false
+          description: L'id della convo-gruppo.
           schema:
             $ref: "#/components/schemas/GenericID"
-        
       requestBody:
         required: true
         content:
           text/plain:
             schema: 
               $ref: "#/components/schemas/UserID"
-        
       responses:
         '200':
           description: All good, user added to group
@@ -594,85 +552,78 @@ paths:
                 $ref: "#/components/schemas/Group"  
         '400':
           description: Convo not found error.
-  
-    delete: #leaveGroup
-      tags: 
-        - "Group Conversation" 
-      description: Elimina l'utente loggato dalla lista degli utenti del gruppo identificato dall'id passato come parametro.
-    
-      security:
-        - bearerAuth: []
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags: ["Group Conversation"]
+      summary: Lascia il gruppo
       operationId: leaveGroup
-      
+      description: L'utente loggato lascia il gruppo.
+      security: [bearerAuth: []]
       parameters:
         - name: ID
           in: query
-          description: L'id del gruppo da cui il user corrente (/me) vuole uscire
+          description: L'id del gruppo
           required: true
           schema:
             $ref: "#/components/schemas/GenericID"
-
       responses:
         '204':
           description: All good, you left the group bro
         '400':
           description: Group not found error.
-  
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/groups/{ID}/name:
-    description: Path usato per operazione setGroupName
-    
-    put:  #setGroupName
-      tags: 
-        - "Group Conversation" 
-      description: Cambia il nome del gruppo identificato dall'id usando la stringa nel body.
-    
-      security:
-        - bearerAuth: []
+    put:
+      tags: ["Group Conversation"]
+      summary: Rinomina gruppo
       operationId: setGroupName
-      
+      description: Cambia il nome del gruppo.
+      security: [bearerAuth: []]
       parameters:
         - name: ID
           in: path
-          description: L'id della convo-gruppo a cui cambiare il nome
+          description: L'id del gruppo
           required: true
           schema:
             $ref: "#/components/schemas/GenericID"
-            
       requestBody:
         required: true
         content:
           text/plain:
             schema: 
-              description: Group name string
               type: string
-              readOnly: false
-      
       responses:
         "200":
          description: Aggiornato il nome gruppo con successo.
-         content: #ritorna il gruppo
+         content:
             application/json:
-              schema:  
+              schema: 
                 $ref: "#/components/schemas/Group"
         "404": 
-            description: Gruppo non trovato :(   
-  
+            description: Gruppo non trovato.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+
   /api/users/me/photo:
-    description: Path usato per operazione setMyPhoto
-    
-    put:  #setMyPhoto
-      tags: 
-        - "Users"
-      description: Imposta la foto profilo dell'utente loggato al momento.
-      
-      security:
-        - bearerAuth: []
+    put:
+      tags: ["Users"]
+      summary: Imposta foto profilo
       operationId: setMyPhoto
-      
+      description: Imposta la foto profilo dell'utente loggato.
+      security: [bearerAuth: []]
       requestBody:
         required: true
         content:
-          multipart/form-data: #tecnicamente, se è una richiesta va bene, ho letto sul libro che è meglio non farlo per le risposte :)
+          multipart/form-data:
             schema:
               type: object
               properties:
@@ -681,60 +632,47 @@ paths:
                   format: binary
               required:
                 - file
-      
       responses:
         "200":
          description: Aggiornato la pfp con successo.
-         content: #ritorna il user
+         content:
             application/json:
               schema: 
                 $ref: "#/components/schemas/User"
-      
+
   /api/groups/{ID}/photo:
-    description: Path usato per operazione setGroupPhoto
-  
-  
-    put:  #setGroupPhoto
-      tags: 
-        - "Group Conversation" 
-      description: Imposta la foto profilo del gruppo identificato dal parametro
-      security:
-        - bearerAuth: []
+    put:
+      tags: ["Group Conversation"]
+      summary: Imposta foto gruppo
       operationId: setGroupPhoto
-      
+      description: Imposta la foto profilo del gruppo.
+      security: [bearerAuth: []]
       parameters:
         - name: ID
           in: path
-          description: L'id della convo-gruppo a cui cambiare la foto
+          description: L'id del gruppo
           required: true
           schema:
-            $ref: "#/components/schemas/GenericID" 
-      
-      
+            $ref: "#/components/schemas/GenericID"
       requestBody:
         content:
-          multipart/form-data: #tecnicamente, se è una richiesta va bene, ho letto sul libro che è meglio non farlo per le risposte :)
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/Photo" 
-      
+              $ref: "#/components/schemas/Photo"
       responses:
         "200":
-         description: Aggiornato la pfp con successo.
-         content: #ritorna il gruppo
+          description: Aggiornato la pfp con successo.
+          content:
             application/json:
               schema: 
-                $ref: "#/components/schemas/Group"   
-      
-      
+                $ref: "#/components/schemas/Group"
+
   /debug:
     get:
-      tags:
-        - "DebugStuff"
-      description: Terminal DBs content viewer
+      tags: ["DebugStuff"]
+      summary: Stampa DBs
       operationId: debugDBs
+      description: Terminal DBs content viewer
       responses:
         "204":
           description: filler lol
-      
-      
-  
