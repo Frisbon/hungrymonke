@@ -1,9 +1,9 @@
 package handlers
 
-//  login handlers + functions
+// login handlers + functions
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -19,16 +19,16 @@ var jwtKey = []byte("non_so_perchè_complico_cosi_tanto_questa_roba...")
 /* NB Devi passare il nome utente come stringa*/
 func GeneraToken(username string) (string, error) {
 
-	expirationTime := time.Now().Add(12 * time.Hour) //  token scade 12 ore
+	expirationTime := time.Now().Add(12 * time.Hour) // token scade 12 ore
 
 	claims := &jwt.StandardClaims{
-		Subject:   username,              //  Username o ID dell'utente
-		ExpiresAt: expirationTime.Unix(), //  tempo di scadenza del token
+		Subject:   username,              // Username o ID dell'utente
+		ExpiresAt: expirationTime.Unix(), // tempo di scadenza del token
 	}
 
-	//  creo token con i parametri sopra
+	// creo token con i parametri sopra
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey) // firma e restituisci stringa token
+	tokenString, err := token.SignedString(jwtKey) //firma e restituisci stringa token
 
 	if err != nil {
 		return "", err
@@ -47,12 +47,15 @@ func Login(c *gin.Context) {
 
 	reqUserID := strings.Trim(string(body), "\"")
 
+	scs.DBMutex.Lock()
+	defer scs.DBMutex.Unlock()
+
 	if _, exists := scs.UserDB[reqUserID]; !exists {
 		scs.UserDB[reqUserID] = &scs.User{Username: reqUserID}
-		log.Println("Non trovo utente perciò lo creo...")
+		fmt.Println("Non trovo utente perciò lo creo...")
 	}
 
-	// genero token x user e lo returno
+	//genero token x user e lo returno
 	tokenString, err := GeneraToken(reqUserID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "non riesco a crea il token"})

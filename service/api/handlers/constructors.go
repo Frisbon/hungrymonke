@@ -17,16 +17,18 @@ import (
 type MsgCONSTR struct {
 	Timestamp   time.Time      `json:"timestamp"`
 	Content     scs.Content    `json:"content"`
-	Author      *scs.User      `json:"author"` //  sender_struct pointer
+	Author      *scs.User      `json:"author"` // sender_struct pointer
 	Status      scs.Status     `json:"status"`
 	Reactions   []scs.Reaction `json:"reactions"`
-	SeenBy      []scs.User     `json:"seenby"` //  new record for group msgs.
+	SeenBy      []scs.User     `json:"seenby"` // new record for group msgs.
 	IsForwarded bool           `json:"isforwarded,omitempty"`
 	ReplyingTo  *scs.Message   `json:"replyingto,omitempty"`
 }
 
 // Costruisce il messaggio, lo salva nel DB e ritorna il puntatore a come argomento.
 func ConstrMessage(data MsgCONSTR) *scs.Message {
+	scs.DBMutex.Lock()
+	defer scs.DBMutex.Unlock()
 
 	m := &scs.Message{
 
@@ -47,13 +49,15 @@ func ConstrMessage(data MsgCONSTR) *scs.Message {
 
 // STRUCT SENZA ID PASSATAMI DALL'ESTERNO
 type ConvoCONSTR struct {
-	DateLastMessage time.Time      `json:"datelastmessage"` // timestamp
+	DateLastMessage time.Time      `json:"datelastmessage"` //timestamp
 	Preview         string         `json:"preview"`         /*NB il Preview è una stringa variabile (messaggio) or una stringa prefissata ("📷 Photo") v2: oppure un mix tra i due? :)*/
 	Messages        []*scs.Message `json:"messages"`
 }
 
 // Costruisce la convo, la salva nel DB e la ritorna come argomento.
 func ConstrConvo(data ConvoCONSTR) *scs.ConversationELT {
+	scs.DBMutex.Lock()
+	defer scs.DBMutex.Unlock()
 
 	c := &scs.ConversationELT{
 
@@ -68,13 +72,15 @@ func ConstrConvo(data ConvoCONSTR) *scs.ConversationELT {
 
 }
 
-func ConstrGroup(users []*scs.User) *scs.Group {
+func ConstrGroup(Users []*scs.User) *scs.Group {
+	scs.DBMutex.Lock()
+	defer scs.DBMutex.Unlock()
 
 	g := &scs.Group{
 
 		Conversation: ConstrConvo(ConvoCONSTR{}),
 		Name:         "NewGroup :)",
-		Users:        users,
+		Users:        Users,
 	}
 
 	scs.GroupDB[g.Conversation.ConvoID] = g
