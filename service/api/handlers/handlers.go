@@ -852,8 +852,8 @@ func CreatePrivateConvo(c *gin.Context) {
 	}
 	scs.PrivateDB[newConvoID] = newPrivate
 
-	scs.UserConvosDB[user1.Username] = append(scs.UserConvosDB[user1.Username], newConvoELT)
-	scs.UserConvosDB[user2.Username] = append(scs.UserConvosDB[user2.Username], newConvoELT)
+	addConvoToUserIfNotExists(user1.Username, newConvoELT)
+	addConvoToUserIfNotExists(user2.Username, newConvoELT)
 
 	c.JSON(http.StatusOK, gin.H{"convoID": newConvoID})
 }
@@ -918,7 +918,7 @@ func CreateGroupConvo(c *gin.Context) {
 	scs.GroupDB[newConvoELT.ConvoID] = newGroup
 
 	for _, member := range groupMembersSlice {
-		scs.UserConvosDB[member.Username] = append(scs.UserConvosDB[member.Username], newConvoELT)
+		addConvoToUserIfNotExists(member.Username, newConvoELT)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"convoID": newConvoELT.ConvoID, "message": "Group created successfully"})

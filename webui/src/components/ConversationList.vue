@@ -82,7 +82,7 @@
           </div>
 
           <div class="convoBubbleRight">
-            <p class="notificationDot" v-if="c.chatStatus == 'delivered' && c.lastSender != this.username"></p>
+            <p class="notificationDot" v-if="c.lastSender != this.username && !hasSeenLastMessage(c)"></p>
             <br v-else>
 
             <p>{{ c.chatTime.substring(11, 16) }}</p>
@@ -158,7 +158,16 @@ export default {
       }
     },
 
-    // todo, oddio potrebbe essere easy...
+
+    hasSeenLastMessage(convo) { 
+      if (!convo || !convo.seenBy) {
+        return false;
+      }
+      // some controlla se E un item con la condizione
+      return convo.seenBy.some(user => user.username === this.username);
+    },
+
+
     changeUsernameInputField(){
       console.log("Opening Username Field");
       this.showUsernameInput = true;
@@ -255,6 +264,7 @@ export default {
               chatTime: c.datelastmessage,
               chatStatus: c.messages?.[c.messages.length - 1]?.status,
               lastSender: c.messages?.[c.messages.length - 1]?.author?.username,
+              seenBy: c.messages?.[c.messages.length - 1]?.seenBy || [],
 
               chatPic: null,
               chatName: null,
