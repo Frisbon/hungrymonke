@@ -7,10 +7,10 @@
 
         <img
           @click="changePfp" class="mainpfp" style="margin-top: 0px; "
-          v-if="this.userPfp != 'https:// i.imgur.com/D95gXlb.png' && this.userPfp != ''&& this.userPfp != null"
+          v-if="this.userPfp != 'https://i.imgur.com/D95gXlb.png' && this.userPfp != ''&& this.userPfp != null"
           :src="'data:' + this.userPfpType + ';base64,' + this.userPfp">
 
-        <img @click="changePfp" class="mainpfp" v-else :src="'https:// i.imgur.com/D95gXlb.png'">
+        <img @click="changePfp" class="mainpfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
         <input type="file" @change="handleFileUpload" accept="image/*" style="display: none;" ref="fileInput">
 
         <div style="display: flex; align-items: center; justify-items: flex-start;">
@@ -53,18 +53,18 @@
       <li class="convoBubble"
         v-for="c in this.convertedConvos"
         :key="c.convoid"
-        @click="selectConversation(c.convoid)"
+        @click="selectConversation(c)"
         >
 
           <div class="convoBubbleLeft">
 
             <div style="display: flex; align-items: center; justify-items: flex-start;">
 
-              <img class="pfp" v-if="c.chatPic != null && c.chatPic != 'https:// i.imgur.com/D95gXlb.png' && c.chatPic != ''"
+              <img class="pfp" v-if="c.chatPic != null && c.chatPic != 'https://i.imgur.com/D95gXlb.png' && c.chatPic != ''"
               :src="'data:' + c.chatPicType + ';base64,' + c.chatPic">
 
 
-              <img class="pfp" v-else :src="'https:// i.imgur.com/D95gXlb.png'">
+              <img class="pfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
               <h3 class='chatName'>{{ c.chatName }}</h3>
 
             </div>
@@ -82,7 +82,7 @@
           </div>
 
           <div class="convoBubbleRight">
-            <p class="notificationDot" v-if="c.lastSender != this.username && !hasSeenLastMessage(c)"></p>
+            <p class="notificationDot" v-if="!hasSeenLastMessage(c)"></p>
             <br v-else>
 
             <p>{{ c.chatTime.substring(11, 16) }}</p>
@@ -143,28 +143,42 @@ export default {
       this.$emit('logout');
     },
 
-    selectConversation(convoID) {
-      if (convoID) {
-        //  Trova l'oggetto toRender corrispondente al convoID
-        const selectedConvo = this.convertedConvos.find(c => c.convoid === convoID);
-        if (selectedConvo) {
-          //  Emetti l'evento con convoID e selectedConvo (toRender)
-          this.$emit('select-conversation', convoID, selectedConvo);
-          console.log("Ho fatto l'emit, ecco le info:");
-          console.log(selectedConvo);
-        } else {
-          console.error('Convo non trovata per ID:', convoID);
-        }
+    selectConversation(convo) {
+ 
+      // faccio sparire subito il notification dot
+      if (convo.lastSender !== this.username) {
+        convo.chatStatus = 'seen';
       }
+
+      // emetto ad app.vue ID e convo struct 
+      this.$emit('select-conversation', convo.convoid, convo);
     },
 
 
-    hasSeenLastMessage(convo) { 
-      if (!convo || !convo.seenBy) {
-        return false;
+    //  Controlla se l'utente ha visto l'ultimo messaggio
+    hasSeenLastMessage(convo) {
+      // Se l'ultimo messaggio è stato inviato dall'utente corrente, è stato "visto" .
+      if (convo.lastSender === this.username) {
+      return true;
       }
-      // some controlla se E un item con la condizione
-      return convo.seenBy.some(user => user.username === this.username);
+      
+      // Se non c'è un ultimo mittente => la chat è nuova e vuota. Nessun messaggio non letto.
+      if (!convo.lastSender) {
+      return true;
+      }
+
+      // Se lo stato del messaggio è 'seen', è stato visto.
+      if (convo.chatStatus === 'seen') {
+      return true;
+      }
+      
+      // Se l'utente corrente è in 'seenBy', è stato visto.
+      if (convo.seenBy && convo.seenBy.some(user => user.username === this.username)) {
+      return true;
+      }
+      
+      // else, l'ultimo messaggio non è stato visto.
+      return false;
     },
 
 
@@ -264,7 +278,7 @@ export default {
               chatTime: c.datelastmessage,
               chatStatus: c.messages?.[c.messages.length - 1]?.status,
               lastSender: c.messages?.[c.messages.length - 1]?.author?.username,
-              seenBy: c.messages?.[c.messages.length - 1]?.seenBy || [],
+              seenBy: c.messages?.[c.messages.length - 1]?.seenby || [],
 
               chatPic: null,
               chatName: null,
@@ -339,7 +353,7 @@ export default {
       this.pollingInterval = setInterval(() => {
         console.log("Polling for new conversations...");
         this.pollingFetcher();
-      }, 3000); //  3000ms = 3 second
+      }, 400); //  3000ms = 3 second
     },
 
     stopPolling() {

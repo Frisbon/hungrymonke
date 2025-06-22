@@ -96,7 +96,7 @@ export default {
     return {
       isLoggedIn: false,
       username: '',
-      userPfp: 'https:// i.imgur.com/D95gXlb.png', // setto pfp di default
+      userPfp: 'https://i.imgur.com/D95gXlb.png', // setto pfp di default
       userPfpType: null,
       loginError: '',
       selectedConvoID: null,
@@ -192,7 +192,7 @@ export default {
       this.username = '';
       this.selectedConvoID = '';
       this.recipientUsername = '';
-      this.userPfp = 'https:// i.imgur.com/D95gXlb.png';
+      this.userPfp = 'https://i.imgur.com/D95gXlb.png';
       this.userPfpType = null;
       localStorage.removeItem('username');
       localStorage.removeItem('userPfp');
@@ -299,7 +299,7 @@ export default {
     if (localStorage.getItem('token')) {
       this.isLoggedIn = true;
       this.username = localStorage.getItem('username') || '';
-      this.userPfp = localStorage.getItem('userPfp') || 'https:// i.imgur.com/D95gXlb.png';
+      this.userPfp = localStorage.getItem('userPfp') || 'https://i.imgur.com/D95gXlb.png';
       this.userPfpType = localStorage.getItem('userPfpType') || null;
     }
   },

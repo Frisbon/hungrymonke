@@ -15,7 +15,7 @@
         v-if="this.selectedConvoRender.chatPic != null" 
         :src="'data:' + this.selectedConvoRender.chatPicType + ';base64,' + this.selectedConvoRender.chatPic">
 
-        <img @click="changePfp" class="chatpfp" v-else :src="'https:// i.imgur.com/D95gXlb.png'">
+        <img @click="changePfp" class="chatpfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
         
         <h1>{{ this.selectedConvoRender.chatName }}</h1>
 
@@ -85,7 +85,7 @@
 
                   <div v-if="message.author.username !== this.username && this.isGroup">
                     <div style="display: flex;">
-                    <strong >{{ message.author.username }}:</strong> 
+                    <strong >{{ message.author.username }}:</strong><br> 
                     <!-- ADD FORWARDED OR REPLIED CONTENT HERE-->
                     <i class="message-bubble-heading" v-if="message.isforwarded" style="color: gray;">↪ (Forwarded)</i>
                     </div>
