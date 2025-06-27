@@ -15,7 +15,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8081", "http://localhost:8082"},
+		AllowOrigins:     []string{"http://localhost:8081", "http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -63,7 +63,7 @@ func main() {
 		handlers.DebugPrintDatabases()
 	})
 
-	if err := r.Run(":8082"); err != nil {
+	if err := r.Run(":3000"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
 }

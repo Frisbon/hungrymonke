@@ -16,5 +16,5 @@ WORKDIR /app
 COPY --from=builder /app/webapi .
 COPY --from=builder /app/service/api/pictureslol ./service/api/pictureslol
 
-EXPOSE 8082
+EXPOSE 3000
 CMD ["./webapi"]
