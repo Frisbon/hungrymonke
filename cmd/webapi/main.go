@@ -12,13 +12,11 @@ import (
 
 func main() {
 
-	r := gin.Default() //  creo un router Gin per gestire l'HTTP
+	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://localhost:8081", "http://localhost:8082"},
-		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		// This is the most important line for this fix.
-		// It explicitly allows the browser to send these headers.
+		AllowOrigins:     []string{"http://localhost:8081", "http://localhost:8082"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -28,91 +26,44 @@ func main() {
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/doc/api.yaml")))
 
-	r.GET("api/utils/listUsers", func(c *gin.Context) {
-		handlers.ListUsers(c)
-	})
+	// --- Routes updated to match api.yaml ---
 
-	r.POST("api/login", func(c *gin.Context) { handlers.Login(c) })
+	r.POST("/api/login", handlers.Login)
 
-	r.PUT("/api/users/me/username", func(c *gin.Context) {
-		handlers.SetMyUsername(c)
-	})
+	// User routes
+	r.PUT("/api/users/me/username", handlers.SetMyUsername)
+	r.PUT("/api/users/me/photo", handlers.SetMyPhoto)
 
-	r.PUT("/api/users/me/photo", func(c *gin.Context) {
-		handlers.SetMyPhoto(c)
-	})
+	// Conversation routes
+	r.GET("/api/conversations", handlers.GetMyConversations)
+	r.GET("/api/conversations/:ID", handlers.GetConversation)
+	r.POST("/api/conversations/messages", handlers.SendMessage)
 
-	r.GET("/api/conversations", func(c *gin.Context) {
-		handlers.GetMyConversations(c)
-	})
+	// Message routes
+	r.POST("/api/messages/:ID/forward", handlers.ForwardMSG)
+	r.POST("/api/messages/:ID/comments", handlers.CommentMSG)
+	r.DELETE("/api/messages/:ID/comments", handlers.UncommentMSG)
+	r.DELETE("/api/messages/:ID", handlers.DeleteMSG)
 
-	r.GET("/api/conversations/:ID", func(c *gin.Context) {
-		handlers.GetMyConversation(c)
-	})
+	// Group routes
+	r.PUT("/api/groups/members", handlers.AddToGroup)
+	r.DELETE("/api/groups/members", handlers.LeaveGroup)
+	r.PUT("/api/groups/:ID/name", handlers.SetGroupName)
+	r.PUT("/api/groups/:ID/photo", handlers.SetGroupPhoto)
 
-	r.POST("/api/conversations/messages", func(c *gin.Context) {
-		handlers.SendMessage(c)
-	})
+	// Admin and Utility routes
+	// This path in your main.go was `/api/utils/listUsers`, but your api.yaml specifies `/admin/listUsers`
+	r.GET("/admin/listUsers", handlers.ListUsers) // Corrected path
+	r.GET("/api/utils/getconvoinfo/:ID", handlers.GetConvoInfo)
+	r.POST("/api/utils/createConvo", handlers.CreatePrivateConvo)
+	r.POST("/api/utils/createGroup", handlers.CreateGroupConvo)
 
-	r.POST("/api/messages/:ID/forward", func(c *gin.Context) {
-		handlers.ForwardMSG(c)
-	})
-
-	r.POST("/api/messages/:ID/comments", func(c *gin.Context) {
-		handlers.CommentMSG(c)
-	})
-
-	r.DELETE("/api/messages/:ID/comments", func(c *gin.Context) {
-		handlers.UncommentMSG(c)
-	})
-
-	r.DELETE("/api/messages/:ID", func(c *gin.Context) {
-		handlers.DeleteMSG(c)
-	})
-
-	r.PUT("/api/groups/members", func(c *gin.Context) {
-		handlers.AddToGroup(c)
-	})
-
-	r.DELETE("/api/groups/members", func(c *gin.Context) {
-		handlers.LeaveGroup(c)
-	})
-
-	r.PUT("/api/groups/:ID/name", func(c *gin.Context) {
-		handlers.SetGroupName(c)
-	})
-
-	r.PUT("/api/groups/:ID/photo", func(c *gin.Context) {
-		handlers.SetGroupPhoto(c)
-	})
-
+	// Debug route
 	r.GET("/debug", func(c *gin.Context) {
 		handlers.DebugPrintDatabases()
-	})
-
-	r.GET("/api/utils/getconvoinfo/:ID", func(c *gin.Context) {
-		handlers.GetConvoInfo(c)
-	})
-
-	r.POST("/api/utils/createConvo", func(c *gin.Context) {
-		handlers.CreatePrivateConvo(c)
-	})
-
-	r.POST("/api/utils/createGroup", func(c *gin.Context) {
-		handlers.CreateGroupConvo(c)
 	})
 
 	if err := r.Run(":8082"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
-
 }
-
-/*
-
-LINTER COMMANDS:
-	go (in root) -> golangci-lint run
-	js (webui) -> yarn lint
-	api (in root) -> spectral lint ./doc/api.yaml
-
-*/

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -13,8 +12,8 @@ import (
 
 // POST, path /users/me/username
 func SetMyUsername(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	username, user, err := QuickAuth(c)
 	if err != nil {
@@ -40,7 +39,7 @@ func SetMyUsername(c *gin.Context) {
 		return
 	}
 
-	//trasferisco le convo sull'altro nickname
+	// trasferisco le convo sull'altro nickname
 	var convos = scs.UserConvosDB[username]
 	delete(scs.UserConvosDB, username)
 	scs.UserConvosDB[usernameString] = convos
@@ -49,7 +48,7 @@ func SetMyUsername(c *gin.Context) {
 	user.Username = usernameString
 	scs.UserDB[usernameString] = user // lo riaggiungo con il nome diverso.
 
-	//azzo devo anche aggiornarlo con il token altrimenti si ricorda ancora il nome precedente
+	// azzo devo anche aggiornarlo con il token altrimenti si ricorda ancora il nome precedente
 	// rigeneriamo il token con il nuovo username
 	tokenString, errToken := GeneraToken(usernameString) // Supponiamo che la funzione generaToken prenda il nuovo username
 	if errToken != nil {
@@ -62,8 +61,8 @@ func SetMyUsername(c *gin.Context) {
 
 // PUT, path /users/me/photo
 func SetMyPhoto(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	username, user, err := QuickAuth(c)
 	if err != nil {
@@ -108,8 +107,8 @@ func SetMyPhoto(c *gin.Context) {
 
 // GET, path /conversations
 func GetMyConversations(c *gin.Context) {
-	scs.DBMutex.RLock()         //*
-	defer scs.DBMutex.RUnlock() //*
+	scs.DBMutex.RLock()         // *
+	defer scs.DBMutex.RUnlock() // *
 
 	username, _, err := QuickAuth(c)
 	if err != nil {
@@ -125,23 +124,23 @@ func GetMyConversations(c *gin.Context) {
 }
 
 // GET, path /conversations/:ID
-func GetMyConversation(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+func GetConversation(c *gin.Context) {
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	username, logged_struct, err := QuickAuth(c)
 	if err != nil {
 		return
 	}
 
-	//estraggo l'ID dal body
+	// estraggo l'ID dal body
 	conversationID := c.Param("ID")
 	if conversationID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID della conversazione mancante"})
 		return
 	}
 
-	//ricerco la conversazione nel UserConvosDB tramite l'id estratto.
+	// ricerco la conversazione nel UserConvosDB tramite l'id estratto.
 	var found_conversation *scs.ConversationELT
 	user_conversations, exists := scs.UserConvosDB[username]
 	if !exists {
@@ -175,8 +174,8 @@ func GetMyConversation(c *gin.Context) {
 
 // POST, path /conversations/messages/?=ID
 func SendMessage(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	SenderUsername, sender_struct, err := QuickAuth(c)
 	if err != nil {
@@ -279,8 +278,8 @@ func SendMessage(c *gin.Context) {
 
 // POST, path /messages/{ID}/forward
 func ForwardMSG(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	_, sender_struct, err := QuickAuth(c)
 	if err != nil {
@@ -331,8 +330,8 @@ func ForwardMSG(c *gin.Context) {
 
 // POST, path /messages/{ID}/comments
 func CommentMSG(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	_, sender_struct, err := QuickAuth(c)
 	if err != nil {
@@ -391,8 +390,8 @@ func CommentMSG(c *gin.Context) {
 
 // DELETE, path /messages/{ID}/comments
 func UncommentMSG(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	_, sender_struct, err := QuickAuth(c)
 	if err != nil {
@@ -432,8 +431,8 @@ func UncommentMSG(c *gin.Context) {
 
 // DELETE, path /message/{ID}
 func DeleteMSG(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	_, sender_struct, err := QuickAuth(c)
 	if err != nil {
@@ -492,8 +491,8 @@ func DeleteMSG(c *gin.Context) {
 
 // PUT, path /groups/members
 func AddToGroup(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	logged_username, _, err := QuickAuth(c)
 	if err != nil {
@@ -574,8 +573,8 @@ func AddToGroup(c *gin.Context) {
 
 // DELETE, path /groups/members
 func LeaveGroup(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	logged_username, _, err := QuickAuth(c)
 	if err != nil {
@@ -622,15 +621,15 @@ func LeaveGroup(c *gin.Context) {
 
 	if convoIndexToDelete != -1 {
 		scs.UserConvosDB[logged_username] = append(userConvos[:convoIndexToDelete], userConvos[convoIndexToDelete+1:]...)
-		fmt.Printf("Conversation %s removed from user %s list.\n", ConvoID, logged_username)
+		log.Printf("Conversation %s removed from user %s list.\n", ConvoID, logged_username)
 	} else {
-		fmt.Printf("Warning: Conversation %s not found in user %s conversation list.\n", ConvoID, logged_username)
+		log.Printf("Warning: Conversation %s not found in user %s conversation list.\n", ConvoID, logged_username)
 	}
 
 	if len(g.Users) == 0 {
 		delete(scs.GroupDB, ConvoID)
 		delete(scs.ConvoDB, ConvoID)
-		fmt.Printf("Group %s is now empty and has been deleted from global DBs.\n", ConvoID)
+		log.Printf("Group %s is now empty and has been deleted from global DBs.\n", ConvoID)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"Success": "You left the group and the convo was removed from your list."})
@@ -638,8 +637,8 @@ func LeaveGroup(c *gin.Context) {
 
 // PUT, path /groups/{ID}/name
 func SetGroupName(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	_, logged_struct, err := QuickAuth(c)
 	if err != nil {
@@ -678,8 +677,8 @@ func SetGroupName(c *gin.Context) {
 
 // PUT, path /groups/{ID}/photo
 func SetGroupPhoto(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	_, logged_struct, err := QuickAuth(c)
 	if err != nil {
@@ -736,8 +735,8 @@ func SetGroupPhoto(c *gin.Context) {
 
 // PUT /utils/getconvoinfo/{ID}
 func GetConvoInfo(c *gin.Context) {
-	scs.DBMutex.RLock()         //*
-	defer scs.DBMutex.RUnlock() //*
+	scs.DBMutex.RLock()         // *
+	defer scs.DBMutex.RUnlock() // *
 
 	_, logged_struct, err := QuickAuth(c)
 	if err != nil {
@@ -779,8 +778,8 @@ func GetConvoInfo(c *gin.Context) {
 
 // GET, path /utils/listUsers
 func ListUsers(c *gin.Context) {
-	scs.DBMutex.RLock()         //*
-	defer scs.DBMutex.RUnlock() //*
+	scs.DBMutex.RLock()         // *
+	defer scs.DBMutex.RUnlock() // *
 
 	if len(scs.UserDB) == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Non trovo Utenti..."})
@@ -796,8 +795,8 @@ func ListUsers(c *gin.Context) {
 
 // POST, path /utils/createConvo
 func CreatePrivateConvo(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	Current_Username, _, err := QuickAuth(c)
 	if err != nil {
@@ -860,8 +859,8 @@ func CreatePrivateConvo(c *gin.Context) {
 
 // POST, path /utils/createGroup
 func CreateGroupConvo(c *gin.Context) {
-	scs.DBMutex.Lock()         //*
-	defer scs.DBMutex.Unlock() //*
+	scs.DBMutex.Lock()         // *
+	defer scs.DBMutex.Unlock() // *
 
 	_, Current_UserStruct, err := QuickAuth(c)
 	if err != nil {

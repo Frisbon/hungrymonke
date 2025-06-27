@@ -3,9 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+
+	"log"
 	"math/rand"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -135,17 +137,24 @@ func DebugPrintDatabases() {
 	scs.DBMutex.RLock()
 	defer scs.DBMutex.RUnlock()
 	printMap := func(name string, data interface{}) {
-		if len(fmt.Sprintf("%v", data)) == 0 {
-			fmt.Printf("%s è vuoto.\n", name)
+		v := reflect.ValueOf(data)
+		if v.Kind() != reflect.Map {
+			log.Printf("%s is not a map", name)
 			return
 		}
-		fmt.Printf("Contenuto di %s:\n", name)
+
+		if v.Len() == 0 { // <-- This is the correct and universal check
+			log.Printf("%s è vuoto.\n", name)
+			return
+		}
+
+		log.Printf("Contenuto di %s:\n", name)
 		jsonData, err := json.MarshalIndent(data, "", "  ")
 		if err != nil {
-			fmt.Printf("Errore durante la conversione in JSON di %s: %v\n", name, err)
+			log.Printf("Errore durante la conversione in JSON di %s: %v\n", name, err)
 			return
 		}
-		fmt.Println(string(jsonData))
+		log.Println(string(jsonData))
 	}
 	printMap("GenericDB", scs.GenericDB)
 	printMap("UserDB", scs.UserDB)

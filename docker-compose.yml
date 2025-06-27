@@ -6,7 +6,7 @@ services:
     container_name: wasa-text-backend
     build:
       context: .
-      dockerfile: backend.Dockerfile
+      dockerfile: Dockerfile.backend
     ports:
       # host:container
       - "8082:8082"
@@ -19,7 +19,7 @@ services:
     container_name: wasa-text-frontend
     build:
       context: .
-      dockerfile: frontend.Dockerfile
+      dockerfile: Dockerfile.frontend
     ports:
       # host:container
       - "8081:80"
