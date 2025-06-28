@@ -15,7 +15,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8081", "http://localhost:3000"},
+		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -52,7 +52,6 @@ func main() {
 	r.PUT("/api/groups/:ID/photo", handlers.SetGroupPhoto)
 
 	// Admin and Utility routes
-	// This path in your main.go was `/api/utils/listUsers`, but your api.yaml specifies `/admin/listUsers`
 	r.GET("/admin/listUsers", handlers.ListUsers) // Corrected path
 	r.GET("/api/utils/getconvoinfo/:ID", handlers.GetConvoInfo)
 	r.POST("/api/utils/createConvo", handlers.CreatePrivateConvo)
@@ -63,7 +62,7 @@ func main() {
 		handlers.DebugPrintDatabases()
 	})
 
-	if err := r.Run(":3000"); err != nil {
+	if err := r.Run(":8082"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
 }

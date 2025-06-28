@@ -25,6 +25,6 @@ USER 1000
 # copy the built frontend from the builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-EXPOSE 3000
+EXPOSE 80
 
 # The default Nginx CMD will be used
