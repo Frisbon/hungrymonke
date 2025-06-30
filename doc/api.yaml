@@ -248,8 +248,10 @@ components:
       type: object
       properties:
         GroupPhoto:
+          description: Foto profilo del gruppo.
           $ref: "#/components/schemas/Photo"
         Conversation:
+          description: Conversazione associata al gruppo.
           $ref: "#/components/schemas/ConversationELT"
         Name:
           description: Nome del gruppo.
@@ -294,6 +296,7 @@ paths:
             application/json:
               schema:
                 type: object
+                description: Object containing all registered users.
                 properties:
                   Users:
                     type: array
@@ -328,6 +331,7 @@ paths:
             application/json:
               schema:
                 type: object
+                description: Returned token and user information.
                 properties:
                   token:
                     type: string
@@ -473,8 +477,9 @@ paths:
         description: ID conversazione alla quale inoltrare la roba.
         content:
           application/json:
-            schema: 
+            schema:
               type: object
+              description: Target conversation identifier.
               properties:
                 ConvoID:
                   $ref: "#/components/schemas/GenericID"
@@ -699,6 +704,7 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              description: File contenente la nuova foto profilo.
               properties:
                 file:
                   type: string
@@ -752,4 +758,4 @@ paths:
       description: Terminal DBs content viewer
       responses:
         "204":
-          description: filler lol
+          description: filler lol.

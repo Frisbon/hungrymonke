@@ -1,22 +1,32 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Hardcode the absolute path to the webui directory in Windows format
-WEBUI_PATH="C:/Users/sasha/Documents/GitHub/hungrymonke/webui"
+# Usage: ./open-npm.sh [path/to/webui]
+# If no path is supplied the script will attempt to locate the
+# repository root via git and use the "webui" directory inside it.
 
-# Debug: Print the path being used
+set -euo pipefail
+
+if [ "$#" -gt 0 ]; then
+  WEBUI_PATH="$(realpath "$1")"
+else
+  if git_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+    WEBUI_PATH="$git_root/webui"
+  else
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    WEBUI_PATH="$SCRIPT_DIR/webui"
+  fi
+fi
+
 echo "Mounting path: $WEBUI_PATH"
 
-# Verify the path exists on the host
-if [ -d "$WEBUI_PATH" ]; then
-  echo "webui directory exists on host"
-else
+if [ ! -d "$WEBUI_PATH" ]; then
   echo "Error: webui directory does not exist at $WEBUI_PATH"
   exit 1
 fi
 
-# Run the Docker container without the -w flag
+# Run the Docker container inside the webui directory
 docker run --rm -it \
   -v "$WEBUI_PATH:/app" \
   -p 8081:8081 \
-  node:lts \
-  bash -c "ls -la /app && echo 'Current directory: $PWD' && bash"
+  -w /app \
+  node:lts bash
