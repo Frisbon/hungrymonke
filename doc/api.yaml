@@ -299,6 +299,7 @@ paths:
                 description: Object containing all registered users.
                 properties:
                   Users:
+                    description: List of all user records
                     type: array
                     minItems: 0
                     maxItems: 1000

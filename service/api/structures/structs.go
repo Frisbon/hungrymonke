@@ -62,7 +62,7 @@ type Group struct {
 	Users         []*User          `json:"users"`
 }
 
-//  Questa struct serve per aiutare a decidere lo status "Seen" in una convo di gruppo.
+// Questa struct serve per aiutare a decidere lo status "Seen" in una convo di gruppo.
 type GroupMessage struct {
 	Msg   Message `json:"message"`
 	Users []*User `json:"users"`
