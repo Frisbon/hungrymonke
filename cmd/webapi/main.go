@@ -12,11 +12,6 @@ import (
 
 func main() {
 
-	// Disable proxy trust to avoid startup warnings
-	if err := gin.SetTrustedProxies(nil); err != nil {
-		log.Fatalf("Failed to set trusted proxies: %v", err)
-	}
-
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
