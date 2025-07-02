@@ -367,9 +367,9 @@ paths:
          description: Aggiornato il nome utente con successo.
          content:
             application/json:
-              schema: 
+              schema:
                 $ref: "#/components/schemas/User"
-        "404": 
+        "404":
             description: Utente non trovato.
             content:
               application/json:
@@ -450,7 +450,7 @@ paths:
           description: All good, message sent bro
           content:
             application/json:
-              schema: 
+              schema:
                 $ref: "#/components/schemas/Message"
         "404":
           description: Convo or user not found error.
@@ -517,14 +517,14 @@ paths:
         description: L'oggetto "Reazione".
         content:
           application/json:
-            schema: 
+            schema:
               $ref: "#/components/schemas/SendReactionRequest"
       responses:
         "200":
           description: All good, message commented bro
           content:
             application/json:
-              schema: 
+              schema:
                 $ref: "#/components/schemas/Message"
         "404":
           description: Message not found error.
@@ -556,7 +556,7 @@ paths:
           description: All good, comment deleted bro
           content:
             application/json:
-              schema: 
+              schema:
                 $ref: "#/components/schemas/Message"
         "404":
           description: Message or Comment not found error.
@@ -590,8 +590,8 @@ paths:
           description: All good, message deleted bro
           content:
             application/json:
-              schema: 
-                $ref: "#/components/schemas/Message" 
+              schema:
+                $ref: "#/components/schemas/Message"
         '400':
           description: Message not found error.
           content:
@@ -616,15 +616,15 @@ paths:
         required: true
         content:
           text/plain:
-            schema: 
+            schema:
               $ref: "#/components/schemas/UserID"
       responses:
         '200':
           description: All good, user added to group
           content:
             application/json:
-              schema: 
-                $ref: "#/components/schemas/Group"  
+              schema:
+                $ref: "#/components/schemas/Group"
         '400':
           description: Convo not found error.
           content:
@@ -672,7 +672,7 @@ paths:
         required: true
         content:
           text/plain:
-            schema: 
+            schema:
               type: string
               description: New group name.
               minLength: 1
@@ -683,9 +683,9 @@ paths:
          description: Aggiornato il nome gruppo con successo.
          content:
             application/json:
-              schema: 
+              schema:
                 $ref: "#/components/schemas/Group"
-        "404": 
+        "404":
             description: Gruppo non trovato.
             content:
               application/json:
@@ -721,7 +721,7 @@ paths:
          description: Aggiornato la pfp con successo.
          content:
             application/json:
-              schema: 
+              schema:
                 $ref: "#/components/schemas/User"
 
   /api/groups/{ID}/photo:
@@ -748,7 +748,7 @@ paths:
           description: Aggiornato la pfp con successo.
           content:
             application/json:
-              schema: 
+              schema:
                 $ref: "#/components/schemas/Group"
 
   /debug:

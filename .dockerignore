@@ -1,0 +1,8 @@
+.git
+.vscode
+doc/
+open-npm.sh
+**/dataset.png
+webui/node_modules
+webui/dist
+.DS_Store
