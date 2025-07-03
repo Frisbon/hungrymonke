@@ -353,7 +353,7 @@ paths:
     put:
       tags: ["Users"]
       summary: Aggiorna il nome utente di un utente loggato
-      operationId: setMyUserName
+      operationId: setMyUsername
       description: Utilizza la stringa passata come parametro per impostare il nuovo nome utente.
       security: [bearerAuth: []]
       requestBody:
