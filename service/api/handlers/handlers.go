@@ -7,11 +7,12 @@ import (
 	"time"
 
 	scs "github.com/Frisbon/hungrymonke/service/api/structures"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 // POST, path /users/me/username
-func SetMyUsername(c *gin.Context) {
+func setMyUsername(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -60,7 +61,7 @@ func SetMyUsername(c *gin.Context) {
 }
 
 // PUT, path /users/me/photo
-func SetMyPhoto(c *gin.Context) {
+func setMyPhoto(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -106,7 +107,7 @@ func SetMyPhoto(c *gin.Context) {
 }
 
 // GET, path /conversations
-func GetMyConversations(c *gin.Context) {
+func getMyConversations(c *gin.Context) {
 	scs.DBMutex.RLock()         // *
 	defer scs.DBMutex.RUnlock() // *
 
@@ -124,7 +125,7 @@ func GetMyConversations(c *gin.Context) {
 }
 
 // GET, path /conversations/:ID
-func GetConversation(c *gin.Context) {
+func getConversation(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -173,7 +174,7 @@ func GetConversation(c *gin.Context) {
 }
 
 // POST, path /conversations/messages/?=ID
-func SendMessage(c *gin.Context) {
+func sendMessage(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -277,7 +278,7 @@ func SendMessage(c *gin.Context) {
 }
 
 // POST, path /messages/{ID}/forward
-func ForwardMSG(c *gin.Context) {
+func forwardMSG(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -329,7 +330,7 @@ func ForwardMSG(c *gin.Context) {
 }
 
 // POST, path /messages/{ID}/comments
-func CommentMSG(c *gin.Context) {
+func commentMSG(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -389,7 +390,7 @@ func CommentMSG(c *gin.Context) {
 }
 
 // DELETE, path /messages/{ID}/comments
-func UncommentMSG(c *gin.Context) {
+func uncommentMSG(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -430,7 +431,7 @@ func UncommentMSG(c *gin.Context) {
 }
 
 // DELETE, path /message/{ID}
-func DeleteMSG(c *gin.Context) {
+func deleteMSG(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -490,7 +491,7 @@ func DeleteMSG(c *gin.Context) {
 }
 
 // PUT, path /groups/members
-func AddToGroup(c *gin.Context) {
+func addToGroup(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -572,7 +573,7 @@ func AddToGroup(c *gin.Context) {
 }
 
 // DELETE, path /groups/members
-func LeaveGroup(c *gin.Context) {
+func leaveGroup(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -636,7 +637,7 @@ func LeaveGroup(c *gin.Context) {
 }
 
 // PUT, path /groups/{ID}/name
-func SetGroupName(c *gin.Context) {
+func setGroupName(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -676,7 +677,7 @@ func SetGroupName(c *gin.Context) {
 }
 
 // PUT, path /groups/{ID}/photo
-func SetGroupPhoto(c *gin.Context) {
+func setGroupPhoto(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -734,7 +735,7 @@ func SetGroupPhoto(c *gin.Context) {
 /* HANDLER NON RICHIESTI */
 
 // PUT /utils/getconvoinfo/{ID}
-func GetConvoInfo(c *gin.Context) {
+func getConvoInfo(c *gin.Context) {
 	scs.DBMutex.RLock()         // *
 	defer scs.DBMutex.RUnlock() // *
 
@@ -777,7 +778,7 @@ func GetConvoInfo(c *gin.Context) {
 }
 
 // GET, path /utils/listUsers
-func ListUsers(c *gin.Context) {
+func listUsers(c *gin.Context) {
 	scs.DBMutex.RLock()         // *
 	defer scs.DBMutex.RUnlock() // *
 
@@ -794,7 +795,7 @@ func ListUsers(c *gin.Context) {
 }
 
 // POST, path /utils/createConvo
-func CreatePrivateConvo(c *gin.Context) {
+func createPrivateConvo(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -858,7 +859,7 @@ func CreatePrivateConvo(c *gin.Context) {
 }
 
 // POST, path /utils/createGroup
-func CreateGroupConvo(c *gin.Context) {
+func createGroupConvo(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -921,4 +922,49 @@ func CreateGroupConvo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"convoID": newConvoELT.ConvoID, "message": "Group created successfully"})
+}
+
+// NewRouter sets up all routes and returns a *gin.Engine for use in main.go
+func NewRouter() *gin.Engine {
+	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
+
+	r.Static("/doc", "./doc")
+
+	r.POST("/api/login", login)
+
+	r.PUT("/api/users/me/username", setMyUsername)
+	r.PUT("/api/users/me/photo", setMyPhoto)
+
+	r.GET("/api/conversations", getMyConversations)
+	r.GET("/api/conversations/:ID", getConversation)
+	r.POST("/api/conversations/messages", sendMessage)
+
+	r.POST("/api/messages/:ID/forward", forwardMSG)
+	r.POST("/api/messages/:ID/comments", commentMSG)
+	r.DELETE("/api/messages/:ID/comments", uncommentMSG)
+	r.DELETE("/api/messages/:ID", deleteMSG)
+
+	r.PUT("/api/groups/members", addToGroup)
+	r.DELETE("/api/groups/members", leaveGroup)
+	r.PUT("/api/groups/:ID/name", setGroupName)
+	r.PUT("/api/groups/:ID/photo", setGroupPhoto)
+
+	r.GET("/admin/listUsers", listUsers)
+	r.GET("/api/utils/getconvoinfo/:ID", getConvoInfo)
+	r.POST("/api/utils/createConvo", createPrivateConvo)
+	r.POST("/api/utils/createGroup", createGroupConvo)
+
+	r.GET("/debug", func(c *gin.Context) {
+		DebugPrintDatabases()
+	})
+
+	return r
 }

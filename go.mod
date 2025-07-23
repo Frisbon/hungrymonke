@@ -6,8 +6,6 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.4.0 // Version likely compatible with gin v1.7.4
 	github.com/gin-gonic/gin v1.8.1 // Version compatible with Go 1.17
-	github.com/swaggo/files v1.0.1 // Keep your existing version
-	github.com/swaggo/gin-swagger v1.3.2 // Version likely compatible with gin v1.7.4 and older swag
 )
 
 require (
@@ -30,6 +28,8 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
+	github.com/swaggo/files v1.0.1 // indirect; Keep your existing version
+	github.com/swaggo/gin-swagger v1.3.2 // indirect; Version likely compatible with gin v1.7.4 and older swag
 	github.com/swaggo/swag v1.5.1 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
@@ -37,6 +37,7 @@ require (
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/tools v0.1.12 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

@@ -4,15 +4,15 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Frisbon/hungrymonke/service/api"
+	"github.com/Frisbon/hungrymonke/service/api/handlers"
 )
 
 func main() {
-	apirouter := api.New()
+	r := handlers.NewRouter()
 
 	srv := http.Server{
 		Addr:    ":8082",
-		Handler: apirouter.Handler(),
+		Handler: r,
 	}
 
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

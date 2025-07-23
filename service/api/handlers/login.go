@@ -37,7 +37,7 @@ func GeneraToken(username string) (string, error) {
 }
 
 // handler per il login
-func Login(c *gin.Context) {
+func login(c *gin.Context) {
 
 	body, err := c.GetRawData()
 	if err != nil {
