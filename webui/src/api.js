@@ -6,7 +6,7 @@ Così posso accedere alle funzioni qui, nelle altre schermate vue
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8082/api',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json', //  implica che riceverà solo JSON dal back-end
   },

@@ -1,36 +1,25 @@
-version: '3.8'
-
 services:
-  # the go backend
-  api:
-    container_name: wasa-text-backend
+  backend:
+    image: wasa-backend:final
     build:
       context: .
       dockerfile: Dockerfile.backend
+    environment:
+      - PORT=3000
+      - GIN_MODE=release
     ports:
-      # host:container
-      - "8082:8082"
-    networks:
-      - wasa-net
-    restart: unless-stopped
+      - "3000:3000"
 
-  # the vue frontend
-  webui:
-    container_name: wasa-text-frontend
+  frontend:
+    image: wasa-frontend:final
     build:
       context: .
       dockerfile: Dockerfile.frontend
+    # Fallback (se la tua Docker Desktop esegue non-root): sblocca user root
+    # user: "0:0"
+    environment:
+      - API_BASE=/api
     ports:
-      # host:container
-      - "8081:80"
-    networks:
-      - wasa-net
-    # make sure the backend starts first
+      - "8080:80"
     depends_on:
-      - api
-    restart: unless-stopped
-
-# network so they can talk to each other
-networks:
-  wasa-net:
-    driver: bridge
+      - backend
