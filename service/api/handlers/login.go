@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"encoding/json"
 	"time"
 
 	scs "github.com/Frisbon/hungrymonke/service/api/structures"
@@ -45,7 +46,15 @@ func login(c *gin.Context) {
 		return
 	}
 
-	reqUserID := strings.Trim(string(body), "\"")
+	var reqUserID string
+	// Accetta "Maria" o {"name":"Maria"}
+	var tmp struct{ Name string `json:"name"` }
+	if err := json.Unmarshal(body, &tmp); err == nil && tmp.Name != "" {
+		reqUserID = tmp.Name
+	} else {
+		reqUserID = strings.TrimSpace(string(body))
+		reqUserID = strings.Trim(reqUserID, `"` )
+	}
 
 	scs.DBMutex.Lock()
 	defer scs.DBMutex.Unlock()
@@ -62,5 +71,5 @@ func login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": scs.UserDB[reqUserID]})
+	c.JSON(http.StatusOK, gin.H{"identifier": tokenString, "token": tokenString, "user": scs.UserDB[reqUserID]})
 }

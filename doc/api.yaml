@@ -349,6 +349,43 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+/session:
+    post:
+      tags: ["Users"]
+      summary: Logs in the user
+      description: If the user does not exist, it will be created.
+      operationId: doLogin
+      requestBody:
+        description: User details
+        content:
+          text/plain:
+            schema:
+              $ref: "#/components/schemas/UserID"
+        required: true
+      responses:
+        '201':
+          description: User log-in action successful
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Returned token and user information.
+                properties:
+                  token:
+                    type: string
+                    description: JWT token for authentication.
+                    minLength: 1
+                    maxLength: 512
+                    pattern: ".+"
+                  user:
+                    $ref: "#/components/schemas/User"
+        '500':
+          description: Could not create token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /api/users/me/username:
     put:
       tags: ["Users"]

@@ -934,13 +934,18 @@ func NewRouter() *gin.Engine {
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
+		MaxAge: 1 * time.Second,
 	}))
 
 	r.Static("/doc", "./doc")
 
 	r.POST("/api/login", login)
 
-	r.PUT("/api/users/me/username", setMyUsername)
+	r.POST("/session", login)
+
+	// Preflight for CORS
+// Preflight for CORS
+r.PUT("/api/users/me/username", setMyUsername)
 	r.PUT("/api/users/me/photo", setMyPhoto)
 
 	r.GET("/api/conversations", getMyConversations)
