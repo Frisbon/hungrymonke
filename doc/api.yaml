@@ -21,7 +21,7 @@ tags:
     description: Endpoints per debug, roba che non serve in prod.
 
 servers:
-  - url: http://localhost:8082/api
+  - url: http://localhost:3000/api
     description: Local dev server, dove gira tutto in locale.
 
 components:
@@ -313,43 +313,6 @@ paths:
                 $ref: '#/components/schemas/Error'
 
   /api/login:
-    post:
-      tags: ["Users"]
-      summary: Logs in the user
-      description: If the user does not exist, it will be created.
-      operationId: doLogin
-      requestBody:
-        description: User details
-        content:
-          text/plain:
-            schema:
-              $ref: "#/components/schemas/UserID"
-        required: true
-      responses:
-        '201':
-          description: User log-in action successful
-          content:
-            application/json:
-              schema:
-                type: object
-                description: Returned token and user information.
-                properties:
-                  token:
-                    type: string
-                    description: JWT token for authentication.
-                    minLength: 1
-                    maxLength: 512
-                    pattern: ".+"
-                  user:
-                    $ref: "#/components/schemas/User"
-        '500':
-          description: Could not create token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-/session:
     post:
       tags: ["Users"]
       summary: Logs in the user
@@ -776,10 +739,21 @@ paths:
           schema:
             $ref: "#/components/schemas/GenericID"
       requestBody:
+        required: true
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/Photo"
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Group photo file.
+                  minLength: 1
+                  maxLength: 10000000
+                  pattern: ".+"
+              required:
+                - file
       responses:
         "200":
           description: Aggiornato la pfp con successo.
