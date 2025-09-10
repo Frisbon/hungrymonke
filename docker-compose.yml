@@ -1,25 +1,25 @@
 services:
   backend:
-    image: wasa-backend:final
     build:
       context: .
       dockerfile: Dockerfile.backend
-    environment:
-      - PORT=3000
-      - GIN_MODE=release
+    image: wasa-backend:local
+    container_name: backend
+    expose:
+      - "3000"        # visibile nel network
     ports:
-      - "3000:3000"
+      - "3000:3000"   # utile anche per test diretto
+    environment:
+      - GIN_MODE=release
+
 
   frontend:
-    image: wasa-frontend:final
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    # Fallback (se la tua Docker Desktop esegue non-root): sblocca user root
-    # user: "0:0"
-    environment:
-      - API_BASE=/api
-    ports:
-      - "8080:80"
+    image: wasa-frontend:local
+    container_name: frontend
     depends_on:
       - backend
+    ports:
+      - "8080:80"

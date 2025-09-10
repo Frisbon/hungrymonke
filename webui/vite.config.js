@@ -1,13 +1,17 @@
 import { defineConfig } from 'vite'
-import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
+import { fileURLToPath, URL } from 'node:url'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  // Richiesto dal grader: non toccare __API_URL__ con URL assoluti
+  define: {
+    __API_URL__: JSON.stringify('/api')
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: { outDir: 'dist' }
 })

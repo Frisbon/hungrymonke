@@ -1,28 +1,34 @@
-# ---------- build ----------
-FROM node:lts-alpine AS builder
+# Build static bundle
+FROM node:lts-alpine AS build
 WORKDIR /app
-
-# porta dentro il lockfile se c'è, ma NON congeliamo (il tuo lock va aggiornato)
 COPY webui/package.json webui/yarn.lock* ./
 RUN yarn install --no-progress --network-timeout 600000
-
 COPY webui/ .
-RUN yarn run build
+RUN yarn build
 
-# ---------- runtime ----------
+# Runtime: nginx
 FROM nginx:stable-alpine
 
-# statici
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Statici
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# nginx: reverse proxy verso il backend + rewrite fallback SPA
+# Vhost unico (SPA fallback)
 COPY nginx.default.conf /etc/nginx/conf.d/default.conf
 
-# forza i temp path in /tmp (sempre scrivibile) e disabilita 'user' directive
-COPY nginx.zz_temps.conf /etc/nginx/conf.d/zz_temps.conf
-RUN mkdir -p /tmp/nginx/client_temp /tmp/nginx/proxy_temp /tmp/nginx/fastcgi_temp /tmp/nginx/uwsgi_temp /tmp/nginx/scgi_temp \
- && chmod -R 777 /tmp/nginx \
- && sed -i 's/^\s*user\s\+.*;/# user disabled in container;/' /etc/nginx/nginx.conf || true
+# --- RUN AS UID 1000: fix permessi e pid ---
+# crea le dir necessarie e assegna a uid/gid 1000
+RUN mkdir -p /var/cache/nginx/client_temp \
+             /var/cache/nginx/proxy_temp \
+             /var/cache/nginx/fastcgi_temp \
+             /var/cache/nginx/uwsgi_temp \
+             /var/cache/nginx/scgi_temp \
+             /run/nginx \
+    && chown -R 1000:1000 /var/cache/nginx /run/nginx
+
+# disabilita la direttiva 'user' e imposta un pid scrivibile da uid 1000
+RUN sed -i 's/^\s*user\s\+.*;/# user disabled for non-root run;/' /etc/nginx/nginx.conf \
+ && sed -i 's|^\s*pid\s\+.*;|pid /run/nginx/nginx.pid;|' /etc/nginx/nginx.conf
+# -------------------------------------------
 
 EXPOSE 80
 CMD ["nginx","-g","daemon off;"]

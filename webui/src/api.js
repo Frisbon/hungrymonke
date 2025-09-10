@@ -6,14 +6,12 @@ Così posso accedere alle funzioni qui, nelle altre schermate vue
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: '/api',
-  headers: {
-    'Content-Type': 'application/json', //  implica che riceverà solo JSON dal back-end
-  },
+  baseURL: (typeof __API_URL__ !== 'undefined' ? __API_URL__ : '/api'),
+  headers: { 'Content-Type': 'application/json' },
 });
 
+
   
-//  TODO, fai in modo che anche lo username si salvi per app.vue e convolist
 
   //  Funzione per impostare/rimuovere il token negli header di Axios per login e logout
   function setAuthToken(token) {
