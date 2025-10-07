@@ -6,10 +6,9 @@ Così posso accedere alle funzioni qui, nelle altre schermate vue
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: (typeof __API_URL__ !== 'undefined' ? __API_URL__ : '/api'),
+  baseURL: 'http://localhost:3000/api',
   headers: { 'Content-Type': 'application/json' },
 });
-
 
   
 
@@ -274,7 +273,9 @@ const apiClient = axios.create({
   ritornando un JSON. Quindi response.data = {token: String, user: UserStruct}
   */
   async login(credentials) { 
-    const response = await apiClient.post('/login', credentials); // invio post al back-end per fare il login
+    const response = await apiClient.post('/login', credentials, {
+      headers: { 'Content-Type': 'text/plain' }
+    }); // invio post al back-end per fare il login
     const token = response.data.token;
 
     console.log("Ho appena loggato l'utente ("+response.data.user.username+")")

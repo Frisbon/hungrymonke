@@ -1,34 +1,12 @@
-# Build static bundle
-FROM node:lts-alpine AS build
-WORKDIR /app
-COPY webui/package.json webui/yarn.lock* ./
+# Dockerfile.frontend
+FROM node:lts AS build
+WORKDIR /app/webui
+COPY webui/ ./
 RUN yarn install --no-progress --network-timeout 600000
-COPY webui/ .
+# usa lo script che hai: 'yarn build' o 'yarn run build-prod'
 RUN yarn build
 
-# Runtime: nginx
-FROM nginx:stable-alpine
-
-# Statici
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# Vhost unico (SPA fallback)
-COPY nginx.default.conf /etc/nginx/conf.d/default.conf
-
-# --- RUN AS UID 1000: fix permessi e pid ---
-# crea le dir necessarie e assegna a uid/gid 1000
-RUN mkdir -p /var/cache/nginx/client_temp \
-             /var/cache/nginx/proxy_temp \
-             /var/cache/nginx/fastcgi_temp \
-             /var/cache/nginx/uwsgi_temp \
-             /var/cache/nginx/scgi_temp \
-             /run/nginx \
-    && chown -R 1000:1000 /var/cache/nginx /run/nginx
-
-# disabilita la direttiva 'user' e imposta un pid scrivibile da uid 1000
-RUN sed -i 's/^\s*user\s\+.*;/# user disabled for non-root run;/' /etc/nginx/nginx.conf \
- && sed -i 's|^\s*pid\s\+.*;|pid /run/nginx/nginx.pid;|' /etc/nginx/nginx.conf
-# -------------------------------------------
-
-EXPOSE 80
-CMD ["nginx","-g","daemon off;"]
+FROM nginxinc/nginx-unprivileged:stable
+COPY --from=build /app/webui/dist /usr/share/nginx/html
+EXPOSE 8080
+CMD ["nginx", "-g", "daemon off;"]
