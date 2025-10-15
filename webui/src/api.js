@@ -5,8 +5,11 @@ Così posso accedere alle funzioni qui, nelle altre schermate vue
 
 import axios from 'axios';
 
+// === BaseURL dinamico: stesso host della pagina + porta 3000; niente 'http://localhost:3000' hardcoded ===
+const apiBaseURL = `${window.location.protocol}//${window.location.hostname}:3000/api`;
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL: apiBaseURL,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -109,10 +112,10 @@ const apiClient = axios.create({
           return response;
         }
     }).catch(error => {
-        console.error("Errore durante il cambio username:", error.response.data.error);
+        console.error("Errore durante il cambio username:", error.response?.data?.error);
         console.log("Ritorno:")
-        console.log(error.response.data)
-        return error.response.data
+        console.log(error.response?.data)
+        return error.response?.data
       })
 
     
@@ -145,11 +148,6 @@ const apiClient = axios.create({
         }
     })
 
-
-
-    
-  
-    
   },
   
   sendReaction(messageID, Emoticon){
@@ -192,7 +190,7 @@ const apiClient = axios.create({
   },
 
   listUsers(){
-    return apiClient.get('utils/listUsers')
+    return apiClient.get('/utils/listUsers') // aggiunto lo slash iniziale
   },
 
   async forwardMessage(convoID, selectedMessage) {
@@ -231,10 +229,10 @@ const apiClient = axios.create({
           return response;
         }
     }).catch(error => {
-        console.error("Errore durante il cambio username:", error.response.data.error);
+        console.error("Errore durante il cambio username:", error.response?.data?.error);
         console.log("Ritorno:")
-        console.log(error.response.data)
-        return error.response.data
+        console.log(error.response?.data)
+        return error.response?.data
       })
 
   },

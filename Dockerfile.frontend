@@ -1,12 +1,14 @@
-# Dockerfile.frontend
-FROM node:lts AS build
+# --- build ---
+FROM node:lts AS builder
 WORKDIR /app/webui
-COPY webui/ ./
-RUN yarn install --no-progress --network-timeout 600000
-# usa lo script che hai: 'yarn build' o 'yarn run build-prod'
+COPY webui/ .
+# se c'è yarn.lock: userà quello; altrimenti cade su install normale
+RUN yarn install --no-progress --network-timeout 600000 || yarn install
+# usa lo script che hai (vite/vite build). Se il tuo package.json ha "build": "vite build", va bene così
 RUN yarn build
 
+# --- runtime ---
 FROM nginxinc/nginx-unprivileged:stable
-COPY --from=build /app/webui/dist /usr/share/nginx/html
+COPY --from=builder /app/webui/dist /usr/share/nginx/html
 EXPOSE 8080
-CMD ["nginx", "-g", "daemon off;"]
+# niente config custom: l’immagine espone già 8080 e serve /usr/share/nginx/html
