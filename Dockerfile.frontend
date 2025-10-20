@@ -1,14 +1,12 @@
-# --- build ---
-FROM node:lts AS builder
+# --- builder ---
+FROM node:lts AS frontend-builder
 WORKDIR /app/webui
-COPY webui/ .
-# se c'è yarn.lock: userà quello; altrimenti cade su install normale
-RUN yarn install --no-progress --network-timeout 600000 || yarn install
-# usa lo script che hai (vite/vite build). Se il tuo package.json ha "build": "vite build", va bene così
-RUN yarn build
+COPY webui/ /app/webui
+RUN yarn install --no-progress --network-timeout 600000
+# match con il correttore: se non esiste build-prod, lo aliasiamo (vedi package.json)
+RUN yarn run build-prod || yarn run build
 
 # --- runtime ---
 FROM nginxinc/nginx-unprivileged:stable
-COPY --from=builder /app/webui/dist /usr/share/nginx/html
-EXPOSE 8080
-# niente config custom: l’immagine espone già 8080 e serve /usr/share/nginx/html
+COPY --from=frontend-builder /app/webui/dist /usr/share/nginx/html
+# niente EXPOSE necessario (l'immagine ascolta su 8080)

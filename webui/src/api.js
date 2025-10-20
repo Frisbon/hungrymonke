@@ -6,7 +6,8 @@ Così posso accedere alle funzioni qui, nelle altre schermate vue
 import axios from 'axios';
 
 // === BaseURL dinamico: stesso host della pagina + porta 3000; niente 'http://localhost:3000' hardcoded ===
-const apiBaseURL = `${window.location.protocol}//${window.location.hostname}:3000/api`;
+const apiBaseURL = import.meta.env.VITE_API_BASE || '/api';
+
 
 const apiClient = axios.create({
   baseURL: apiBaseURL,
