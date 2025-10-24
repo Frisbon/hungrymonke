@@ -1,26 +1,22 @@
+# docker-compose.yml (solo per uso tuo)
 services:
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
     image: wasa-backend:local
-    container_name: backend
-    expose:
-      - "3000"        # visibile nel network
-    ports:
-      - "3000:3000"   # utile anche per test diretto
     environment:
       - GIN_MODE=release
-
+    ports:
+      - "3000:3000"
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
     image: wasa-frontend:local
-    container_name: frontend
-    depends_on:
-      - backend
+    depends_on: [backend]
     ports:
-      - "8080:80"
-
+      - "8080:8080"
+    volumes:
+      - ./nginx.default.conf:/etc/nginx/conf.d/default.conf:ro
