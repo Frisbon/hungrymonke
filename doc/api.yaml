@@ -282,7 +282,7 @@ components:
             $ref: '#/components/schemas/ConversationELT'
 
 paths:
-  /admin/listUsers: # Changed from list_users back to your original
+  /api/admin/listUsers: # Changed from list_users back to your original
     description: List All Existing Users.
     get:
       tags: ["Users"]

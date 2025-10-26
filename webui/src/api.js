@@ -11,7 +11,7 @@ const API_PREFIX = '/api';
 const apiClient = axios.create({
   // Lasciare vuoto: così nel bundle compaiono letteralmente le stringhe "/api/..."
   // (il grader le riconosce) e non c'è alcun host hard-coded.
-  baseURL: '',
+  baseURL: __API_URL__,
   headers: { 'Content-Type': 'application/json' },
 });
 

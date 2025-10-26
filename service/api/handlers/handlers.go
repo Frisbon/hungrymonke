@@ -934,7 +934,7 @@ func NewRouter() *gin.Engine {
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
-		MaxAge: 1 * time.Second,
+		MaxAge:           1 * time.Second,
 	}))
 
 	r.Static("/doc", "./doc")
@@ -944,8 +944,8 @@ func NewRouter() *gin.Engine {
 	r.POST("/session", login)
 
 	// Preflight for CORS
-// Preflight for CORS
-r.PUT("/api/users/me/username", setMyUsername)
+	// Preflight for CORS
+	r.PUT("/api/users/me/username", setMyUsername)
 	r.PUT("/api/users/me/photo", setMyPhoto)
 
 	r.GET("/api/conversations", getMyConversations)
@@ -962,7 +962,7 @@ r.PUT("/api/users/me/username", setMyUsername)
 	r.PUT("/api/groups/:ID/name", setGroupName)
 	r.PUT("/api/groups/:ID/photo", setGroupPhoto)
 
-	r.GET("/admin/listUsers", listUsers)
+	r.GET("/api/admin/listUsers", listUsers)
 	r.GET("/api/utils/getconvoinfo/:ID", getConvoInfo)
 	r.POST("/api/utils/createConvo", createPrivateConvo)
 	r.POST("/api/utils/createGroup", createGroupConvo)

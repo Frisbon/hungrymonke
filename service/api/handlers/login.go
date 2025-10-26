@@ -3,10 +3,10 @@ package handlers
 // login handlers + functions
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
-	"encoding/json"
 	"time"
 
 	scs "github.com/Frisbon/hungrymonke/service/api/structures"
@@ -48,12 +48,14 @@ func login(c *gin.Context) {
 
 	var reqUserID string
 	// Accetta "Maria" o {"name":"Maria"}
-	var tmp struct{ Name string `json:"name"` }
+	var tmp struct {
+		Name string `json:"name"`
+	}
 	if err := json.Unmarshal(body, &tmp); err == nil && tmp.Name != "" {
 		reqUserID = tmp.Name
 	} else {
 		reqUserID = strings.TrimSpace(string(body))
-		reqUserID = strings.Trim(reqUserID, `"` )
+		reqUserID = strings.Trim(reqUserID, `"`)
 	}
 
 	scs.DBMutex.Lock()
