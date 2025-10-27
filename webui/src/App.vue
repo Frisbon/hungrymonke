@@ -96,7 +96,7 @@ export default {
     return {
       isLoggedIn: false,
       username: '',
-      userPfp: 'https://i.imgur.com/D95gXlb.png', // setto pfp di default
+      userPfp: require('@/assets/blank_pfp.png'), // setto pfp di default
       userPfpType: null,
       loginError: '',
       selectedConvoID: null,
@@ -218,6 +218,11 @@ export default {
       } else {
         this.isGroup = false;
       }
+
+       if (!this.isGroup && this.showGroupInfo) {
+        this.showGroupInfo = false;
+      }
+
     },
 
     resetNameError(){ this.newUsernameTaken = false},
@@ -262,6 +267,13 @@ export default {
         localStorage.setItem('userPfp', this.userPfp);
         localStorage.setItem('userPfpType', this.userPfpType);
         this.newUsernameTaken = false
+
+        // Dopo aver aggiornato localStorage ecc.
+        if (this.selectedConvoRender && this.selectedConvoRender.username === this.username) {
+          this.selectedConvoRender.username = newName;
+        }
+
+
 
       }
       else{

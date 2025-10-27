@@ -353,7 +353,7 @@ export default {
       this.pollingInterval = setInterval(() => {
         console.log("Polling for new conversations...");
         this.pollingFetcher();
-      }, 2000); //  3000ms = 3 second
+      }, 10000); //  3000ms = 3 second
     },
 
     stopPolling() {
