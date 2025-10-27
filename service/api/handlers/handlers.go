@@ -944,7 +944,6 @@ func NewRouter() *gin.Engine {
 	r.POST("/session", login)
 
 	// Preflight for CORS
-	// Preflight for CORS
 	r.PUT("/api/users/me/username", setMyUsername)
 	r.PUT("/api/users/me/photo", setMyPhoto)
 
