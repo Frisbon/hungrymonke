@@ -941,8 +941,6 @@ func NewRouter() *gin.Engine {
 
 	r.POST("/api/login", login)
 
-	r.POST("/session", login)
-
 	// Preflight for CORS
 	r.PUT("/api/users/me/username", setMyUsername)
 	r.PUT("/api/users/me/photo", setMyPhoto)
@@ -965,10 +963,6 @@ func NewRouter() *gin.Engine {
 	r.GET("/api/utils/getconvoinfo/:ID", getConvoInfo)
 	r.POST("/api/utils/createConvo", createPrivateConvo)
 	r.POST("/api/utils/createGroup", createGroupConvo)
-
-	r.GET("/debug", func(c *gin.Context) {
-		DebugPrintDatabases()
-	})
 
 	return r
 }

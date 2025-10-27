@@ -762,12 +762,3 @@ paths:
               schema:
                 $ref: "#/components/schemas/Group"
 
-  /debug:
-    get:
-      tags: ["DebugStuff"]
-      summary: Stampa DBs
-      operationId: debugDBs
-      description: Terminal DBs content viewer
-      responses:
-        "204":
-          description: filler lol.
