@@ -25,7 +25,8 @@
       
       <ConversationList 
         ref="convoList"
-
+        :reload="reloadConvos"
+        @reloaded="listReloaded"
         :username="username" 
         :userPfp="userPfp" 
         :userPfpType="userPfpType"
@@ -121,6 +122,41 @@ export default {
     };
   },
   methods: {
+
+    async syncSelectedChatTitle() {
+      try {
+        if (!this.selectedConvoID) return;
+
+        const { data } = await api.getConvoInfo(this.selectedConvoID);
+        const convo = data?.conversation;
+        if (!convo) return;
+
+        let newName = '';
+        if (convo.group) {
+          // chat di gruppo
+          newName = convo.group.name;
+        } else {
+          // 1-to-1: prendi "l’altro" utente rispetto a me
+          const other = (this.username !== convo.firstuser.username)
+            ? convo.firstuser
+            : convo.seconduser;
+          newName = other?.username || '';
+        }
+
+        if (newName && this.selectedConvoRender && this.selectedConvoRender.chatName !== newName) {
+          // aggiorna il titolo visibile
+          this.selectedConvoRender.chatName = newName;
+
+          // opzionale ma utile: rinfresca la sidebar
+          this.reloadConvos = true;
+          this.$nextTick(() => (this.reloadConvos = false));
+        }
+      } catch (e) {
+        // no-op: non vogliamo sporcare la console con polling silenzioso
+      }
+    },
+
+
 
     resetReload(){ this.reloadConvos = false;},
     reloadChatMessages(){
@@ -234,21 +270,48 @@ export default {
     },
 
     resetNameError(){ this.newUsernameTaken = false},
-    updateConvertedConvos(updated) {
-      this.convertedConvos = updated;
+    updateConvertedConvos(val) {
+      const prevList = this.convertedConvos || [];
+      this.convertedConvos = val || [];
 
-      if (!this.selectedConvoID) return;
+      // Trova la conversazione attualmente aperta nella lista aggiornata
+      const sel = this.selectedConvoID
+        ? this.convertedConvos.find(c => c.convoid === this.selectedConvoID)
+        : null;
 
-      const sel = updated.find(c => c.convoid === this.selectedConvoID);
-      if (!sel) return;
+      // 1) Mantieni il titolo e l'immagine in sync anche se è cambiato "solo" il nome/pfp
+      if (
+        sel &&
+        this.selectedConvoRender &&
+        this.selectedConvoRender.convoid === sel.convoid
+      ) {
+        const needHeaderUpdate =
+          this.selectedConvoRender.chatName !== sel.chatName ||
+          this.selectedConvoRender.chatPic !== sel.chatPic ||
+          this.selectedConvoRender.chatPicType !== sel.chatPicType ||
+          this.selectedConvoRender.chatTime !== sel.chatTime;
 
-      // Se l'ultimo messaggio (chatTime) è cambiato, ricarico i messaggi della chat aperta
-      if (sel.chatTime !== this.currentConvoTime) {
-        this.currentConvoTime = sel.chatTime;
-        // chiamo direttamente il child (nessuna altra logica)
-        this.$refs.chatMessages?.fetchMessages?.(this.selectedConvoID);
+        if (needHeaderUpdate) {
+          // aggiorna i metadati usati nel titolo/header
+          this.selectedConvoRender = {
+            ...this.selectedConvoRender,
+            chatName: sel.chatName,
+            chatPic: sel.chatPic,
+            chatPicType: sel.chatPicType,
+            chatTime: sel.chatTime,
+          };
+        }
+      }
+
+      // 2) Se ci sono nuovi messaggi (chatTime è cambiato), aggiorna la finestra messaggi
+      if (sel && this.selectedConvoRender && this.selectedConvoRender.convoid === sel.convoid) {
+        const prev = prevList.find(c => c.convoid === this.selectedConvoID);
+        if (!prev || prev.chatTime !== sel.chatTime) {
+          this.fetchMessages(this.selectedConvoID, false, false, true);
+        }
       }
     },
+
 
     async forwardingConvoListHandler(chosenConvoObject){ 
       this.showConvoListWindow = false; 
@@ -336,7 +399,15 @@ export default {
       this.userPfp = localStorage.getItem('userPfp') || 'https://i.imgur.com/D95gXlb.png';
       this.userPfpType = localStorage.getItem('userPfpType') || null;
     }
+
+    this._titleSync = setInterval(() => {
+      this.syncSelectedChatTitle();
+    }, 2500);
   },
+  beforeUnmount() {
+    if (this._titleSync) clearInterval(this._titleSync);
+  },
+
 };
 </script>
 
