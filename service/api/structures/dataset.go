@@ -13,9 +13,17 @@ Una rappresentazione grafica dei contenuti è stampata su dataset.png
 */
 var DATASET_INITIALIZED = false
 
+// Set to true to enable dataset initialization during package init.
+// Set to false to skip heavy file reads / panic-causing init.
+const TO_IMPORT = false
+
 const failedToReadImage = "Failed to read image "
 
 func init() {
+	if !TO_IMPORT {
+		DATASET_INITIALIZED = false
+		return
+	}
 
 	//  load the pfps
 	pfp, errpfp := os.ReadFile("service/api/pictureslol/cat2 Arturo.jpg")
