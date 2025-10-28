@@ -41,15 +41,18 @@
 
       <div class="chat-area" v-if="showMessageWindow">
 
-        <ChatMessages 
-          :selectedConvoID="selectedConvoID" 
-          :username="username" 
+        <ChatMessages
+          ref="chatMessages"
+          :selectedConvoID="selectedConvoID"
+          :username="username"
           :isGroup="isGroup"
-          :selectedConvoRender = "selectedConvoRender"
-          @forwarder = "forwarder"
-          @reloadConvo = "reloadChatMessages"  
-          @groupLeft = "reloadButNoChoosing"
+          :selectedConvoRender="selectedConvoRender"
+          @forwarder="forwarder"
+          @reloadConvo="reloadChatMessages"
+          @groupLeft="reloadButNoChoosing"
         />
+
+
 
       </div>
 
@@ -78,6 +81,7 @@
 </template>
 
 <script>
+import defaultPfp from '@/components/blank_pfp.png';
 import ConversationList from './components/ConversationList.vue';
 import ChatMessages from './components/ChatMessages.vue';
 import api from './api';
@@ -96,15 +100,16 @@ export default {
     return {
       isLoggedIn: false,
       username: '',
-      userPfp: require('@/assets/blank_pfp.png'), // setto pfp di default
+      userPfp: defaultPfp, // setto pfp di default  
       userPfpType: null,
       loginError: '',
-      selectedConvoID: null,
+      selectedConvoID: '',
 
       isGroup: null,
       selectedConvoRender: null,
       convertedConvos: null,
       newUsernameTaken: false,
+      currentConvoTime: null,
 
       selectedMessage: null,
       
@@ -137,7 +142,7 @@ export default {
       convoListComponent.pollingFetcher();
 
       // nel frattempo devo ri-fetchare nella convo list
-      setTimeout(() => {this.selectedConvoID = null; this.selectedConvoRender = null; this.showMessageWindow = true;}, 400);
+      setTimeout(() => {this.selectedConvoID = ''; this.selectedConvoRender = null; this.showMessageWindow = true;}, 400);
     },
 
     newChatSequence(){
@@ -148,7 +153,7 @@ export default {
     async startPrivateConvo(user){
       console.log("Sono in App.vue dentro startPrivateConvo(), mi connetto al back-end...")
       const response = await api.startPrivateConvo(user)
-      this.selectedConvoID = null
+      this.selectedConvoID = ''
       this.showMessageWindow = false
       this.showNewChatWindow = false
       console.log("response: ", response.data)
@@ -157,7 +162,7 @@ export default {
     async startGroupChat(users, name, picture, mime){
       console.log("Sono in App.vue dentro startGroupChat(), mi connetto al back-end...")
       const response = await api.startGroupChat(users, name, picture, mime)
-      this.selectedConvoID = null
+      this.selectedConvoID = ''
       this.showMessageWindow = false
       this.showNewChatWindow = false
       console.log("response: ", response.data)
@@ -206,6 +211,9 @@ export default {
     async selectConversation(convoID, convoRender) {
       this.selectedConvoID = convoID;
       this.selectedConvoRender = convoRender;
+
+      this.currentConvoTime = convoRender?.chatTime || null;
+
       this.showMessageWindow = true
       this.showNewChatWindow = false
       this.showConvoListWindow = false
@@ -226,7 +234,21 @@ export default {
     },
 
     resetNameError(){ this.newUsernameTaken = false},
-    updateConvertedConvos(x){this.convertedConvos = x},
+    updateConvertedConvos(updated) {
+      this.convertedConvos = updated;
+
+      if (!this.selectedConvoID) return;
+
+      const sel = updated.find(c => c.convoid === this.selectedConvoID);
+      if (!sel) return;
+
+      // Se l'ultimo messaggio (chatTime) è cambiato, ricarico i messaggi della chat aperta
+      if (sel.chatTime !== this.currentConvoTime) {
+        this.currentConvoTime = sel.chatTime;
+        // chiamo direttamente il child (nessuna altra logica)
+        this.$refs.chatMessages?.fetchMessages?.(this.selectedConvoID);
+      }
+    },
 
     async forwardingConvoListHandler(chosenConvoObject){ 
       this.showConvoListWindow = false; 

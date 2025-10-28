@@ -10,8 +10,14 @@
 
       <div class="chatMenu">
           
-        <img @click="changePfp" class="chatpfp" :src="chatPicSrc" style="margin-top: 0px;">
+        <img
+        class="chatpfp" style="margin-top: 0px;"
+        v-if="selectedConvoRender && selectedConvoRender.chatPic && selectedConvoRender.chatPic !== 'https://i.imgur.com/D95gXlb.png'"
+        :src="'data:' + selectedConvoRender.chatPicType + ';base64,' + selectedConvoRender.chatPic">
+      
+        <img class="chatpfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
 
+        
         <h1>{{ this.selectedConvoRender.chatName }}</h1>
 
         
@@ -40,7 +46,7 @@
 
           <div class="message-list"> 
 
-            <div class= "message-container" v-for="message in messages" :key="message.msgID"
+            <div class= "message-container" v-for="message in messages" :key="message.msgid || message.msgID || message.id"
             
             :class="{'other-message': message.author.username !== username,
                         'my-message': message.author.username === username}"
@@ -179,7 +185,6 @@
 
 <script>
 import api from '../api';
-import defaultPfp from '../assets/blank_pfp.png'; // relative import to the project's assets
 import EmojiButtons from './EmojiButtons.vue';
 import MessageOptions from './MessageOptions.vue';
 import GroupChatOptions from './GroupChatOptions.vue';
@@ -189,12 +194,11 @@ export default {
 
   components:{MessageOptions, EmojiButtons, GroupChatOptions},
 
-  // typed/defaulted props
   props: {
-    selectedConvoID: { type: String, required: true },
-    isGroup:        { type: Boolean, default: null },
-    username:       { type: String, default: '' },
-    selectedConvoRender: { type: Object, default: null },
+    selectedConvoID: String,
+    username: String,
+    isGroup: Boolean,
+    selectedConvoRender: Object,
   },
 
   data() {
@@ -202,71 +206,64 @@ export default {
       messages: [],
       newMessage: '',
       selectedFile: null,
-      base64Image: '', // Per memorizzare la foto
+      base64Image: '', //  Per memorizzare la foto
       selectedMessage: null,
       selectedEmoji: '',
       reactionsOpen: false,
       messageOptionsOpen: false,
+
       replyingMsg: "",
+
       closeButtons: true,
-      // added polling fields
-      _msgPoll: null,
-      _lastMsgId: null,
     };
   },
 
   computed: {
-    // existing computed
     isSubmitDisabled() {
       return !this.newMessage && !this.base64Image;
-    },
-    // new computed for pfp fallback
-    chatPicSrc() {
-      const pic  = this.selectedConvoRender?.chatPic;
-      const mime = this.selectedConvoRender?.chatPicType;
-      if (pic && mime) return `data:${mime};base64,${pic}`;
-      return defaultPfp;
     }
   },
 
   watch: {
-    // start polling when convo changes
-    selectedConvoID () { this.startMsgPolling() },
-    // also refresh silently when username updates
-    username () { this.fetchMessagesSilent() },
+    selectedConvoID(newConvoID) {
+      if (!this.isValidConvoID(newConvoID)) return;
+      this.fetchMessages(newConvoID);
+      if (this._pollTimer) clearInterval(this._pollTimer);
+      this._pollTimer = setInterval(() => {
+        if (this.isValidConvoID(this.selectedConvoID)) {
+          this.fetchMessages(this.selectedConvoID);
+        }
+      }, 1500);
+    },
+
   },
 
-  mounted() { this.startMsgPolling() },
-  beforeUnmount() { this.stopMsgPolling() },
+
+  mounted() {
+    if (this.isValidConvoID(this.selectedConvoID)) {
+      this.fetchMessages(this.selectedConvoID);
+    }
+    this.helloInterval = setInterval(() => {
+      if (this.isValidConvoID(this.selectedConvoID)) {
+        this.fetchMessages(this.selectedConvoID);
+      }
+    }, 3000);
+  },
+
+  beforeUnmount() {
+    if (this.helloInterval) clearInterval(this.helloInterval);
+    if (this._pollTimer) clearInterval(this._pollTimer);
+  },
+
+
+
 
   methods: {
-    // BEGIN: polling + silent fetch methods
-    async fetchMessagesSilent () {
-      if (!this.selectedConvoID) return;
-      try {
-        const { data } = await api.getMessages(this.selectedConvoID);
-        const list = data?.Messages || data?.messages || [];
-        const last = list.length ? (list[list.length - 1].MsgID || list[list.length - 1].msgid) : null;
-        if (list.length !== this.messages.length || last !== this._lastMsgId) {
-          this.messages   = list;
-          this._lastMsgId = last;
-        }
-      } catch (_) {}
+
+    isValidConvoID(id) {
+      return !!id && id !== 'null' && id !== 'undefined';
     },
 
-    startMsgPolling () {
-      this.stopMsgPolling();
-      this.fetchMessagesSilent();
-      this._msgPoll = setInterval(() => this.fetchMessagesSilent(), 5000);
-    },
-
-    stopMsgPolling () {
-      if (this._msgPoll) {
-        clearInterval(this._msgPoll);
-        this._msgPoll = null;
-      }
-    },
-    // END: polling + silent fetch methods
 
     reloadConvo(){
       this.$emit("reloadConvo")
@@ -336,10 +333,13 @@ export default {
     },
 
     async fetchMessages(convoID) {
+      if (!convoID) return;
+      if (!this.isValidConvoID(convoID)) return;
+
       try {
         const response = await api.getMessages(convoID);
         console.log("(RESPONSE DATA) Ho cercato di fetchare i messages:", response.data);
-        this.messages = response.data.conversation?.messages || response.data?.messages || [];
+        this.messages = response.data.conversation.messages || [];
       } catch (error) {
         console.error('Error fetching messages:', error);
         this.messages = [];
@@ -387,8 +387,7 @@ export default {
         this.newMessage = '';
         this.selectedFile = null;
         this.base64Image = '';
-        // trigger a silent immediate refresh, polling will keep things up-to-date
-        this.fetchMessagesSilent();
+        this.fetchMessages(this.selectedConvoID);
         this.replyingMsg = "";
 
 
