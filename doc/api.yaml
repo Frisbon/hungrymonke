@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: WASAText
   version: '1.1'
-  description: Project made by 2087354. Risistemazioni finali per saziare il linter e le correzioni della vm del prof.
+  description: Project made by 2087354. Risistemazioni finali per saziare il linter e le correz
   contact:
     name: Sasha
     url: www.youtube.com/watch?v=dQw4w9WgXcQ
@@ -17,8 +17,6 @@ tags:
     description: Conversazioni private tra due utenti, chat 1-to-1.
   - name: "Group Conversation"
     description: Conversazioni di gruppo, chat con più utenti.
-  - name: "DebugStuff"
-    description: Endpoints per debug, roba che non serve in prod.
 
 servers:
   - url: http://localhost:3000/api
@@ -248,10 +246,8 @@ components:
       type: object
       properties:
         GroupPhoto:
-          description: Foto profilo del gruppo.
           $ref: "#/components/schemas/Photo"
         Conversation:
-          description: Conversazione associata al gruppo.
           $ref: "#/components/schemas/ConversationELT"
         Name:
           description: Nome del gruppo.
@@ -744,6 +740,7 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              description: damme er 30lode
               properties:
                 file:
                   type: string
