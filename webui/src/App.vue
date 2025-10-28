@@ -43,15 +43,19 @@
       <div class="chat-area" v-if="showMessageWindow">
 
         <ChatMessages
-          ref="chatMessages"
+          v-if="showMessageWindow"
           :selectedConvoID="selectedConvoID"
-          :username="username"
-          :isGroup="isGroup"
           :selectedConvoRender="selectedConvoRender"
-          @forwarder="forwarder"
-          @reloadConvo="reloadChatMessages"
-          @groupLeft="reloadButNoChoosing"
+          :username="username"
+          :userPfpType="userPfpType"
+          :userPfp="userPfp"
+          :isGroup="isGroup"
+          @newProfilePicture="(file) => setPfp(file)"
+          @newUsername="(newUsername) => setUsername(newUsername)"
+          @closeChat="() => closeChat()"
+          :key="selectedConvoID"
         />
+
 
 
 

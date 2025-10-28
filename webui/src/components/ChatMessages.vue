@@ -213,6 +213,7 @@ export default {
       messageOptionsOpen: false,
 
       replyingMsg: "",
+      isHeaderMenuOpen: false,
 
       closeButtons: true,
     };
@@ -225,18 +226,26 @@ export default {
   },
 
   watch: {
-    selectedConvoID(newConvoID) {
-      if (!this.isValidConvoID(newConvoID)) return;
-      this.fetchMessages(newConvoID);
-      if (this._pollTimer) clearInterval(this._pollTimer);
-      this._pollTimer = setInterval(() => {
-        if (this.isValidConvoID(this.selectedConvoID)) {
-          this.fetchMessages(this.selectedConvoID);
-        }
-      }, 1500);
-    },
+  selectedConvoID(newConvoID) {
+    if (!this.isValidConvoID(newConvoID)) return;
 
+    this.closeButtons = true;
+
+    this.fetchMessages(newConvoID);
+    if (this._pollTimer) clearInterval(this._pollTimer);
+    this._pollTimer = setInterval(() => {
+      if (this.isValidConvoID(this.selectedConvoID)) {
+        this.fetchMessages(this.selectedConvoID);
+      }
+    }, 1500);
   },
+
+
+  selectedConvoRender() {
+    this.closeButtons = true;
+  },
+},
+
 
 
   mounted() {
