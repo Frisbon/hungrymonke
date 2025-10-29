@@ -63,7 +63,7 @@
               @reloadMsgs = 'reloadMessages'
               @reply = 'replyProcedure'
               @handleForward = 'handleForward'
-
+              @forward="onForward"
               />
               <EmojiButtons
                 @emojiSelected = "reactionWindow"
@@ -145,7 +145,7 @@
               @reloadMsgs = 'reloadMessages'
               @reply = 'replyProcedure'
               @handleForward = 'handleForward'
-
+              @forward="onForward"
               
               />
               <EmojiButtons
@@ -184,6 +184,8 @@
 </template>
 
 <script>
+import blankPfp from '@/assets/blank_pfp.png'
+
 import api from '../api';
 import EmojiButtons from './EmojiButtons.vue';
 import MessageOptions from './MessageOptions.vue';
@@ -313,6 +315,11 @@ export default {
         }, 500);
       this.closeMessageOptions()
       this.reactionsOpen = false
+    },
+
+    onForward(msg) {
+    console.log('[ChatMessages] forward -> up', msg?._id);
+    this.$emit('forwarder', msg);
     },
 
     switchReactions(){

@@ -6,7 +6,7 @@
     <div v-if="!isLoggedIn" class="login">
 
 
-      <h2>WasaText 🌟</h2>
+      <h2>WasaText PORCODIO3 🌟</h2>
       <!-- ascolto per l'evento @submit e impedisco al browser la funzionalità di default (ricarica pagina) usando .prevent -->
       <form @submit.prevent="handleLogin">
         <div>
@@ -54,6 +54,7 @@
           @newUsername="(newUsername) => setUsername(newUsername)"
           @closeChat="() => closeChat()"
           :key="selectedConvoID"
+          @forwarder="forwarder"
         />
 
 
@@ -64,9 +65,11 @@
       <div class="convo-list-area" v-if="showConvoListWindow">
 
         <ForwardingConvoList
-        :currentUser="username"
-        :convertedConvos="convertedConvos"
-        @forwardToConvo="forwardingConvoListHandler"
+          v-if="showForwardingConvoListWindow"
+          :convertedConvos="convertedConvos"
+          :currentUser="username"
+          @forwardToConvo="forwardingConvoListHandler"
+          @close="showForwardingConvoListWindow = false"
         />
 
       </div>
@@ -123,6 +126,11 @@ export default {
       showNewChatWindow: false,
 
       reloadConvos: false,
+
+      showForwardingConvoListWindow: false,
+
+
+
     };
   },
   methods: {
@@ -248,6 +256,23 @@ export default {
 
     },  
 
+      async forwardMessage(convoID, selectedMessage) {
+    try {
+      const res = await api.forwardMessage(convoID, selectedMessage);
+      console.log('[Forward] OK:', res?.data);
+
+      // chiudi overlay e ricarica i messaggi della chat corrente
+      this.showForwardingConvoListWindow = false;
+      await this.fetchMessages(this.selectedConvoID);
+      // pulizia selezione
+      this.selectedMessage = null;
+    } catch (err) {
+      console.error('[Forward] API error:', err);
+      throw err;
+    }
+  },
+
+
     async selectConversation(convoID, convoRender) {
       this.selectedConvoID = convoID;
       this.selectedConvoRender = convoRender;
@@ -317,25 +342,37 @@ export default {
     },
 
 
-    async forwardingConvoListHandler(chosenConvoObject){ 
-      this.showConvoListWindow = false; 
-      this.showMessageWindow = true
-      console.log("Sono in App.vue dentro forwardingConvoListHandler(), mi connetto al back-end...")
-      console.log("prima dell'api.js, al momento mi hai passato l'oggetto: ", chosenConvoObject)
-      const response = await api.forwardMessage(chosenConvoObject.convoid, this.selectedMessage)
-      console.log("Response: ")
-      console.log(response.data)
-      this.selectedConvoID = chosenConvoObject.convoid
-      console.log(this.showConvoListWindow, this.showMessageWindow)
+    async forwardingConvoListHandler(chosenConvo) {
+      try {
+
+        await api.forwardMessage(chosenConvo.convoid, this.selectedMessage);
+        this.showForwardingConvoListWindow = false;
+        await this.fetchMessages(this.selectedConvoID);
+        this.selectedMessage = null;
+
+
+        // chiudi overlay e pulisci
+        this.showForwardingConvoListWindow = false;
+        this.selectedMessage = null;
+
+        // ricarica i messaggi della chat corrente
+        await this.fetchMessages(this.selectedConvoID)
+      } catch (err) {
+        console.error('[Forward] failed:', err);
+      }
     },
     
-    forwarder(selectedMsg){
-      this.showConvoListWindow = true; 
-      this.showMessageWindow = false;
-      this.selectedMessage = selectedMsg
-      console.log(this.showConvoListWindow, this.showMessageWindow)
+    forwarder(message) {
+      // Mem messaggio selezionato
+      this.selectedMessage = message;
 
+      // contenitore sia montato
+      this.showConvoListWindow = true;
+
+      // overlay di inoltro
+      this.showForwardingConvoListWindow = true;
     },
+
 
     async changeUsername(newName){
       console.log("Sono in App.vue dentro changeUsername(), mi connetto al back-end...")

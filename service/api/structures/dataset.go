@@ -11,11 +11,11 @@ in modo da non dover ri-registrarli per testare l'applicazione.
 
 Una rappresentazione grafica dei contenuti è stampata su dataset.png
 */
-var DATASET_INITIALIZED = false
+var DATASET_INITIALIZED = true
 
 // Set to true to enable dataset initialization during package init.
 // Set to false to skip heavy file reads / panic-causing init.
-const TO_IMPORT = false
+const TO_IMPORT = true
 
 const failedToReadImage = "Failed to read image "
 

@@ -37,6 +37,7 @@
            console.log("You've chosen the convo: ", convo);
            this.$emit('forwardToConvo', convo);
        },
+       close() {this.$emit('close')}
 
    },
 
