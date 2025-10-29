@@ -14,10 +14,10 @@
     >
       <img
         class="pfp"
-        v-if="c.chatPic != null && c.chatPic != 'https://i.imgur.com/D95gXlb.png' && c.chatPic != ''"
-        :src="'data:' + c.chatPicType + ';base64,' + c.chatPic"
+        :src="(c.chatPic && c.chatPicType) ? ('data:' + c.chatPicType + ';base64,' + c.chatPic) : 'https://i.imgur.com/D95gXlb.png'"
+        @error="e => (e.target.src = 'https://i.imgur.com/D95gXlb.png')"
       />
-      <img class="pfp" v-else src="https://i.imgur.com/D95gXlb.png" />
+
       <h4 class="chatName">{{ c.chatName }}</h4>
     </div>
   </div>

@@ -6,11 +6,13 @@
       <div class="user-info">
 
         <img
-          @click="changePfp" class="mainpfp" style="margin-top: 0px; "
-          v-if="this.userPfp != 'https://i.imgur.com/D95gXlb.png' && this.userPfp != ''&& this.userPfp != null"
-          :src="'data:' + this.userPfpType + ';base64,' + this.userPfp">
+          @click="changePfp"
+          class="mainpfp"
+          style="margin-top: 0px;"
+          :src="(userPfp && userPfpType) ? ('data:' + userPfpType + ';base64,' + userPfp) : 'https://i.imgur.com/D95gXlb.png'"
+          @error="e => (e.target.src = 'https://i.imgur.com/D95gXlb.png')"
+        />
 
-        <img @click="changePfp" class="mainpfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
         <input type="file" @change="handleFileUpload" accept="image/*" style="display: none;" ref="fileInput">
 
         <div style="display: flex; align-items: center; justify-items: flex-start;">
@@ -64,7 +66,12 @@
               :src="'data:' + c.chatPicType + ';base64,' + c.chatPic">
 
 
-              <img class="pfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
+              <img
+                class="pfp"
+                :src="(c.chatPic && c.chatPicType) ? ('data:' + c.chatPicType + ';base64,' + c.chatPic) : 'https://i.imgur.com/D95gXlb.png'"
+                @error="e => (e.target.src = 'https://i.imgur.com/D95gXlb.png')"
+              />
+
               <h3 class='chatName'>{{ c.chatName }}</h3>
 
             </div>

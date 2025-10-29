@@ -21,11 +21,9 @@
       >
         <img
           class="pfp"
-          v-if="user.photo != null && user.photo !== ''"
-          :src="'data:' + user.photoMimeType + ';base64,' + user.photo"
-          alt="Profile Picture"
+          :src="(user.photo && user.photoMimeType) ? ('data:' + user.photoMimeType + ';base64,' + user.photo) : 'https://i.imgur.com/D95gXlb.png'"
+          @error="e => (e.target.src = 'https://i.imgur.com/D95gXlb.png')"
         />
-        <img class="pfp" v-else src="https://i.imgur.com/D95gXlb.png" alt="Default PFP" />
         <h3>{{ user.username }}</h3>
       </div>
     </div>

@@ -11,12 +11,13 @@
       <div class="chatMenu">
           
         <img
-        class="chatpfp" style="margin-top: 0px;"
-        v-if="selectedConvoRender && selectedConvoRender.chatPic && selectedConvoRender.chatPic !== 'https://i.imgur.com/D95gXlb.png'"
-        :src="'data:' + selectedConvoRender.chatPicType + ';base64,' + selectedConvoRender.chatPic">
-      
-        <img class="chatpfp" v-else :src="'https://i.imgur.com/D95gXlb.png'">
-
+          class="chatpfp"
+          style="margin-top: 0px;"
+          :src="(selectedConvoRender && selectedConvoRender.chatPic && selectedConvoRender.chatPicType)
+                ? ('data:' + selectedConvoRender.chatPicType + ';base64,' + selectedConvoRender.chatPic)
+                : 'https://i.imgur.com/D95gXlb.png'"
+          @error="e => (e.target.src = 'https://i.imgur.com/D95gXlb.png')"
+        />
         
         <h1>{{ this.selectedConvoRender.chatName }}</h1>
 

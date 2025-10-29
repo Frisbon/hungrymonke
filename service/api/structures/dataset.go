@@ -15,7 +15,7 @@ var DATASET_INITIALIZED = true
 
 // Set to true to enable dataset initialization during package init.
 // Set to false to skip heavy file reads / panic-causing init.
-const TO_IMPORT = true
+const TO_IMPORT = false
 
 const failedToReadImage = "Failed to read image "
 

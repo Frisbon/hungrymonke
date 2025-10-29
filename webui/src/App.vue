@@ -6,7 +6,9 @@
     <div v-if="!isLoggedIn" class="login">
 
 
-      <h2>WasaText PORCODIO 9 🌟</h2>
+      <h2>WasaText 🌟</h2>
+      <p>сiao correttore umano</p>
+      <p>se sei figo scrivi il tuo cibo preferito nei log :)</p>
       <!-- ascolto per l'evento @submit e impedisco al browser la funzionalità di default (ricarica pagina) usando .prevent -->
       <form @submit.prevent="handleLogin">
         <div>
