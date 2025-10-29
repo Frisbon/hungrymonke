@@ -117,7 +117,7 @@
                   <div class='messageStats'>
                     <!-- la reaction bubble avrà foto in minuscolo e reaction accanto tutto accerchiato alla telegram-->
                     <div class="reactionBubble" v-for="reaction in message.reactions" v-bind:key="reaction.author.username">
-                      <img class="reactionImage" :src="'data:undefined;base64,'+ reaction.author.photo" >
+                      <img class="reactionImage" :src="avatarSrc(reaction.author)" alt="reactor" />
                       <div class="reactionEmoticon">{{ reaction.emoticon }}</div>
                     </div>
 
@@ -188,6 +188,8 @@ import api from '../api';
 import EmojiButtons from './EmojiButtons.vue';
 import MessageOptions from './MessageOptions.vue';
 import GroupChatOptions from './GroupChatOptions.vue';
+import defaultPfp from '@/assets/blank_pfp.png';
+
 
 export default {
   name: 'ChatMessages',
@@ -273,6 +275,13 @@ export default {
       return !!id && id !== 'null' && id !== 'undefined';
     },
 
+    avatarSrc(user) {
+      if (user && user.photo) {
+        const mt = user.photoMimeType || user.photoType || 'image/png';
+        return `data:${mt};base64,${user.photo}`;
+      }
+      return defaultPfp; // fallback immagine
+    },
 
     reloadConvo(){
       this.$emit("reloadConvo")
