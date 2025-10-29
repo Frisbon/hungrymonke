@@ -103,6 +103,7 @@
 
 <script>
 import api from '../api';
+import { resizeImageIfNeeded } from '@/utils/resizeImage';
 
 export default {
   name: 'ConversationList',
@@ -136,12 +137,23 @@ export default {
 
 
     // NB: permette di inviare una foto per volta, e non in bulk (TODO)
-    handleFileUpload(event) {
-      this.selectedFile = event.target.files[0];
-      if (this.selectedFile) {
-        this.$emit('changeUserPfp', this.selectedFile);
-        console.log("Profile picture selected:", this.selectedFile);
-      }
+    async handleFileUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      // Ridimensiona/Comprimi PFP
+      const { file: resized } = await resizeImageIfNeeded(file, {
+        maxWidth: 512,
+        maxHeight: 512,
+        maxBytes: 220 * 1024,   // ~220 KB
+        outputMime: 'image/jpeg',
+        quality: 0.9
+      });
+
+      this.$emit('changeUserPfp', resized);
+      console.log("Profile picture selected (resized):", resized);
+      // pulisci l'input per poter ricaricare lo stesso file se serve
+      if (event.target) event.target.value = '';
     },
 
     cancelChangeName(){ this.showUsernameInput = false; this.$emit("resetNameError")},

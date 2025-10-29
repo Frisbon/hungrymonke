@@ -186,6 +186,7 @@
 
 <script>
 import blankPfp from '@/assets/blank_pfp.png'
+import { resizeImageIfNeeded } from '@/utils/resizeImage';
 
 import api from '../api';
 import EmojiButtons from './EmojiButtons.vue';
@@ -339,14 +340,24 @@ export default {
       this.replyingMsg = this.selectedMessage;
     },
     // NB: permette di inviare una foto per volta, e non in bulk (TODO)
-    handleFileUpload(event) {
-      this.selectedFile = event.target.files[0];
-      if (this.selectedFile) {
-        this.convertToBase64();
-      } else {
-        this.base64Image = '';
-      }
+    async handleFileUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) { this.base64Image = ''; return; }
+
+      // Ridimensiona/Comprimi immagine messaggio
+      const { dataURL } = await resizeImageIfNeeded(file, {
+        maxWidth: 1600,
+        maxHeight: 1600,
+        maxBytes: 700 * 1024,   // ~700 KB
+        outputMime: 'image/jpeg',
+        quality: 0.9
+      });
+
+      this.base64Image = dataURL || '';
+      // pulizia per poter ri-selezionare la stessa immagine
+      if (event.target) event.target.value = '';
     },
+
 
     // usato per convertire immagine in formato leggibile dal back-end (base64)
     convertToBase64() {
@@ -574,6 +585,14 @@ export default {
   max-height: 500px;
   width: auto;
 }
+
+.message-bubble img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.message-bubble{ max-width: 80%;}
 
 .message-input-form {
     padding: 10px 10px 0px 10px;

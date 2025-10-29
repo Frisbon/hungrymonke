@@ -12,7 +12,7 @@ import (
 )
 
 // POST, path /users/me/username
-func setMyUsername(c *gin.Context) {
+func setMyUserName(c *gin.Context) {
 	scs.DBMutex.Lock()         // *
 	defer scs.DBMutex.Unlock() // *
 
@@ -940,7 +940,7 @@ func NewRouter() *gin.Engine {
 	r.POST("/api/login", login)
 
 	// Preflight for CORS
-	r.PUT("/api/users/me/username", setMyUsername)
+	r.PUT("/api/users/me/username", setMyUserName)
 	r.PUT("/api/users/me/photo", setMyPhoto)
 
 	r.GET("/api/conversations", getMyConversations)

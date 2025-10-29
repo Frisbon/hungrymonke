@@ -32,6 +32,8 @@
 </template>
 
 <script>
+import { resizeImageIfNeeded } from '@/utils/resizeImage';
+
 import api from '@/api';
 import GroupUserList from './GroupUserList.vue';
 
@@ -104,15 +106,27 @@ export default {
         },
 
 
-        handleFileUpload(event) {
-        this.selectedFile = event.target.files[0];
-        if (this.selectedFile) {
-            let response = api.setGroupPhoto(this.convoID, this.selectedFile)
-            console.log("fileUploadLog: ", response.data)
-            this.$emit("groupDataUpdated")
-        } 
-        this.selectedFile = null;
+        async handleFileUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const { file: resized } = await resizeImageIfNeeded(file, {
+                maxWidth: 1024,
+                maxHeight: 1024,
+                maxBytes: 400 * 1024, // ~400 KB
+                outputMime: 'image/jpeg',
+                quality: 0.9
+            });
+
+            const response = await api.setGroupPhoto(this.convoID, resized);
+            console.log("setGroupPhoto response:", response);
+            // chiudi pannello / notifica parent che i dati di gruppo sono cambiati
+            this.$emit("groupDataUpdated");
+            this.$emit("closeButtons");
+
+            if (event.target) event.target.value = '';
         },
+
 
 
     },
