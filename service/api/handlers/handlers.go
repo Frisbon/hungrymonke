@@ -937,8 +937,6 @@ func NewRouter() *gin.Engine {
 		MaxAge:           1 * time.Second,
 	}))
 
-	r.Static("/doc", "./doc")
-
 	r.POST("/api/login", login)
 
 	// Preflight for CORS
