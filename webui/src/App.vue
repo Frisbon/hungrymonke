@@ -8,7 +8,7 @@
 
       <h2>WasaText 🌟</h2>
 
-      <p>"God bless carbonara"</p>
+      <a href="https://sasholo.notion.site/ebd/29bc45a718ed804ba927c92868f4826a">"God bless carbonara"</a>
       <!-- ascolto per l'evento @submit e impedisco al browser la funzionalità di default (ricarica pagina) usando .prevent -->
       <form @submit.prevent="handleLogin">
         <div>
@@ -23,9 +23,7 @@
 
     </div>
 
-    <iframe v-if="!isLoggedIn" style="margin-top: 200px;" src="https://sasholo.notion.site/ebd/29bc45a718ed804ba927c92868f4826a" width="70%" height="800" frameborder="1" allowfullscreen />
-
-    <!-- Interfaccia chat se l'utente è loggato -->
+        <!-- Interfaccia chat se l'utente è loggato -->
     <div v-else class="container">
       
       <ConversationList 

@@ -7,6 +7,8 @@ RUN yarn install --no-progress --network-timeout 600000
 RUN yarn run build-prod || yarn run build
 
 # --- runtime ---
-FROM nginxinc/nginx-unprivileged:stable
+FROM nginx:alpine
 COPY --from=frontend-builder /app/webui/dist /usr/share/nginx/html
-# niente EXPOSE necessario (l'immagine ascolta su 8080)
+EXPOSE 80
+
+
