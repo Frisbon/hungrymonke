@@ -6,7 +6,7 @@
     <div v-if="!isLoggedIn" class="login">
 
 
-      <h2>WasaText PORCODIO3 🌟</h2>
+      <h2>WasaText PORCODIO 7 🌟</h2>
       <!-- ascolto per l'evento @submit e impedisco al browser la funzionalità di default (ricarica pagina) usando .prevent -->
       <form @submit.prevent="handleLogin">
         <div>
@@ -24,6 +24,7 @@
     <div v-else class="container">
       
       <ConversationList 
+        
         ref="convoList"
         :reload="reloadConvos"
         @reloaded="listReloaded"
@@ -43,6 +44,7 @@
       <div class="chat-area" v-if="showMessageWindow">
 
         <ChatMessages
+          ref="chat"
           v-if="showMessageWindow"
           :selectedConvoID="selectedConvoID"
           :selectedConvoRender="selectedConvoRender"
@@ -168,6 +170,13 @@ export default {
       }
     },
 
+    fetchMessages(convoID) {
+      if (!convoID) return;
+      const cmp = this.$refs.chat;
+      if (cmp && typeof cmp.fetchMessages === 'function') {
+        return cmp.fetchMessages(convoID);
+      }
+    },
 
 
     resetReload(){ this.reloadConvos = false;},
@@ -344,23 +353,28 @@ export default {
 
     async forwardingConvoListHandler(chosenConvo) {
       try {
+        // 1) inoltra
+        await this.forwardMessage(chosenConvo.convoid, this.selectedMessage);
 
-        await api.forwardMessage(chosenConvo.convoid, this.selectedMessage);
+        // 2) imposta subito il render target (evita undefined in template)
+        this.selectedConvoID = chosenConvo.convoid;
+        this.selectedConvoRender = { ...chosenConvo };
+        this.isGroup = !!(chosenConvo.convoid && chosenConvo.convoid.startsWith('group_'));
+
+        // 3) chiudi overlay e riapri la chat centrale
         this.showForwardingConvoListWindow = false;
+        this.showMessageWindow = true;
+
+        // 4) carica i messaggi della nuova chat
         await this.fetchMessages(this.selectedConvoID);
+
+        // 5) cleanup
         this.selectedMessage = null;
-
-
-        // chiudi overlay e pulisci
-        this.showForwardingConvoListWindow = false;
-        this.selectedMessage = null;
-
-        // ricarica i messaggi della chat corrente
-        await this.fetchMessages(this.selectedConvoID)
       } catch (err) {
-        console.error('[Forward] failed:', err);
+        console.error('[Forward] switch to convo failed:', err);
       }
-    },
+    }
+    ,
     
     forwarder(message) {
       // Mem messaggio selezionato
@@ -368,6 +382,8 @@ export default {
 
       // contenitore sia montato
       this.showConvoListWindow = true;
+      this.showMessageWindow = false;    
+      this.showNewChatWindow = false;    
 
       // overlay di inoltro
       this.showForwardingConvoListWindow = true;
