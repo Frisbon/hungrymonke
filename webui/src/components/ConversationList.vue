@@ -62,10 +62,7 @@
 
             <div style="display: flex; align-items: center; justify-items: flex-start;">
 
-              <img class="pfp" v-if="c.chatPic != null && c.chatPic != 'https://i.imgur.com/D95gXlb.png' && c.chatPic != ''"
-              :src="'data:' + c.chatPicType + ';base64,' + c.chatPic">
-
-
+            
               <img
                 class="pfp"
                 :src="(c.chatPic && c.chatPicType) ? ('data:' + c.chatPicType + ';base64,' + c.chatPic) : 'https://i.imgur.com/D95gXlb.png'"
